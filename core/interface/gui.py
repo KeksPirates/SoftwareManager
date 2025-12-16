@@ -116,13 +116,20 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.emptyLibrary = QLabel("No items in library.")
         self.emptyDownload = QLabel("No items in downloads.")
         self.progressbar = QProgressBar()
+
+        # Table Widget for Item List
         self.qtablewidget = QTableWidget()
 
         self.qtablewidget.setColumnCount(2)
         self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.qtablewidget.verticalHeader().setVisible(False)
         self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
-        self.qtablewidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+
+        header = self.qtablewidget.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch) 
+        header.setSectionResizeMode(1, QHeaderView.Fixed)   
+        header.setStretchLastSection(False)
+
         self.qtablewidget.setAttribute(Qt.WA_TranslucentBackground)
         self.qtablewidget.viewport().setAttribute(Qt.WA_TranslucentBackground)
 
@@ -273,3 +280,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         else:
             self.emptyResults.hide()
             self.qtablewidget.show()
+
+
+    # thank you claude
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        table_width = self.qtablewidget.viewport().width()
+        self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
