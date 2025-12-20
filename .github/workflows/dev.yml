@@ -81,14 +81,14 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
 
-      - name: Inject commit hash into code (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Inject commit hash into code
+        shell: bash
         run: |
-          $json = '{
-            "version": "' + $env:VERSION + '"
-          }'
-          $json | Out-File -Encoding utf8 build_info.json
+          cat > build_info.json << EOF
+          {
+            "version": "${{ env.VERSION }}"
+          }
+          EOF
 
       - name: Download aria2c (Windows)
         if: runner.os == 'Windows'
@@ -99,11 +99,24 @@ jobs:
 
       - name: Build executable with PyInstaller (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --windowed --add-data "build_info.json:." --add-data "deps/aria2c.exe:." --name ${{ env.APP_NAME }} main.py
+        shell: bash
+        run: |
+          pyinstaller --onefile --windowed \
+            --add-data "build_info.json;." \
+            --add-data "deps/aria2c.exe;." \
+            --add-data "core/interface/assets;core/interface/assets" \
+            --name ${{ env.APP_NAME }} \
+            main.py
 
       - name: Build executable with PyInstaller (Unix)
         if: runner.os != 'Windows'
-        run: pyinstaller --onefile --windowed --name ${{ env.APP_NAME }} main.py
+        shell: bash
+        run: |
+          pyinstaller --onefile --windowed \
+            --add-data "build_info.json:." \
+            --add-data "core/interface/assets:core/interface/assets" \
+            --name ${{ env.APP_NAME }} \
+            main.py
 
       - name: Make executable (Unix)
         if: runner.os != 'Windows'
