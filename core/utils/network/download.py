@@ -12,7 +12,6 @@ def download_selected(item, posts, post_titles):
         if state.debug:
             print(f"Downloading {item.text()}")
         run_thread(threading.Thread(target=run_download, args=(item.text(), posts, post_titles)))
-        
     else:
         if state.debug:
             print("No item selected for download.")
