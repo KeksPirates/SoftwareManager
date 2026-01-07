@@ -6,7 +6,7 @@ from typing import List
 class Download:
     title: str
     url: str
-    torrent_uri: str
+    magnet_uri: str
     completed: bool
 
 @dataclass
