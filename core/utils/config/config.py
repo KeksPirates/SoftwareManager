@@ -10,14 +10,14 @@ def create_config():
                          "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}"}
 
     if platform.system() == "Windows":
-            config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
+        config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
     else:
         config_dir = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
 
-    settings_path = os.path.join(config_dir, "SoftwareManager")
-    os.makedirs(settings_path, exist_ok=True)
+    state.settings_path = os.path.join(config_dir, "SoftwareManager")
+    os.makedirs(state.settings_path, exist_ok=True)
 
-    with open(os.path.join(settings_path, "config.yml"), 'w') as cf:
+    with open(os.path.join(state.settings_path, "config.yml"), 'w') as cf:
         config.write(cf)
 
 
@@ -26,11 +26,11 @@ def read_config():
     config = configparser.ConfigParser()
 
     if platform.system() == "Windows":
-            config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
+        config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
     else:
         config_dir = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
-    settings_path = os.path.join(config_dir, "SoftwareManager")
-    config_file = os.path.join(settings_path, "config.yml")
+    state.settings_path = os.path.join(config_dir, "SoftwareManager")
+    config_file = os.path.join(state.settings_path, "config.yml")
 
     if not os.path.exists(config_file):
         create_config()
