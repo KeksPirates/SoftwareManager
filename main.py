@@ -5,6 +5,7 @@ from core.network.aria2_integration import send_notification
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
 from core.utils.config.config import read_config
+from core.utils.general.logs import get_download_logs
 from PySide6 import QtWidgets
 import qdarktheme
 import darkdetect
@@ -37,7 +38,8 @@ def keyboardinterrupthandler(signum, frame):
 
 if __name__ == "__main__":
     read_config()
-    state.debug = args.debug # override of read_config
+    if args.debug:
+        state.debug = args.debug # override of read_config
     if state.debug:
         print("Starting Aria2 Server")
     state.aria2process = run_aria2server()

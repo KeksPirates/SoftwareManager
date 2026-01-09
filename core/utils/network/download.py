@@ -4,6 +4,8 @@ from core.utils.data.tracker import get_magnet_link
 from core.network.aria2_wrapper import start_client
 from core.network.aria2_wrapper import add_magnet
 from core.utils.general.wrappers import run_thread
+from core.utils.general.logs import add_download_log
+
 import threading
 
 
@@ -22,6 +24,7 @@ def run_download(item, posts, post_titles):
         print("Selected URL: ", post_url)
     magnet_uri = get_magnet_link(post_url)
     start_client()
+    add_download_log(item, post_url, magnet_uri, False)
     add_magnet(magnet_uri)
 
 
