@@ -88,9 +88,6 @@ def update_log(shutdown_event):
                     update_download_completed_by_hash(d.info_hash, True)
                     updated.add(d.gid)
             state.downloads = [d for d in state.aria2.get_downloads() if d.is_active and not d.is_metadata]
-        except Exception as e:
-            if state.debug:
-                print(f"Error in update_log: {e}")
-                import traceback
-                traceback.print_exc()
+        except Exception:
+            pass
         time.sleep(5)
