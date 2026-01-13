@@ -28,18 +28,33 @@ def settings_dialog(self):
         def close_settings():
             dialog.reject()
 
-        checkbox_container = QWidget()
-        checkbox_layout = QHBoxLayout()
+        update_checkbox_container = QWidget()
+        update_checkbox_layout = QHBoxLayout()
 
         # ignore updates checkbox
-        checkbox = QCheckBox()
-        checkbox_container.setLayout(checkbox_layout)
-        checkbox_layout.addWidget(QLabel("Ignore Updates: "))
-        checkbox_layout.addStretch()
-        checkbox.setChecked(state.ignore_updates)
-        checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
-        checkbox_layout.addWidget(checkbox)
-        dialog.layout().addWidget(checkbox_container)
+        update_checkbox = QCheckBox()
+        update_checkbox_container.setLayout(update_checkbox_layout)
+        update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
+        update_checkbox_layout.addStretch()
+        update_checkbox.setChecked(state.ignore_updates)
+        update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
+        update_checkbox_layout.addWidget(update_checkbox)
+        dialog.layout().addWidget(update_checkbox_container)
+
+        # auto-resume downloads checkbox
+
+        autoresume_container = QWidget()
+        autoresume_layout = QHBoxLayout()
+
+        autoresume_checkbox = QCheckBox()
+        autoresume_container.setLayout(autoresume_layout)
+        autoresume_layout.addWidget(QLabel("Auto-Resume Downloads: "))
+
+        autoresume_layout.addStretch()
+        autoresume_checkbox.setChecked(state.autoresume)
+        autoresume_checkbox.toggled.connect(lambda checked: setattr(state, 'autoresume', checked))
+        autoresume_layout.addWidget(autoresume_checkbox)
+        dialog.layout().addWidget(autoresume_container)
 
         ##################
         # THREAD SETTING #

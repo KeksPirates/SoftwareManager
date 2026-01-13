@@ -7,7 +7,7 @@ def create_config():
     config = configparser.ConfigParser()
 
     config["General"] = {"debug": True, "api_url": f"{state.api_url}", "aria2_threads": f"{state.aria2_threads}", "download_path": f"{state.download_path}", f"speed_limit": f"{state.speed_limit}", 
-                         "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}"}
+                         "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}", "autoresume": f"{state.autoresume}"}
 
     if platform.system() == "Windows":
         config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
@@ -51,3 +51,5 @@ def read_config():
         state.ignore_updates = config.getboolean("General", "ignore_updates")
     if state.image_path is not None:
         state.image_path = config.get("General", "image_path")
+    if state.autoresume is not None:
+        state.autoresume = config.getboolean("General", "autoresume")
