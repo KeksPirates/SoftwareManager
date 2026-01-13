@@ -231,6 +231,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         if darkdetect.isDark():
             settings_action = QAction(QIcon("core/interface/assets/settings_black.png"), "Settings", self)
+        else:
             settings_action = QAction(QIcon("core/interface/assets/settings_white.png"), "Settings", self)
 
         settings_action.triggered.connect(lambda: settings_dialog(self))
