@@ -1,6 +1,7 @@
 import aria2p
 import subprocess
 from core.utils.data.state import state
+from core.utils.general.logs import update_download_completed_by_hash
 from plyer import notification
 import time
 import sys
@@ -72,4 +73,24 @@ def send_notification(shutdown_event):
             state.downloads = [d for d in state.aria2.get_downloads() if d.is_active and not d.is_metadata]
         except Exception:
             pass
+        time.sleep(5)
+
+def update_log(shutdown_event):
+    updated = set()
+    while not shutdown_event.is_set():
+        try:
+            for d in state.aria2.get_downloads():
+                if d.is_metadata:
+                    continue
+                if d.progress == 100 and d.gid not in updated:
+                    if state.debug:
+                        print(f"Marking {d.name} as completed")
+                    update_download_completed_by_hash(d.info_hash, True)
+                    updated.add(d.gid)
+            state.downloads = [d for d in state.aria2.get_downloads() if d.is_active and not d.is_metadata]
+        except Exception as e:
+            if state.debug:
+                print(f"Error in update_log: {e}")
+                import traceback
+                traceback.print_exc()
         time.sleep(5)
