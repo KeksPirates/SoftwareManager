@@ -46,10 +46,10 @@ if __name__ == "__main__":
     if state.debug:
         print("Starting Aria2 Server")
     state.aria2process = run_aria2server()
-    check_completed(downloads, True)
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
     run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
     run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
+    run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     if state.debug:
         print("Launching GUI")
     run_gui()

@@ -16,6 +16,7 @@ class AppState(QObject):
         self._image_path: str = ""
         self.ignore_updates: bool = False
         self.debug: bool = False
+        self.autoresume: bool = True
         self.tracker: str = "rutracker"
         self.api_url: str = "https://api.michijackson.xyz"
         self.download_path: str = str(Path.home() / "Downloads")
