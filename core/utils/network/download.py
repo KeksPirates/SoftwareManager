@@ -27,5 +27,9 @@ def run_download(item, posts, post_titles):
     add_download_log(item, post_url, magnet_uri, False)
     add_magnet(magnet_uri)
 
+def run_download_direct(magnet_uri):
+    start_client()
+    add_magnet(magnet_uri)    
+
 
 
