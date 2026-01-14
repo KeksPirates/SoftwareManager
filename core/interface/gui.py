@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QTableWidget,
+    QTextEdit
     )
 
 from PySide6.QtGui import QIcon, QAction, QCloseEvent, QImage, QPixmap
@@ -28,6 +29,7 @@ import subprocess
 import time
 import sys
 import json
+from core.utils.general.logs import consoleLog
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
@@ -43,7 +45,7 @@ def download_update(latest_version):
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
 
-    print("Downloading update...")
+    consoleLog("Downloading update...")
     response = r.get(url, allow_redirects=True)
     with open(new_filename, "wb") as f:
         f.write(response.content)
@@ -63,8 +65,12 @@ def download_update(latest_version):
 
 
 class MainWindow(QtWidgets.QMainWindow, QWidget):
+    log_signal = Signal(str)  # Thread-safe signal for logging
+    
     def __init__(self):
         super().__init__()
+        MainWindow._instance = self
+        self.log_signal.connect(self._on_log_signal)
 
         build_info_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "build_info.json")
         if os.path.exists(build_info_path):
@@ -115,6 +121,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList = QTableView()
         self.emptyLibrary = QLabel("No items in library.")
         self.emptyDownload = QLabel("No items in downloads.")
+
+        self.consoleLog = QTextEdit()
         self.progressbar = QProgressBar()
 
         # Table Widget for Item List
@@ -240,8 +248,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         toolbar.setMovable(False)
 
-        self.progressbar.setValue(0)
-        containerLayout.addWidget(self.progressbar)
+        # self.progressbar.setValue(0)
+        self.consoleLog.setReadOnly(True)
+        self.consoleLog.setFixedHeight(150)
+        containerLayout.addWidget(self.consoleLog)
 
         self.progress_timer = QTimer()
         self.progress_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.update_progress)))
@@ -250,6 +260,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.download_timer = QTimer()
         self.download_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.download_list_update)))
         self.download_timer.start(500)
+
+    @staticmethod
+    def add_log(text):
+        if MainWindow._instance:
+            MainWindow._instance.log_signal.emit(text)
+    
+    def _on_log_signal(self, text):
+        self.consoleLog.append(text)
+        self.consoleLog.verticalScrollBar().setValue(
+            self.consoleLog.verticalScrollBar().maximum()
+        )
 
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)
@@ -288,3 +309,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().resizeEvent(event)
         table_width = self.qtablewidget.viewport().width()
         self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
+
+
+
+    

@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+from core.utils.general.logs import consoleLog
 
 def scrape_monkrus_telegram(query):
     post = 100

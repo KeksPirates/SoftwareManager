@@ -1,4 +1,5 @@
 from core.utils.data.state import state
+from core.utils.general.logs import consoleLog
 import threading
 import psutil
 import sys
@@ -14,15 +15,13 @@ def kill_aria2server():
 
     if state.aria2process:
         state.aria2process.kill()
-        if state.debug:
-            print("Killed Aria2")
+        consoleLog("Killed Aria2")
             
     try:
         for proc in psutil.process_iter():
             if proc.name() == process:
                 proc.kill()
-                if state.debug:
-                    print(f"Killed Aria2c (PID {proc.pid})")
+                consoleLog(f"Killed Aria2c (PID {proc.pid})")
     except psutil.NoSuchProcess:
         pass
 

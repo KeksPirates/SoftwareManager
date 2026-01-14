@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QTableWidgetItem
+from core.utils.general.logs import consoleLog
 from core.data.scrapers.uztracker import scrape_uztracker
 from core.data.scrapers.rutracker import scrape_rutracker
 from core.data.scrapers.monkrus import scrape_monkrus_telegram
@@ -8,11 +9,9 @@ from core.utils.data.state import state
 def return_pressed(self):
     search_text = self.searchbar.text()
     if search_text == "":
-        if state.debug:
-            print("Error: Can't search for nothing")
+        consoleLog("Error: Can't search for nothing")
         return
-    if state.debug:
-        print("User searched for:", search_text)
+    consoleLog(f"User searched for: {search_text}")
     
     if state.tracker == "uztracker":
         response = scrape_uztracker(search_text)
@@ -28,13 +27,11 @@ def return_pressed(self):
                     self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
                 self.show_empty_results(False)
             else:
-                if state.debug:
-                    print(f"No Results for {search_text}")
+                consoleLog(f"No Results for {search_text}")
                 self.qtablewidget.clear()
                 self.show_empty_results(True)
         else:
-            if state.debug:
-                print(f"No response from uztracker")
+            consoleLog(f"No response from uztracker")
             self.qtablewidget.clear()
             self.show_empty_results(True)
     
@@ -43,8 +40,7 @@ def return_pressed(self):
         if response:
             _, state.posts, _, _, cached = split_data(response)
             if state.posts == []:
-                if state.debug:
-                    print(f"No Results for {search_text}")
+                consoleLog(f"No Results for {search_text}")
                 self.qtablewidget.clear()
                 self.show_empty_results(True)
             else:
@@ -58,10 +54,9 @@ def return_pressed(self):
                 for i, title in enumerate(state.post_titles):
                     self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
                 if state.debug == True:
-                    print(f"Response Cached: {cached}")
+                    consoleLog(f"Response Cached: {cached}")
         else:
-            if state.debug:
-                print(f"No response from rutracker")
+            consoleLog(f"No response from rutracker")
             self.qtablewidget.clear()
             self.show_empty_results(True)
 
@@ -69,8 +64,7 @@ def return_pressed(self):
         state.posts = scrape_monkrus_telegram(search_text)
 
         if state.posts == []:
-            if state.debug:
-                print(f"No Results for {search_text}")
+            consoleLog(f"No Results for {search_text}")
             self.qtablewidget.clear()
             self.show_empty_results(True)
         else:

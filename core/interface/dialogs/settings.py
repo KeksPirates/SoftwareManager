@@ -1,5 +1,6 @@
 from core.utils.config.settings import save_settings
 from core.utils.data.state import state
+from core.utils.general.logs import consoleLog
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QLineEdit, 
@@ -16,8 +17,7 @@ from PySide6.QtWidgets import (
 
 def settings_dialog(self):
 
-        if state.debug:
-            print("Settings dialog opened")
+        consoleLog("Settings dialog opened")
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
         dialog.setFixedSize(800, 400)

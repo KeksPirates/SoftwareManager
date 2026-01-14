@@ -1,16 +1,15 @@
 from .aria2_integration import run_aria2p
 from core.utils.data.state import state
+from core.utils.general.logs import consoleLog
 
 def start_client():
     global aria2
     aria2 = run_aria2p()
-    if state.debug:
-        print("Started Aria2p")
+    consoleLog("Started Aria2p")
 
 def add_magnet(uri):
     aria2.add_magnet(uri)
-    if state.debug:
-        print("Magnet URI added to Aria2")
+    consoleLog("Magnet URI added to Aria2")
 
 
 

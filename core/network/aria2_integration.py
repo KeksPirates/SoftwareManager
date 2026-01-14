@@ -83,8 +83,7 @@ def update_log(shutdown_event):
                 if d.is_metadata:
                     continue
                 if d.progress == 100 and d.gid not in updated:
-                    if state.debug:
-                        print(f"Marking {d.name} as completed")
+                    consoleLog(f"Marking {d.name} as completed")
                     update_download_completed_by_hash(d.info_hash, True)
                     updated.add(d.gid)
             state.downloads = [d for d in state.aria2.get_downloads() if d.is_active and not d.is_metadata]

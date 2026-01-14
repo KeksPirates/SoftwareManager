@@ -2,6 +2,7 @@ import requests
 import asyncio
 from bs4 import BeautifulSoup
 from core.utils.data.state import state
+from core.utils.general.logs import consoleLog
 
 
 global url_uztracker
@@ -16,13 +17,11 @@ async def init_uztracker():
             up = True
         else:
             up = False
-            if state.debug: 
-                print(f"Uztracker seems down, status code: {response.status_code}")
+            consoleLog(f"Uztracker seems down, status code: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        if state.debug:
-            print(f"\nRequest Exception on {url_uztracker}:")
-            print(e)
-            print("\nIs the Site down?")
+        consoleLog(f"\nRequest Exception on {url_uztracker}:")
+        consoleLog(str(e))
+        consoleLog("\nIs the Site down?")
         up = False
 
 asyncio.run(init_uztracker())
@@ -30,8 +29,7 @@ asyncio.run(init_uztracker())
 def scrape_uztracker(search):
     if up:
         search_url = url_uztracker + search
-        if state.debug:
-            print(search_url)
+        consoleLog(search_url)
         result = False
         global results
         global resulttitles
@@ -59,12 +57,11 @@ def scrape_uztracker(search):
                 return None
 
         except requests.RequestException as e:
-            if result and state.debug:
-                print(f"Failed to fetch {search_url}: {e}")
+            if result:
+                consoleLog(f"Failed to fetch {search_url}: {e}")
             return None
     else:
-        if state.debug:
-            print("Error: Uztracker down")
+        consoleLog("Error: Uztracker down")
         return None, None
 
 def get_post_title(post_url):
@@ -75,11 +72,9 @@ def get_post_title(post_url):
         if maintitle:
             return maintitle.text
         else:
-            if state.debug:
-                print("Program not found")
+            consoleLog("Program not found")
     else:
-        if state.debug:
-            print("Error: Uztracker down")
+        consoleLog("Error: Uztracker down")
         return None   
 
     

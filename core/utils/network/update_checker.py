@@ -1,12 +1,13 @@
 import requests
 from core.utils.data.state import state
+from core.utils.general.logs import consoleLog
 
 def check_for_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases"
     response = requests.get(url)
 
     if response.status_code != 200:
-        print(f"Failed to fetch releases: {response.status_code}")
+        consoleLog(f"Failed to fetch releases: {response.status_code}")
         exit(1)
 
     releases = response.json()
@@ -18,21 +19,17 @@ def check_for_updates():
 
 
     if state.version == "dev":
-        if state.debug:
-            print("Dev release detected, skipping version check")
-            return None, None
+        consoleLog("Dev release detected, skipping version check")
+        return None, None
     elif latest_version != state.version:
-        if state.debug:
-            print(f"New release available: {latest_version}")
+        consoleLog(f"New release available: {latest_version}")
         if assets:
-            if state.debug:
-                print("Assets:")
-                for asset in assets:
-                    print(f" - {asset['name']}: {asset['browser_download_url']}")
+            consoleLog("Assets:")
+            for asset in assets:
+                consoleLog(f" - {asset['name']}: {asset['browser_download_url']}")
             return assets, latest_version
         else: 
             return None, None
     else:
-        if state.debug:
-            print("Already up-to-date.")
+        consoleLog("Already up-to-date.")
         return None, None
