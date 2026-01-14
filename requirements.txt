@@ -1,5 +1,5 @@
 requests==2.32.2
-PySide6==6.9.2
+PySide6==6.10.1
 beautifulsoup4==4.13.5
 darkdetect==0.8.0
 aria2p==0.12.1
