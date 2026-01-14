@@ -34,22 +34,17 @@ def read_config():
 
     if not os.path.exists(config_file):
         create_config()
+        return
 
     config.read(config_file)
 
-    if state.debug is not None:
-        state.debug = config.getboolean("General", "debug")
-    if state.api_url is not None:
-        state.api_url = config.get("General", "api_url")
-    if state.aria2_threads is not None:
-        state.aria2_threads = config.getint("General", "aria2_threads")
-    if state.download_path is not None:
-        state.download_path = config.get("General", "download_path")
-    if state.speed_limit is not None:
-        state.speed_limit = config.getint("General", "speed_limit")
-    if state.ignore_updates is not None:
-        state.ignore_updates = config.getboolean("General", "ignore_updates")
-    if state.image_path is not None:
-        state.image_path = config.get("General", "image_path")
-    if state.autoresume is not None:
-        state.autoresume = config.getboolean("General", "autoresume")
+    state.debug = config.getboolean("General", "debug", fallback=state.debug)
+    state.api_url = config.get("General", "api_url", fallback=state.api_url)
+    state.aria2_threads = config.getint("General", "aria2_threads", fallback=state.aria2_threads)
+    state.download_path = config.get("General", "download_path", fallback=state.download_path)
+    state.speed_limit = config.getint("General", "speed_limit", fallback=state.speed_limit)
+    state.ignore_updates = config.getboolean("General", "ignore_updates", fallback=state.ignore_updates)
+    state.image_path = config.get("General", "image_path", fallback=state.image_path)
+    state.autoresume = config.getboolean("General", "autoresume", fallback=state.autoresume)
+
+    create_config()
