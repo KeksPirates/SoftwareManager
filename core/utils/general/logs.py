@@ -1,6 +1,7 @@
 from core.utils.data.models import Download, DownloadList
 from core.utils.data.state import state
 from dataclasses import asdict
+from datetime import datetime
 import json
 import os
 import re
@@ -165,11 +166,14 @@ def set_main_window(window):
     _main_window = window
 
 def consoleLog(text):
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+
     try:
         from core.interface.gui import MainWindow
-        MainWindow.add_log(text)
+        MainWindow.add_log(f"[{current_time}] {text}")
     except Exception:
         pass
     
     if state.debug:
-        print(text)
+        print(f"[{current_time}] {text}")
