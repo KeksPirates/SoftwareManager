@@ -67,7 +67,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller backports.tarfile
 
       - name: Generate version
         id: version
@@ -105,6 +105,11 @@ jobs:
             --add-data "build_info.json;." \
             --add-data "deps/aria2c.exe;." \
             --add-data "core/interface/assets;core/interface/assets" \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
             main.py
 
@@ -115,6 +120,11 @@ jobs:
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
             --add-data "core/interface/assets:core/interface/assets" \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
             main.py
 
@@ -158,11 +168,30 @@ jobs:
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
           ls -la release/
 
+      - name: Generate release notes
+        run: |
+          SHORT_SHA="${{ needs.build.outputs.short_sha }}"
+          cat > release_notes.md << EOF
+          ## Development Build
+          
+          **Commit:** [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+          
+          ### Changes
+          $(git log -1 --pretty=format:"- %s" ${{ github.sha }})
+          
+          ### Downloads
+          - Linux: \`SoftwareManager-dev-${SHORT_SHA}-linux\`
+          - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.exe\`
+          - macOS: \`SoftwareManager-dev-${SHORT_SHA}-macos\`
+          EOF
+          cat release_notes.md
+
       - name: Create Release (Public)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.build.outputs.version }}
           name: ${{ needs.build.outputs.version }}
+          body_path: release_notes.md
           files: |
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-linux
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.exe
