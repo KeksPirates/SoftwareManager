@@ -2,6 +2,7 @@ import aria2p
 import subprocess
 from core.utils.data.state import state
 from core.utils.general.logs import update_download_completed_by_hash
+from core.utils.general.logs import consoleLog
 from plyer import notification
 import time
 import sys

@@ -52,8 +52,11 @@ if __name__ == "__main__":
     state.aria2process = run_aria2server()
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
     run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
+    consoleLog("Started send_notification thread")
     run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
+    consoleLog("Started update_log thread")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
+    consoleLog("Started check_completed thread")
     consoleLog("Launching GUI")
     run_gui()
 
