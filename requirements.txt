@@ -4,6 +4,7 @@ beautifulsoup4==4.13.5
 darkdetect==0.8.0
 aria2p==0.12.1
 pyinstaller==6.15.0
+pyqtdarktheme==0.1.7
 aiohttp==3.13.0
 plyer==2.1.0
 psutil==7.1.0
