@@ -165,7 +165,7 @@ def set_main_window(window):
     global _main_window
     _main_window = window
 
-def consoleLog(text):
+def consoleLog(text, printAnyways = False):
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
 
@@ -175,5 +175,5 @@ def consoleLog(text):
     except Exception:
         pass
     
-    if state.debug:
+    if state.debug or printAnyways:
         print(f"[{current_time}] {text}")

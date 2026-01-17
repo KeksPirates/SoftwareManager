@@ -45,7 +45,7 @@ def download_update(latest_version):
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
 
-    consoleLog("Downloading update...")
+    consoleLog("Downloading update...", True)
     response = r.get(url, allow_redirects=True)
     with open(new_filename, "wb") as f:
         f.write(response.content)
