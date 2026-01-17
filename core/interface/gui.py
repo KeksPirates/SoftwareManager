@@ -1,5 +1,4 @@
 from PySide6 import QtWidgets
-from PySide6 import QtCore
 from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -210,18 +209,20 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
         self.tab3 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
-        self.image = QImage(state.image_path)
-        self.pixmap = QPixmap.fromImage(self.image)
-        self.overlay_label = QLabel(self)
-        self.overlay_label.setPixmap(self.pixmap)
-        self.overlay_label.adjustSize()
-        self.overlay_label.raise_()
+        if state.image_path is not None and os.path.exists(state.image_path):
+            self.image = QImage(state.image_path)
+            self.pixmap = QPixmap.fromImage(self.image)
+            self.overlay_label = QLabel(self)
+            self.overlay_label.setPixmap(self.pixmap)
+            self.overlay_label.adjustSize()
+            self.overlay_label.raise_()
 
-        offset_x = -1350
-        offset_y = -550
-        x = self.width() - self.overlay_label.width() - offset_x
-        y = self.height() - self.overlay_label.height() - offset_y
-        self.overlay_label.move(x, y)
+            offset_x = -1350
+            offset_y = -550
+            x = self.width() - self.overlay_label.width() - offset_x
+            y = self.height() - self.overlay_label.height() - offset_y
+            self.overlay_label.move(x, y)
+        
 
         # temporarily disabled
         # state.image_changed.connect(self.update_image_overlay)
