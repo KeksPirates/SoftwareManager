@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QTableWidget,
-    QTextEdit
+    QTextEdit,
     )
 
 from PySide6.QtGui import QIcon, QAction, QCloseEvent, QImage, QPixmap
@@ -70,6 +70,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().__init__()
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
+        self.setWindowIcon(QIcon(os.path.join('core/interface/assets/logo.png')))
+
+        if platform.system() == "Windows":
+            try:
+                import ctypes
+                myappid = 'SoftwareManager.App.1'
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            except Exception as e:
+                consoleLog(f"Could not set app ID: {e}")
 
         build_info_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "build_info.json")
         if os.path.exists(build_info_path):
