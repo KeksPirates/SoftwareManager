@@ -214,3 +214,7 @@ __marimo__/
 *.sublime-project
 *.code-workspace
 *.swp
+
+# Local build files
+build-local.ps1
+build-local.bat

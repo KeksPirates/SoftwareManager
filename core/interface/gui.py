@@ -72,18 +72,16 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.log_signal.connect(self._on_log_signal)
 
         def get_asset_path(filename):
+            if getattr(sys, 'frozen', False):
+                base_path = sys._MEIPASS
+            else:
+                base_path = os.path.dirname(__file__)
 
-            asset_paths = [
-                os.path.join('core/interface/assets', filename),
-                os.path.join(os.path.dirname(__file__), '..', 'assets', filename),
-                os.path.join(os.path.dirname(sys.executable), 'core/interface/assets', filename),
-            ]
-    
-            for path in asset_paths:
-                if os.path.exists(path):
-                    return path
-    
-            return asset_paths[0]
+            asset_path = os.path.join(base_path, 'core', 'interface', 'assets', filename)
+            if os.path.exists(asset_path):
+                return asset_path
+
+            return os.path.join('core', 'interface', 'assets', filename)
         
         self.setWindowIcon(QIcon(get_asset_path("logo.png")))
 

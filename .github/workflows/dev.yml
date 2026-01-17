@@ -103,9 +103,13 @@ jobs:
         run: |
           pyinstaller --onefile --windowed \
             --add-data "build_info.json;." \
+            --add-data "build_info.json;core" \
+            --add-data "build_info.json;core/interface" \
             --add-data "deps/aria2c.exe;." \
             --add-data "core/interface/assets;core/interface/assets" \
             --icon "core/interface/assets/logo.png" \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
             --hidden-import=backports \
             --hidden-import=jaraco.context \
@@ -120,8 +124,12 @@ jobs:
         run: |
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
+            --add-data "build_info.json:core" \
+            --add-data "build_info.json:core/interface" \
             --add-data "core/interface/assets:core/interface/assets" \
             --icon "core/interface/assets/logo.png" \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
             --hidden-import=backports \
             --hidden-import=jaraco.context \
