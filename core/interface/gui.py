@@ -70,7 +70,23 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().__init__()
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
-        self.setWindowIcon(QIcon(os.path.join('core/interface/assets/logo.png')))
+
+        def get_asset_path(filename):
+
+            asset_paths = [
+                os.path.join('core/interface/assets', filename),
+                os.path.join(os.path.dirname(__file__), '..', 'assets', filename),
+                os.path.join(os.path.dirname(sys.executable), 'core/interface/assets', filename),
+            ]
+    
+            for path in asset_paths:
+                if os.path.exists(path):
+                    return path
+    
+            return asset_paths[0]
+        
+        self.setWindowIcon(QIcon(get_asset_path("logo.png")))
+
 
         if platform.system() == "Windows":
             try:
@@ -248,9 +264,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.tracker_list.activated.connect(self.set_tracker)
 
         if darkdetect.isDark():
-            settings_action = QAction(QIcon("core/interface/assets/settings_white.png"), "Settings", self)
+            settings_action = QAction(QIcon(get_asset_path("settings_white.png")), "Settings", self)
         else:
-            settings_action = QAction(QIcon("core/interface/assets/settings_black.png"), "Settings", self)
+            settings_action = QAction(QIcon(get_asset_path("settings_black.png")), "Settings", self)
 
         settings_action.triggered.connect(lambda: settings_dialog(self))
         toolbar.addAction(settings_action)
