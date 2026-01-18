@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal
+from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent
 from PySide6.QtWidgets import (
     QLineEdit,
     QTableView,
@@ -16,6 +16,10 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTableWidget,
     QTextEdit,
+    QStyle,
+    QStyleOptionButton,
+    QStyledItemDelegate,
+    QApplication,
     )
 
 from PySide6.QtGui import QIcon, QAction, QCloseEvent, QImage, QPixmap
@@ -54,11 +58,11 @@ def download_update(latest_version):
     time.sleep(0.5)
 
     msg = QMessageBox()
-    msg.setIcon(QMessageBox.Information)
+    msg.setIcon(QMessageBox.Icon.Information)
     msg.setWindowTitle("New Version")
     msg.setText("New version installed.")
     msg.setInformativeText("Please remove the old exe.")
-    msg.setStandardButtons(QMessageBox.Ok)
+    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
 
     sys.exit(0)
 
@@ -109,14 +113,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
                     if assets:
                         msg = QMessageBox()
-                        msg.setIcon(QMessageBox.Information)
+                        msg.setIcon(QMessageBox.Icon.Information)
                         msg.setWindowTitle("Update Available")
                         msg.setText("A new version is available.")
                         msg.setInformativeText("Press Ok to download the update.")
-                        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Ignore)
+                        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
 
                         response = msg.exec_()
-                        if response == QMessageBox.Ok:
+                        if response == QMessageBox.StandardButton.Ok:
                             download_update(latest_version)
 
         self.setWindowTitle("Software Manager")
@@ -175,7 +179,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         class DownloadModel(QAbstractTableModel):
             def __init__(self):
                 super().__init__()
-                self.headers = ["Name", "Status", "Progress", "Speed", "Size", "Total Size"]
+                self.headers = ["Action", "Name", "Status", "Progress", "Speed", "Size", "Total Size"]
 
             def rowCount(self, parent=QModelIndex()):
                 return len(state.downloads)
@@ -189,23 +193,64 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return None
 
             def data(self, index, role=Qt.DisplayRole):
+                col = index.column()
+                download = state.downloads[index.row()]
                 if role == Qt.DisplayRole:
-                    download = state.downloads[index.row()]
                     col = index.column()
 
                     if col == 0:
-                        return download.name
+                        return "Resume" if download.is_paused else "Pause"
                     elif col == 1:
-                        return getattr(download, 'status', 'Downloading')
+                        return download.name
                     elif col == 2:
-                        return f"{int(download.progress)}%"
+                        return getattr(download, 'status', 'Downloading')
                     elif col == 3:
-                        return f"{download.download_speed_string()}"
+                        return f"{int(download.progress)}%"
                     elif col == 4:
-                        pass
+                        return f"{download.download_speed_string()}"
                     elif col == 5:
+                        pass
+                    elif col == 6:
                         return f"{download.total_length_string()}"
+                
+                if role == Qt.UserRole and col == 0:
+                    return download.is_paused
+
                 return None
+
+            def toggle_pause_resume(self, row):
+                download = state.downloads[row]
+                if download.is_paused:
+                    download.resume()
+                else:
+                    download.pause()
+                idx = self.index(row, 0)
+                self.dataChanged.emit(idx, idx, [Qt.DisplayRole, Qt.UserRole])
+
+        class PauseResumeDelegate(QStyledItemDelegate):
+            clicked = Signal(int)
+
+            def paint(self, painter, option, index):
+                if index.column() != 0:
+                    super().paint(painter, option, index)
+                    return
+
+                paused = index.data(Qt.UserRole)
+
+                button = QStyleOptionButton()
+                button.rect = option.rect
+                button.text = "Resume" if paused else "Pause"
+                button.state = QStyle.State_Enabled
+
+                QApplication.style().drawControl(
+                    QStyle.CE_PushButton, button, painter
+                )
+
+            def editorEvent(self, event, model, option, index):
+                if index.column() == 0 and event.type() == QEvent.Type.MouseButtonPress:
+                    self.clicked.emit(index.row())
+                    return True
+                return False
 
         self.download_model = DownloadModel()
         self.downloadList.setModel(self.download_model)
@@ -214,6 +259,21 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.setSelectionBehavior(QTableView.SelectRows)
         self.downloadList.setAttribute(Qt.WA_TranslucentBackground)
         self.downloadList.viewport().setAttribute(Qt.WA_TranslucentBackground)
+
+        download_model = self.download_model
+
+        def on_pause_resume_clicked(row):
+            download_model.toggle_pause_resume(row)
+
+            download = state.downloads[row]
+            if download.is_paused:
+                download.pause()
+            else:
+                download.resume() 
+
+        delegate = PauseResumeDelegate(self.downloadList)
+        self.downloadList.setItemDelegateForColumn(0, delegate)
+        delegate.clicked.connect(on_pause_resume_clicked)
 
         # download button triggers
         self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(self.qtablewidget.currentItem(), state.posts, state.post_titles))))
