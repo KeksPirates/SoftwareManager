@@ -199,7 +199,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     col = index.column()
 
                     if col == 0:
-                        return "Resume" if download.is_paused else "Pause"
+                        return "▶︎" if download.is_paused else "⏸︎"
                     elif col == 1:
                         return download.name
                     elif col == 2:
@@ -239,7 +239,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
                 button = QStyleOptionButton()
                 button.rect = option.rect
-                button.text = "Resume" if paused else "Pause"
+                button.text = "▶︎" if paused else "⏸︎"
                 button.state = QStyle.State_Enabled
 
                 QApplication.style().drawControl(
@@ -255,7 +255,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.download_model = DownloadModel()
         self.downloadList.setModel(self.download_model)
         self.downloadList.horizontalHeader().setStretchLastSection(False)
-        self.downloadList.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.downloadList.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.downloadList.setSelectionBehavior(QTableView.SelectRows)
         self.downloadList.setAttribute(Qt.WA_TranslucentBackground)
         self.downloadList.viewport().setAttribute(Qt.WA_TranslucentBackground)
