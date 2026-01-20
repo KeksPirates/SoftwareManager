@@ -147,6 +147,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList = QTableView()
         self.emptyLibrary = QLabel("No items in library.")
         self.emptyDownload = QLabel("No items in downloads.")
+        self.emptyDownload.setAlignment(Qt.AlignCenter)
 
         self.consoleLog = QTextEdit()
         self.progressbar = QProgressBar()
@@ -183,7 +184,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
             def rowCount(self, parent=QModelIndex()):
                 return len(state.downloads)
-
+            
             def columnCount(self, parent=QModelIndex()):
                 return len(self.headers)
 
@@ -345,6 +346,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.download_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.download_list_update)))
         self.download_timer.start(500)
 
+        self.active_timer = QTimer()
+        self.active_timer.timeout.connect(self.show_empty_downloads)
+        self.active_timer.start(500)
+
     @staticmethod
     def add_log(text):
         if MainWindow._instance:
@@ -367,6 +372,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if self.download_model:
             self.download_model.layoutAboutToBeChanged.emit()
             self.download_model.layoutChanged.emit()
+        
 
     def closeEvent(self, event: QCloseEvent):
         closehelper()
@@ -384,8 +390,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.qtablewidget.hide()
             self.emptyResults.show()
         else:
-            self.emptyResults.hide()
             self.qtablewidget.show()
+            self.emptyResults.hide()
+
+    def show_empty_downloads(self):
+        if len(state.downloads) > 0:
+            self.emptyDownload.hide()
+            self.downloadList.show()
+        else:
+            self.emptyDownload.show()
+            self.downloadList.hide()
+
 
 
     # thank you claude
