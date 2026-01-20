@@ -1,4 +1,3 @@
-from core.utils.data.state import state
 from core.utils.general.logs import consoleLog
 from core.utils.network.download import run_download_direct
 
