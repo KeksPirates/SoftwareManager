@@ -4,6 +4,7 @@ from core.utils.data.state import state
 from core.utils.general.logs import update_download_completed_by_hash
 from core.utils.general.logs import consoleLog
 from plyer import notification
+import socket
 import time
 import sys
 
@@ -42,6 +43,21 @@ def aria2server():
         stderr=subprocess.DEVNULL,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
     )
+
+    max_checks = 50
+    for check in range(max_checks):
+        try:
+            sock = socket.socket()
+            sock.settimeout(0.1)
+            sock.connect(("localhost", 6800))
+            sock.close()
+            break
+        except(ConnectionRefusedError, socket.timeout):
+            time.sleep(0.1)
+    else:
+        raise RuntimeError("Aria2 Server failed to start")
+
+    consoleLog("Aria2 Server started")
     return aria2server
 
 def dlprogress():
