@@ -89,8 +89,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if platform.system() == "Windows":
             try:
                 import ctypes
-                myappid = 'SoftwareManager.App.1'
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+                appid = 'SoftwareManager'
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appid)
             except Exception as e:
                 consoleLog(f"Could not set app ID: {e}")
 
@@ -327,13 +327,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.emptyResults.hide()
             self.qtablewidget.show()
 
-
     # thank you claude
     def resizeEvent(self, event):
         super().resizeEvent(event)
         table_width = self.qtablewidget.viewport().width()
         self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
-
-
-
-    
