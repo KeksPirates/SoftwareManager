@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             artifact_name: SoftwareManager-dev-${{ github.sha }}-linux
             asset_name: SoftwareManager-dev-${{ github.sha }}-linux
           - os: windows-latest
