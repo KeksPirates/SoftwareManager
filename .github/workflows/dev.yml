@@ -159,7 +159,7 @@ jobs:
   release:
     name: Create Release
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: success()
 
     steps:
@@ -172,7 +172,7 @@ jobs:
         run: |
           mkdir -p release
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
-          cp artifacts/ubuntu-latest-build/SoftwareManager-dev-*-linux release/SoftwareManager-dev-${SHORT_SHA}-linux
+          cp artifacts/ubuntu-22.04-build/SoftwareManager-dev-*-linux release/SoftwareManager-dev-${SHORT_SHA}-linux
           cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows.exe release/SoftwareManager-dev-${SHORT_SHA}-windows.exe
           cp artifacts/macos-latest-build/SoftwareManager-dev-*-macos release/SoftwareManager-dev-${SHORT_SHA}-macos
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
