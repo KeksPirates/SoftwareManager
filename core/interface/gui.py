@@ -210,9 +210,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     elif col == 4:
                         return f"{download.download_speed_string()}"
                     elif col == 5:
-                        pass
+                        return f"{download.completed_length_string()}"
                     elif col == 6:
                         return f"{download.total_length_string()}"
+                    elif col == 7:
+                        return f"{download.eta_string()}"
                 
                 if role == Qt.UserRole and col == 0:
                     return download.is_paused
@@ -223,8 +225,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 download = state.downloads[row]
                 if download.is_paused:
                     download.resume()
+                    consoleLog(f"Resumed download: {download.name}", True)
                 else:
                     download.pause()
+                    consoleLog(f"Paused download: {download.name}", True)
                 idx = self.index(row, 0)
                 self.dataChanged.emit(idx, idx, [Qt.DisplayRole, Qt.UserRole])
 
@@ -265,12 +269,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         def on_pause_resume_clicked(row):
             download_model.toggle_pause_resume(row)
-
-            download = state.downloads[row]
-            if download.is_paused:
-                download.pause()
-            else:
-                download.resume() 
 
         delegate = PauseResumeDelegate(self.downloadList)
         self.downloadList.setItemDelegateForColumn(0, delegate)
