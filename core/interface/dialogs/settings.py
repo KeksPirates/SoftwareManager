@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QCheckBox,
     )
+import platform
 
 
 def settings_dialog(self):
@@ -32,14 +33,16 @@ def settings_dialog(self):
         update_checkbox_layout = QHBoxLayout()
 
         # ignore updates checkbox
-        update_checkbox = QCheckBox()
-        update_checkbox_container.setLayout(update_checkbox_layout)
-        update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
-        update_checkbox_layout.addStretch()
-        update_checkbox.setChecked(state.ignore_updates)
-        update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
-        update_checkbox_layout.addWidget(update_checkbox)
-        dialog.layout().addWidget(update_checkbox_container)
+
+        if platform.system() == "Windows":
+            update_checkbox = QCheckBox()
+            update_checkbox_container.setLayout(update_checkbox_layout)
+            update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
+            update_checkbox_layout.addStretch()
+            update_checkbox.setChecked(state.ignore_updates)
+            update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
+            update_checkbox_layout.addWidget(update_checkbox)
+            dialog.layout().addWidget(update_checkbox_container)
 
         # auto-resume downloads checkbox
 
