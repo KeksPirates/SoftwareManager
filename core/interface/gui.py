@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QStyleOptionButton,
     QStyledItemDelegate,
     QApplication,
-    )
+)
 
 from PySide6.QtGui import QIcon, QAction, QCloseEvent, QImage, QPixmap
 import darkdetect
@@ -223,6 +223,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
             def toggle_pause_resume(self, row):
                 download = state.downloads[row]
+                if download.progress == 100:
+                    if state.download_path is not None and os.path.exists(state.download_path):
+                        if platform.system() == "Windows":
+                            os.startfile(os.path.normpath(state.download_path))
+                        elif platform.system() == "Linux":
+                            subprocess.Popen(["xdg-open", state.download_path])
+                    else:
+                        if platform.system() == "Windows":
+                            os.startfile(os.path.normpath(os.getcwd()))
+                        elif platform.system() == "Linux":
+                            subprocess.Popen(["xdg-open", os.getcwd()])
+                    return
+                    
                 if download.is_paused:
                     download.resume()
                     consoleLog(f"Resumed download: {download.name}", True)
@@ -230,7 +243,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     download.pause()
                     consoleLog(f"Paused download: {download.name}", True)
                 idx = self.index(row, 0)
-                self.dataChanged.emit(idx, idx, [Qt.DisplayRole, Qt.UserRole])
+                self.dataChanged.emit(idx, idx, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
 
         class PauseResumeDelegate(QStyledItemDelegate):
             clicked = Signal(int)
@@ -241,10 +254,16 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     return
 
                 paused = index.data(Qt.UserRole)
+                download = state.downloads[index.row()]
 
                 button = QStyleOptionButton()
                 button.rect = option.rect
-                button.text = "▶︎" if paused else "⏸︎"
+
+                if download.progress == 100:
+                    button.text = "📁"
+                else:
+                    button.text = "▶︎" if paused else "⏸︎"
+
                 button.state = QStyle.State_Enabled
 
                 QApplication.style().drawControl(
