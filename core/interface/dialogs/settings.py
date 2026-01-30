@@ -12,7 +12,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QSpinBox,
     QCheckBox,
-    )
+    QFileDialog,
+)
 import platform
 
 
@@ -114,6 +115,15 @@ def settings_dialog(self):
         download_path.setText(state.download_path)
         dialog.layout().addWidget(download_path_container)
 
+        def browse_download_path():
+            dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
+            if dir_path:
+                download_path.setText(dir_path)
+
+        browse_button = QPushButton("📁")
+        download_path_layout.addWidget(browse_button)
+        browse_button.clicked.connect(browse_download_path)
+
         ##################
         # SPEED LIMITING #
         ##################
@@ -146,6 +156,15 @@ def settings_dialog(self):
         image_path_container.setLayout(image_path_layout)
         image_path.setText(state.image_path)
         dialog.layout().addWidget(image_path_container)
+
+        def browse_image_path():
+            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
+            if file_path:
+                image_path.setText(file_path)
+
+        browse_button = QPushButton("📁")
+        image_path_layout.addWidget(browse_button)
+        browse_button.clicked.connect(browse_image_path)
 
         ###############
         # SAVE/CANCEL #
