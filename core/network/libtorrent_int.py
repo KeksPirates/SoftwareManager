@@ -1,9 +1,13 @@
-import subprocess
+import time
+from core.utils.general.wrappers import run_thread
+import threading
 import libtorrent as lt
 from core.utils.data.state import state
 from core.utils.general.logs import consoleLog
 
 
+global loop_running
+loop_running = False
 
 def init_session():
     if state.dl_session is not None:
@@ -23,10 +27,17 @@ def init_session():
         "active_downloads": 10
     }
 
+    
+
     state.dl_session.apply_settings(settings)
+
+    consoleLog("Initialized Session")
 
 
 def add_download(magnet_uri, dl_path=state.download_path):
+
+    if state.active_downloads is None:
+        state.active_downloads = {}
 
     init_session()
 
@@ -39,5 +50,51 @@ def add_download(magnet_uri, dl_path=state.download_path):
     magnetdl = lt.parse_magnet_uri(magnet_uri)
     magnetdl.save_path = dl_path
 
+    consoleLog(f"Download Path: {dl_path}")
+
     download = state.dl_session.add_torrent(magnetdl)
-    state.active_downloads[magnet_uri] = magnetdl
+    state.active_downloads[magnet_uri] = download
+    consoleLog("added download")
+
+    run_thread(threading.Thread(target=dl_status_loop))
+
+
+
+def dl_status_loop():
+    global loop_running
+
+    if loop_running == True:
+        return
+    
+    loop_running = True
+    completed = []
+
+    if not state.active_downloads:
+        consoleLog("No active downloads")
+        return
+
+    while state.active_downloads:
+        completed.clear()
+
+        for magnet_uri, magnetdl in list(state.active_downloads.items()):
+            status = magnetdl.status()
+            
+            if status.state == lt.torrent_status.seeding:
+                completed.append(magnet_uri)
+                consoleLog(f"Download completed: {status.name}")
+                continue
+        
+        for magnet_uri in completed:
+            magnetdl = state.active_downloads[magnet_uri]
+            state.dl_session.remove_torrent(magnetdl)
+            del state.active_downloads[magnet_uri]
+
+        if not state.active_downloads:
+            loop_running = False
+            break
+
+        time.sleep(1)
+
+
+
+
