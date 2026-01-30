@@ -229,11 +229,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                             os.startfile(os.path.normpath(state.download_path))
                         elif platform.system() == "Linux":
                             subprocess.Popen(["xdg-open", state.download_path])
+                        elif platform.system() == "Darwin":
+                            subprocess.Popen(["open", state.download_path])
                     else:
                         if platform.system() == "Windows":
                             os.startfile(os.path.normpath(os.getcwd()))
                         elif platform.system() == "Linux":
                             subprocess.Popen(["xdg-open", os.getcwd()])
+                        elif platform.system() == "Darwin":
+                            subprocess.Popen(["open", os.getcwd()])
                     return
                     
                 if download.is_paused:
