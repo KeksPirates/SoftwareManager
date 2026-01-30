@@ -26,6 +26,8 @@ class AppState(QObject):
         self.aria2p: Any = None
         self.aria2_threads: int = 4
         self.settings_path: str = None
+        self.dl_session: Any = None
+        self.active_downloads: Any = None
 
     @property
     def image_path(self) -> str:
