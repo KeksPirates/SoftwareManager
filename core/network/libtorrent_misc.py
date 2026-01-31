@@ -1,12 +1,21 @@
-import aria2p
-import subprocess
 from core.utils.data.state import state
 from core.utils.general.logs import update_download_completed_by_hash
 from core.utils.general.logs import consoleLog
 from plyer import notification
-import socket
 import time
-import sys
+
+
+def cleanup_session():
+    if state.dl_session is not None:
+        for magnetdl in state.active_downloads.values():
+            if hasattr(magnetdl, 'pause'):  # Check it's a handle
+                magnetdl.pause()
+        
+        del state.dl_session
+        state.dl_session = None
+        state.active_downloads.clear()
+
+
 
 
 def send_notification(shutdown_event):

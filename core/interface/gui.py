@@ -38,17 +38,18 @@ from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
 from core.utils.network.update_checker import check_for_updates
-from core.utils.general.shutdown import closehelper
 from core.interface.utils.tabhelper import create_tab
 from core.interface.utils.searchhelper import return_pressed
 from core.interface.dialogs.settings import settings_dialog
+from core.network.libtorrent_misc import cleanup_session
+from core.utils.general.shutdown import closehelper
 
 
 def download_update(latest_version):
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
 
-    consoleLog("Downloading update...", True)
+    print("Downloading update...", True)
     response = r.get(url, allow_redirects=True)
     with open(new_filename, "wb") as f:
         f.write(response.content)
@@ -459,7 +460,3 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().resizeEvent(event)
         table_width = self.qtablewidget.viewport().width()
         self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
-
-
-
-    
