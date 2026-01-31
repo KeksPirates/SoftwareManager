@@ -60,31 +60,6 @@ def settings_dialog(self):
         autoresume_layout.addWidget(autoresume_checkbox)
         dialog.layout().addWidget(autoresume_container)
 
-        #####################
-        # DOWNLOAD SETTINGS #
-        #####################
-        thread_box = QSpinBox()
-        thread_box.setMinimum(1)
-        thread_box.setMaximum(16)
-        thread_box.setValue(state.aria2_threads)
-        
-
-        # container for tight space
-        thread_container = QWidget()
-        thread_layout = QHBoxLayout()
-
-        thread_layout.addWidget(QLabel("Threads:"))
-        thread_layout.addWidget(thread_box)
-        thread_container.setLayout(thread_layout)
-        thread_container.setMaximumHeight(80)
-        
-
-        # Dimensions
-        thread_box.setFixedWidth(90)
-        thread_box.setFixedHeight(30)
-
-        dialog.layout().addWidget(thread_container)
-
         ##################
         # SERVER SETTING #
         ##################
@@ -123,6 +98,30 @@ def settings_dialog(self):
         browse_button = QPushButton("📁")
         download_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_download_path)
+
+        ###############
+        # IMAGE PATH #
+        ###############
+
+        image_path_container = QWidget()
+        image_path_layout = QHBoxLayout()
+
+        image_path = QLineEdit()
+        image_path_layout.addWidget(QLabel("Image Path (requires restart):"))
+        image_path_layout.addWidget(image_path)
+        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        image_path_container.setLayout(image_path_layout)
+        image_path.setText(state.image_path)
+        dialog.layout().addWidget(image_path_container)
+
+        def browse_image_path():
+            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
+            if file_path:
+                image_path.setText(file_path)
+
+        browse_button = QPushButton("📁")
+        image_path_layout.addWidget(browse_button)
+        browse_button.clicked.connect(browse_image_path)
 
         ##################
         # SPEED LIMITING #
@@ -191,31 +190,6 @@ def settings_dialog(self):
         max_downloads.setFixedWidth(180)
         max_downloads.setFixedHeight(30)
         dialog.layout().addWidget(max_downloads_container)
-
-
-        ###############
-        # IMAGE PATH #
-        ###############
-
-        image_path_container = QWidget()
-        image_path_layout = QHBoxLayout()
-
-        image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path (requires restart):"))
-        image_path_layout.addWidget(image_path)
-        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        image_path_container.setLayout(image_path_layout)
-        image_path.setText(state.image_path)
-        dialog.layout().addWidget(image_path_container)
-
-        def browse_image_path():
-            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
-            if file_path:
-                image_path.setText(file_path)
-
-        browse_button = QPushButton("📁")
-        image_path_layout.addWidget(browse_button)
-        browse_button.clicked.connect(browse_image_path)
 
         ###############
         # SAVE/CANCEL #
