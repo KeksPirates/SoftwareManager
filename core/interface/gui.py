@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QListWidget,
-    QToolBar,
     QLabel,
     QHBoxLayout,
     QComboBox,
@@ -16,13 +15,10 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTableWidget,
     QTextEdit,
-    QStyle,
-    QStyleOptionButton,
     QStyledItemDelegate,
-    QApplication,
 )
 
-from PySide6.QtGui import QIcon, QAction, QCloseEvent, QImage, QPixmap
+from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap
 import darkdetect
 import threading
 import platform

@@ -8,8 +8,8 @@ from core.utils.general.wrappers import run_thread
 from core.utils.general.loghandler import split_data, check_completed
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 import qdarktheme
-import darkdetect
 import threading
 import signal
 import argparse
@@ -22,11 +22,13 @@ args = parser.parse_args()
 
 def run_gui():
     app = QtWidgets.QApplication([])
-    if darkdetect.isDark:
-        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-    else:
-        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
     widget = MainWindow()
+    if state.window_transparency is True:
+        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
+        widget.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+    else:
+        qdarktheme.setup_theme("auto")
 
     from core.utils.general.logs import set_main_window
     set_main_window(widget)

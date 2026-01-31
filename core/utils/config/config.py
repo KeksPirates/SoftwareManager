@@ -6,8 +6,19 @@ from core.utils.data.state import state
 def create_config():
     config = configparser.ConfigParser()
 
-    config["General"] = {"debug": True, "api_url": f"{state.api_url}", "download_path": f"{state.download_path}", f"download_speed_limit": f"{state.down_speed_limit}", f"upload_speed_limit": f"{state.up_speed_limit}", 
-                         "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}", "autoresume": f"{state.autoresume}", "max_connections": f"{state.max_connections}", "max_downloads": f"{state.max_downloads}"}
+    config["General"] = {
+        "debug": True,
+        "api_url": f"{state.api_url}",
+        "download_path": f"{state.download_path}",
+        "download_speed_limit": f"{state.down_speed_limit}",
+        "upload_speed_limit": f"{state.up_speed_limit}", 
+        "ignore_updates": f"{state.ignore_updates}",
+        "image_path": f"{state.image_path}",
+        "autoresume": f"{state.autoresume}",
+        "max_connections": f"{state.max_connections}",
+        "max_downloads": f"{state.max_downloads}",
+        "window_transparency": f"{state.window_transparency}",
+    }
 
     if platform.system() == "Windows":
         config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
@@ -48,5 +59,6 @@ def read_config():
     state.autoresume = config.getboolean("General", "autoresume", fallback=state.autoresume)
     state.max_connections = config.getint("General", "max_connections", fallback=state.max_connections)
     state.max_downloads = config.getint("General", "max_downloads", fallback=state.max_downloads)
+    state.window_transparency = config.getboolean("General", "window_transparency", fallback=state.window_transparency)
 
     create_config()

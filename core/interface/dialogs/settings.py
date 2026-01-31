@@ -60,6 +60,21 @@ def settings_dialog(self):
         autoresume_layout.addWidget(autoresume_checkbox)
         dialog.layout().addWidget(autoresume_container)
 
+
+        # transparent window checkbox
+        transparent_window_container = QWidget()
+        transparent_window_layout = QHBoxLayout()
+
+        transparent_window_checkbox = QCheckBox()
+        transparent_window_container.setLayout(transparent_window_layout)
+        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart): "))
+
+        transparent_window_layout.addStretch()
+        transparent_window_checkbox.setChecked(state.window_transparency)
+        transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
+        transparent_window_layout.addWidget(transparent_window_checkbox)
+        dialog.layout().addWidget(transparent_window_container)
+
         ##################
         # SERVER SETTING #
         ##################
