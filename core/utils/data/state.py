@@ -11,7 +11,6 @@ class AppState(QObject):
         self.post_titles: List[str] = []
         self.post_urls: List[str] = []
         self.post_author: List[str] = []
-        self.downloads: List[str] = []
         self.version: str = "dev"
         self._image_path: str = ""
         self.ignore_updates: bool = False
@@ -27,7 +26,7 @@ class AppState(QObject):
         self.aria2_threads: int = 4
         self.settings_path: str = None
         self.dl_session: Any = None
-        self.active_downloads: Any = None
+        self.active_downloads: List[str] = {}
 
     @property
     def image_path(self) -> str:

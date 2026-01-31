@@ -29,6 +29,7 @@ import platform
 import requests as r
 import os
 import subprocess
+import libtorrent as lt
 import time
 import sys
 import json
@@ -183,7 +184,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 self.headers = ["Action", "Name", "Status", "Progress", "Speed", "Size", "Total Size"]
 
             def rowCount(self, parent=QModelIndex()):
-                return len(state.downloads)
+                return len(state.active_downloads)
             
             def columnCount(self, parent=QModelIndex()):
                 return len(self.headers)
@@ -194,36 +195,79 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return None
 
             def data(self, index, role=Qt.DisplayRole):
-                col = index.column()
-                download = state.downloads[index.row()]
                 if role == Qt.DisplayRole:
                     col = index.column()
-
+                    
+                    magnet_link = list(state.active_downloads.keys())[index.row()]
+                    magnetdl = state.active_downloads[magnet_link]
+                    
+                    status = magnetdl.status()
+                    
                     if col == 0:
-                        return "▶︎" if download.is_paused else "⏸︎"
+                        is_paused = magnetdl.status().paused
+                        return "▶︎" if is_paused else "⏸︎"
                     elif col == 1:
-                        return download.name
+                        return status.name if status.has_metadata else "Fetching metadata..."
                     elif col == 2:
-                        return getattr(download, 'status', 'Downloading')
+                        if status.state == lt.torrent_status.downloading:
+                            return "Downloading"
+                        elif status.state == lt.torrent_status.seeding:
+                            return "Seeding"
+                        elif status.paused:
+                            return "Paused"
+                        else:
+                            return "Queued"
                     elif col == 3:
-                        return f"{int(download.progress)}%"
+                        return f"{status.progress * 100:.1f}%"
                     elif col == 4:
-                        return f"{download.download_speed_string()}"
+                        speed_kbs = status.download_rate / 1024
+                        if speed_kbs > 1024:
+                            return f"{speed_kbs / 1024:.1f} MB/s"
+                        else:
+                            return f"{speed_kbs:.1f} kB/s"
                     elif col == 5:
-                        return f"{download.completed_length_string()}"
+                        downloaded_mb = status.total_wanted_done / (1024 * 1024)
+                        if downloaded_mb > 1024:
+                            return f"{downloaded_mb / 1024:.2f} GB"
+                        else:
+                            return f"{downloaded_mb:.1f} MB"
                     elif col == 6:
-                        return f"{download.total_length_string()}"
+                        total_mb = status.total_wanted / (1024 * 1024)
+                        if total_mb > 1024:
+                            return f"{total_mb / 1024:.2f} GB"
+                        else:
+                            return f"{total_mb:.1f} MB"
                     elif col == 7:
-                        return f"{download.eta_string()}"
+                        if status.download_rate > 0:
+                            bytes_left = status.total_wanted - status.total_wanted_done
+                            eta_seconds = bytes_left / status.download_rate
+                            
+                            if eta_seconds < 60:
+                                return f"{int(eta_seconds)}s"
+                            elif eta_seconds < 3600:
+                                minutes = int(eta_seconds / 60)
+                                seconds = int(eta_seconds % 60)
+                                return f"{minutes}m {seconds}s"
+                            else:
+                                hours = int(eta_seconds / 3600)
+                                minutes = int((eta_seconds % 3600) / 60)
+                                return f"{hours}h {minutes}m"
+                        else:
+                            return "∞" if status.paused else "Stalled"
                 
-                if role == Qt.UserRole and col == 0:
-                    return download.is_paused
-
+                if role == Qt.UserRole and index.column() == 0:
+                    magnet_link = list(state.active_downloads.keys())[index.row()]
+                    magnetdl = state.active_downloads[magnet_link]
+                    return magnetdl.status().paused
+                
                 return None
 
             def toggle_pause_resume(self, row):
-                download = state.downloads[row]
-                if download.progress == 100:
+                magnet_link = list(state.active_downloads.keys())[row]
+                magnetdl = state.active_downloads[magnet_link]
+                status = magnetdl.status()
+                
+                if status.state == lt.torrent_status.seeding:
                     if state.download_path is not None and os.path.exists(state.download_path):
                         if platform.system() == "Windows":
                             os.startfile(os.path.normpath(state.download_path))
@@ -231,21 +275,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                             subprocess.Popen(["xdg-open", state.download_path])
                         elif platform.system() == "Darwin":
                             subprocess.Popen(["open", state.download_path])
-                    else:
-                        if platform.system() == "Windows":
-                            os.startfile(os.path.normpath(os.getcwd()))
-                        elif platform.system() == "Linux":
-                            subprocess.Popen(["xdg-open", os.getcwd()])
-                        elif platform.system() == "Darwin":
-                            subprocess.Popen(["open", os.getcwd()])
                     return
-                    
-                if download.is_paused:
-                    download.resume()
-                    consoleLog(f"Resumed download: {download.name}", True)
+                
+                if status.paused:
+                    magnetdl.resume()
+                    consoleLog(f"Resumed download: {status.name}", True)
                 else:
-                    download.pause()
-                    consoleLog(f"Paused download: {download.name}", True)
+                    magnetdl.pause()
+                    consoleLog(f"Paused download: {status.name}", True)
+                
                 idx = self.index(row, 0)
                 self.dataChanged.emit(idx, idx, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
 
@@ -258,12 +296,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     return
 
                 paused = index.data(Qt.UserRole)
-                download = state.downloads[index.row()]
+                
+                magnet_link = list(state.active_downloads.keys())[index.row()]
+                magnetdl = state.active_downloads[magnet_link]
+                status = magnetdl.status()
 
                 button = QStyleOptionButton()
                 button.rect = option.rect
 
-                if download.progress == 100:
+                if status.state == lt.torrent_status.seeding:
                     button.text = "📁"
                 else:
                     button.text = "▶︎" if paused else "⏸︎"
@@ -415,7 +456,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.emptyResults.hide()
 
     def show_empty_downloads(self):
-        if len(state.downloads) > 0:
+        if len(state.active_downloads) > 0:
             self.emptyDownload.hide()
             self.downloadList.show()
         else:

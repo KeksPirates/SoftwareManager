@@ -45,16 +45,13 @@ def add_download(magnet_uri, dl_path=state.download_path):
         consoleLog("Skipping, download already running...")
         return
 
-    consoleLog(f"Adding {magnet_uri} to downloads...")
 
     magnetdl = lt.parse_magnet_uri(magnet_uri)
     magnetdl.save_path = dl_path
 
-    consoleLog(f"Download Path: {dl_path}")
-
     download = state.dl_session.add_torrent(magnetdl)
     state.active_downloads[magnet_uri] = download
-    consoleLog("added download")
+    consoleLog(f"Added {magnet_uri} to downloads")
 
     run_thread(threading.Thread(target=dl_status_loop))
 
@@ -62,38 +59,33 @@ def add_download(magnet_uri, dl_path=state.download_path):
 
 def dl_status_loop():
     global loop_running
-
     if loop_running == True:
         return
     
     loop_running = True
-    completed = []
-
+    completed_set = set()
+    
     if not state.active_downloads:
         consoleLog("No active downloads")
+        loop_running = False
         return
-
+    
     while state.active_downloads:
-        completed.clear()
-
         for magnet_uri, magnetdl in list(state.active_downloads.items()):
             status = magnetdl.status()
             
-            if status.state == lt.torrent_status.seeding:
-                completed.append(magnet_uri)
+            if status.state == lt.torrent_status.seeding and magnet_uri not in completed_set:
                 consoleLog(f"Download completed: {status.name}")
-                continue
+                
+                completed_set.add(magnet_uri)
         
-        for magnet_uri in completed:
-            magnetdl = state.active_downloads[magnet_uri]
-            state.dl_session.remove_torrent(magnetdl)
-            del state.active_downloads[magnet_uri]
-
         if not state.active_downloads:
             loop_running = False
             break
-
+        
         time.sleep(1)
+    
+    loop_running = False
 
 
 
