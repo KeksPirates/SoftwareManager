@@ -290,30 +290,35 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         class PauseResumeDelegate(QStyledItemDelegate):
             clicked = Signal(int)
 
-            def paint(self, painter, option, index):
-                if index.column() != 0:
-                    super().paint(painter, option, index)
-                    return
+            def setEditorData(self, editor, index):
+                download = state.downloads[index.row()]
+                button = editor.findChild(QtWidgets.QPushButton)
 
-                paused = index.data(Qt.UserRole)
-                
-                magnet_link = list(state.active_downloads.keys())[index.row()]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
+                if button:
+                    if download.progress == 100:
+                        button.setText("📁")
+                    else:
+                        button.setText("▶︎" if download.is_paused else "⏸︎")
 
-                button = QStyleOptionButton()
-                button.rect = option.rect
 
-                if status.state == lt.torrent_status.seeding:
-                    button.text = "📁"
+            def createEditor(self, parent, option, index):
+                download = state.downloads[index.row()]
+
+                widget = QWidget(parent)
+                widget.setStyleSheet("border: none;")
+                layout = QHBoxLayout(widget)
+                layout.setContentsMargins(0, 0, 0, 0)
+                if download.progress == 100:
+                    btnPause = QtWidgets.QPushButton("📁")
                 else:
-                    button.text = "▶︎" if paused else "⏸︎"
-
-                button.state = QStyle.State_Enabled
-
-                QApplication.style().drawControl(
-                    QStyle.CE_PushButton, button, painter
-                )
+                    btnPause = QtWidgets.QPushButton("▶︎" if download.is_paused else "⏸︎")
+                btnPause.setFixedSize(40, 30)
+                btnPause.clicked.connect(lambda: self.clicked.emit(index.row()))
+                layout.addStretch()
+                layout.addWidget(btnPause)
+                layout.addStretch()
+                widget.setLayout(layout)
+                return widget
 
             def editorEvent(self, event, model, option, index):
                 if index.column() == 0 and event.type() == QEvent.Type.MouseButtonPress:
@@ -401,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         containerLayout.addWidget(self.consoleLog)
 
         self.download_timer = QTimer()
-        self.download_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.download_list_update)))
+        self.download_timer.timeout.connect(self.download_list_update)
         self.download_timer.start(500)
 
         self.active_timer = QTimer()
@@ -430,6 +435,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if self.download_model:
             self.download_model.layoutAboutToBeChanged.emit()
             self.download_model.layoutChanged.emit()
+            for row in range(self.download_model.rowCount()):
+                idx = self.download_model.index(row, 0)
+                self.downloadList.closePersistentEditor(idx)
+                self.downloadList.openPersistentEditor(idx)
         
 
     def closeEvent(self, event: QCloseEvent):
