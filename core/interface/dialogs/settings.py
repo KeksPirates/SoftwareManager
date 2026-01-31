@@ -67,7 +67,7 @@ def settings_dialog(self):
 
         transparent_window_checkbox = QCheckBox()
         transparent_window_container.setLayout(transparent_window_layout)
-        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart): "))
+        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart) (Linux/MacOS only): "))
 
         transparent_window_layout.addStretch()
         transparent_window_checkbox.setChecked(state.window_transparency)
