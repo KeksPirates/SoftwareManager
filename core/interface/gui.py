@@ -393,29 +393,29 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         # temporarily disabled
         # state.image_changed.connect(self.update_image_overlay)
 
-        containerLayout.addWidget(self.tabs)
-
-        containerLayout.setAlignment(Qt.AlignmentFlag.AlignBottom)
-        toolbar = QToolBar("Main Toolbar")
-        self.addToolBar(toolbar)
-        toolbar.setLayoutDirection(Qt.RightToLeft)
-
         self.tracker_list = QComboBox()
         self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
+        self.tracker_list.setFixedSize(90, 30)
         self.tracker_list.activated.connect(self.set_tracker)
 
+        topLayout = QHBoxLayout()
+        
         if darkdetect.isDark():
-            settings_action = QAction(QIcon(get_asset_path("settings_white.png")), "Settings", self)
+            settings_button = QtWidgets.QPushButton(QIcon(get_asset_path("settings_white.png")), "")
         else:
-            settings_action = QAction(QIcon(get_asset_path("settings_black.png")), "Settings", self)
+            settings_button = QtWidgets.QPushButton(QIcon(get_asset_path("settings_black.png")), "")
+        
+        settings_button.clicked.connect(lambda: settings_dialog(self))
+        settings_button.setFixedSize(32, 32)
+        settings_button.setToolTip("Settings")
+        
+        topLayout.addWidget(self.tracker_list)
+        topLayout.addStretch()
+        topLayout.addWidget(settings_button)
+        
+        containerLayout.addLayout(topLayout)
+        containerLayout.addWidget(self.tabs)
 
-        settings_action.triggered.connect(lambda: settings_dialog(self))
-        toolbar.addAction(settings_action)
-        toolbar.addWidget(self.tracker_list)
-
-        toolbar.setMovable(False)
-
-        # self.progressbar.setValue(0)
         self.consoleLog.setReadOnly(True)
         self.consoleLog.setFixedHeight(150)
         containerLayout.addWidget(self.consoleLog)

@@ -12,6 +12,6 @@ def create_tab(title, searchbar, software_list, tabs, dlbutton, layout2):
         layout.addWidget(software_list)
     if dlbutton:
         layout.addWidget(dlbutton)
-    tab.setLayout(layout) 
+    tab.setLayout(layout)
     tabs.addTab(tab, title) 
     return tab
