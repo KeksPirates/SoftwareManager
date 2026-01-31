@@ -138,6 +138,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.returnPressed.connect(lambda: run_thread(threading.Thread(target=return_pressed, args=(self,)))) # Triggers data function thread on enter
 
         self.dlbutton = QtWidgets.QPushButton("Download")
+        self.dlbutton.setCursor(Qt.PointingHandCursor)
         self.libraryList = QListWidget()
 
         self.emptyResults = QLabel("No Results")
@@ -364,13 +365,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Tabs
         self.tabs = QTabWidget()
+        self.tabs = QTabWidget()
         self.tabs.setStyleSheet("""
-        QTabBar::tab {
-            font-size: 11px;
-            padding: 2px 8px;
-            height: 25px;
-        }
+            QTabBar::tab {
+                font-size: 11px;
+                padding: 2px 8px;
+                height: 25px;
+            }
+            QTabWidget::pane {
+                margin-top: -20px;
+            }
         """)
+
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
         self.horizontal_layout.addWidget(self.qtablewidget)
@@ -404,6 +410,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.tracker_list = QComboBox()
         self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
+        self.tracker_list.setCursor(Qt.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)
 
@@ -415,8 +422,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         else:
             self.settings_btn.setIcon(QIcon(get_asset_path("settings_black.png")))
         self.settings_btn.setToolTip("Settings")
+        self.settings_btn.setCursor(Qt.PointingHandCursor)
         self.settings_btn.clicked.connect(lambda: settings_dialog(self))
-
+        
 
         
         self.corner_layout.addWidget(self.settings_btn)
@@ -428,6 +436,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.tab_layout = QVBoxLayout()
         self.tab_layout.setContentsMargins(0, 0, 0, 0)
         self.tab_layout.setSpacing(0)
+        
 
         self.tab_bar_layout = QHBoxLayout()
         self.tab_bar_layout.setContentsMargins(0, 0, 0, 0)
