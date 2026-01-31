@@ -197,6 +197,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def data(self, index, role=Qt.DisplayRole):
                 if role == Qt.DisplayRole:
                     col = index.column()
+
+                    if index.row() >= len(state.active_downloads) or index.row() < 0:
+                        return None
                     
                     magnet_link = list(state.active_downloads.keys())[index.row()]
                     magnetdl = state.active_downloads[magnet_link]
@@ -263,6 +266,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return None
 
             def toggle_pause_resume(self, row):
+
+                if row >= len(state.active_downloads) or row < 0:
+                    return
+                    
                 magnet_link = list(state.active_downloads.keys())[row]
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
@@ -291,10 +298,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             clicked = Signal(int)
 
             def setEditorData(self, editor, index):
-                download = state.downloads[index.row()]
                 button = editor.findChild(QtWidgets.QPushButton)
 
-                paused = index.data(Qt.UserRole)
+
                 
                 magnet_link = list(state.active_downloads.keys())[index.row()]
                 magnetdl = state.active_downloads[magnet_link]
@@ -309,7 +315,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
 
             def createEditor(self, parent, option, index):
-                download = state.downloads[index.row()]
+                magnet_link = list(state.active_downloads.keys())[index.row()]
+                magnetdl = state.active_downloads[magnet_link]
+                status = magnetdl.status()
 
                 widget = QWidget(parent)
                 widget.setStyleSheet("border: none;")
