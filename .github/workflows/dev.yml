@@ -82,13 +82,6 @@ jobs:
           }
           EOF
 
-      - name: Download aria2c (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          mkdir -p deps
-          C:\msys64\usr\bin\wget.exe https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0-win-64bit-build1.zip
-          unzip -j aria2-1.37.0-win-64bit-build1.zip aria2-1.37.0-win-64bit-build1/aria2c.exe -d deps/
-
       - name: Build executable with PyInstaller (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -97,7 +90,6 @@ jobs:
             --add-data "build_info.json;." \
             --add-data "build_info.json;core" \
             --add-data "build_info.json;core/interface" \
-            --add-data "deps/aria2c.exe;." \
             --add-data "core/interface/assets;core/interface/assets" \
             --icon "core/interface/assets/logo.png" \
             --exclude-module PyQt6 \
