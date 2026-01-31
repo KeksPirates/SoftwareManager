@@ -294,11 +294,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 download = state.downloads[index.row()]
                 button = editor.findChild(QtWidgets.QPushButton)
 
+                paused = index.data(Qt.UserRole)
+                
+                magnet_link = list(state.active_downloads.keys())[index.row()]
+                magnetdl = state.active_downloads[magnet_link]
+                status = magnetdl.status()
+
                 if button:
-                    if download.progress == 100:
+                    if status.state == lt.torrent_status.seeding:
                         button.setText("📁")
                     else:
-                        button.setText("▶︎" if download.is_paused else "⏸︎")
+                        button.setText("▶︎" if status.paused else "⏸︎")
+
 
 
             def createEditor(self, parent, option, index):
@@ -308,10 +315,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 widget.setStyleSheet("border: none;")
                 layout = QHBoxLayout(widget)
                 layout.setContentsMargins(0, 0, 0, 0)
-                if download.progress == 100:
+                if status.state == lt.torrent_status.seeding:
                     btnPause = QtWidgets.QPushButton("📁")
                 else:
-                    btnPause = QtWidgets.QPushButton("▶︎" if download.is_paused else "⏸︎")
+                    btnPause = QtWidgets.QPushButton("▶︎" if status.paused else "⏸︎")
                 btnPause.setFixedSize(40, 30)
                 btnPause.clicked.connect(lambda: self.clicked.emit(index.row()))
                 layout.addStretch()
