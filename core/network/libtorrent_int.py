@@ -89,6 +89,9 @@ def dl_status_loop():
 
 def update_settings():
 
+    if state.dl_session is None:
+        return
+
     settings = {
         "upload_rate_limit": state.up_speed_limit,
         "download_rate_limit": state.down_speed_limit,
