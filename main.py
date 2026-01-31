@@ -1,8 +1,6 @@
 from core.interface.gui import MainWindow
 from core.utils.data.state import state
 from core.utils.general.logs import consoleLog
-from core.network.aria2_integration import aria2server
-from core.network.aria2_integration import send_notification, update_log
 from core.utils.general.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
@@ -35,10 +33,6 @@ def run_gui():
     widget.show()
     sys.exit(app.exec())
 
-def run_aria2server():
-    aria2process = aria2server()
-    return aria2process
-
 def keyboardinterrupthandler(signum, frame):
     closehelper()
 
@@ -48,12 +42,10 @@ if __name__ == "__main__":
     count, downloads = split_data(logs)
     if args.debug:
         state.debug = args.debug # override of read_config
-    consoleLog("Starting Aria2 Server")
-    state.aria2process = run_aria2server()
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
-    run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
+    # run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
     consoleLog("Started send_notification thread")
-    run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
+    # run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
     consoleLog("Started update_log thread")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started check_completed thread")

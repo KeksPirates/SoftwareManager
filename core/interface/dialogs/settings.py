@@ -60,9 +60,9 @@ def settings_dialog(self):
         autoresume_layout.addWidget(autoresume_checkbox)
         dialog.layout().addWidget(autoresume_container)
 
-        ##################
-        # THREAD SETTING #
-        ##################
+        #####################
+        # DOWNLOAD SETTINGS #
+        #####################
         thread_box = QSpinBox()
         thread_box.setMinimum(1)
         thread_box.setMaximum(16)
@@ -128,19 +128,33 @@ def settings_dialog(self):
         # SPEED LIMITING #
         ##################
 
-        speed_limit_container = QWidget()
-        speed_limit_layout = QHBoxLayout()
+        down_speed_limit_container = QWidget()
+        down_speed_limit_layout = QHBoxLayout()
 
-        speed_limit_layout.addWidget(QLabel("Max Download Speed (KiB, 0 for unlimited): "))
-        speed_limit = QSpinBox()
-        speed_limit.setMinimum(0)
-        speed_limit.setMaximum(10000000)
-        speed_limit.setValue(state.speed_limit)
-        speed_limit_container.setLayout(speed_limit_layout)
-        speed_limit_layout.addWidget(speed_limit)
-        speed_limit.setFixedWidth(180)
-        speed_limit.setFixedHeight(30)
-        dialog.layout().addWidget(speed_limit_container)
+        down_speed_limit_layout.addWidget(QLabel("Max Download Speed (KiB, 0 for unlimited): "))
+        down_speed_limit = QSpinBox()
+        down_speed_limit.setMinimum(0)
+        down_speed_limit.setMaximum(10000000)
+        down_speed_limit.setValue(state.down_speed_limit)
+        down_speed_limit_container.setLayout(down_speed_limit_layout)
+        down_speed_limit_layout.addWidget(down_speed_limit)
+        down_speed_limit.setFixedWidth(180)
+        down_speed_limit.setFixedHeight(30)
+        dialog.layout().addWidget(down_speed_limit_container)
+        
+        up_speed_limit_container = QWidget()
+        up_speed_limit_layout = QHBoxLayout()
+
+        up_speed_limit_layout.addWidget(QLabel("Max Upload Speed (KiB, 0 for unlimited): "))
+        up_speed_limit = QSpinBox()
+        up_speed_limit.setMinimum(0)
+        up_speed_limit.setMaximum(10000000)
+        up_speed_limit.setValue(state.up_speed_limit)
+        up_speed_limit_container.setLayout(up_speed_limit_layout)
+        up_speed_limit_layout.addWidget(up_speed_limit)
+        up_speed_limit.setFixedWidth(180)
+        up_speed_limit.setFixedHeight(30)
+        dialog.layout().addWidget(up_speed_limit_container)
 
         ###############
         # IMAGE PATH #
@@ -174,7 +188,7 @@ def settings_dialog(self):
 
         save_btn = QPushButton("Save")
         cancel_btn = QPushButton("Cancel")
-        save_btn.clicked.connect(lambda: save_settings(thread_box.value(), close_settings, api_url.text(), download_path.text(), speed_limit.value(), image_path.text()))
+        save_btn.clicked.connect(lambda: save_settings(thread_box.value(), close_settings, api_url.text(), download_path.text(), down_speed_limit.value(), up_speed_limit.value(), image_path.text()))
 
         cancel_btn.clicked.connect(dialog.reject)
         layout.addWidget(cancel_btn)

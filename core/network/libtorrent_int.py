@@ -16,15 +16,15 @@ def init_session():
     state.dl_session = lt.session()
 
     settings = {
-        "upload_rate_limit": 0,
-        "download_rate_limit": 0,
+        "upload_rate_limit": state.up_speed_limit,
+        "download_rate_limit": state.down_speed_limit,
         "enable_dht": True,
         "enable_lsd": True,
         "enable_upnp": True,
         "enable_natpmp": True,
         "dht_bootstrap_nodes": "router.bittorrent.com:6881,dht.transmissionbt.com:6881",
-        "connections_limit": 200,
-        "active_downloads": 10
+        "connections_limit": state.max_connections,
+        "active_downloads": state.max_downloads
     }
 
     
@@ -87,6 +87,14 @@ def dl_status_loop():
     
     loop_running = False
 
+def update_settings():
 
+    settings = {
+        "upload_rate_limit": state.up_speed_limit,
+        "download_rate_limit": state.down_speed_limit,
+        "connections_limit": state.max_connections,
+        "active_downloads": state.max_downloads
+    }
 
-
+    state.dl_session.apply_settings(settings)
+    consoleLog("Updated Settings")

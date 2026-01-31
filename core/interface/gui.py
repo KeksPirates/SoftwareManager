@@ -42,7 +42,6 @@ from core.utils.general.shutdown import closehelper
 from core.interface.utils.tabhelper import create_tab
 from core.interface.utils.searchhelper import return_pressed
 from core.interface.dialogs.settings import settings_dialog
-from core.network.aria2_integration import dlprogress
 
 
 def download_update(latest_version):
@@ -400,10 +399,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.consoleLog.setFixedHeight(150)
         containerLayout.addWidget(self.consoleLog)
 
-        self.progress_timer = QTimer()
-        self.progress_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.update_progress)))
-        self.progress_timer.start(1000)
-
         self.download_timer = QTimer()
         self.download_timer.timeout.connect(lambda: run_thread(threading.Thread(target=self.download_list_update)))
         self.download_timer.start(500)
@@ -442,10 +437,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
     def set_tracker(self, _):
         state.tracker = self.tracker_list.currentText()
-
-    def update_progress(self):
-        progress = dlprogress()
-        self.progressbar.setValue(progress)
 
     def show_empty_results(self, show: bool):
         if show:
