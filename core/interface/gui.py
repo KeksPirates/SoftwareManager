@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent
+from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
 from PySide6.QtWidgets import (
     QLineEdit,
     QTableView,
@@ -161,6 +161,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.qtablewidget.verticalHeader().setVisible(False)
         self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
 
+        
+
         header = self.qtablewidget.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.Stretch) 
         header.setSectionResizeMode(1, QHeaderView.Fixed)   
@@ -299,8 +301,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
-
-
                 
                 magnet_link = list(state.active_downloads.keys())[index.row()]
                 magnetdl = state.active_downloads[magnet_link]
@@ -311,8 +311,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         button.setText("📁")
                     else:
                         button.setText("▶︎" if status.paused else "⏸︎")
-
-
 
             def createEditor(self, parent, option, index):
                 magnet_link = list(state.active_downloads.keys())[index.row()]
@@ -366,7 +364,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Tabs
         self.tabs = QTabWidget()
-
+        self.tabs.setStyleSheet("""
+        QTabBar::tab {
+            font-size: 11px;
+            padding: 2px 8px;
+            height: 25px;
+        }
+        """)
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
         self.horizontal_layout.addWidget(self.qtablewidget)
@@ -389,32 +393,59 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             y = self.height() - self.overlay_label.height() - offset_y
             self.overlay_label.move(x, y)
         
-
         # temporarily disabled
         # state.image_changed.connect(self.update_image_overlay)
 
+        
+        self.corner_widget = QWidget()
+        self.corner_layout = QHBoxLayout(self.corner_widget)
+        self.corner_layout.setContentsMargins(0, 0, 0, 0)
+
+
         self.tracker_list = QComboBox()
         self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
-        self.tracker_list.setFixedSize(90, 30)
         self.tracker_list.activated.connect(self.set_tracker)
+        self.corner_layout.addWidget(self.tracker_list)
 
-        topLayout = QHBoxLayout()
-        
+        self.settings_btn = QtWidgets.QToolButton()
+        self.settings_btn.setIconSize(QSize(21, 21))
+        self.settings_btn.setStyleSheet("background: transparent;")
         if darkdetect.isDark():
-            settings_button = QtWidgets.QPushButton(QIcon(get_asset_path("settings_white.png")), "")
+            self.settings_btn.setIcon(QIcon(get_asset_path("settings_white.png")))
         else:
-            settings_button = QtWidgets.QPushButton(QIcon(get_asset_path("settings_black.png")), "")
+            self.settings_btn.setIcon(QIcon(get_asset_path("settings_black.png")))
+        self.settings_btn.setToolTip("Settings")
+        self.settings_btn.clicked.connect(lambda: settings_dialog(self))
+
+
         
-        settings_button.clicked.connect(lambda: settings_dialog(self))
-        settings_button.setFixedSize(32, 32)
-        settings_button.setToolTip("Settings")
+        self.corner_layout.addWidget(self.settings_btn)
+
         
-        topLayout.addWidget(self.tracker_list)
-        topLayout.addStretch()
-        topLayout.addWidget(settings_button)
+
+
+        self.tab_wrapper = QWidget()
+        self.tab_layout = QVBoxLayout()
+        self.tab_layout.setContentsMargins(0, 0, 0, 0)
+        self.tab_layout.setSpacing(0)
+
+        self.tab_bar_layout = QHBoxLayout()
+        self.tab_bar_layout.setContentsMargins(0, 0, 0, 0)
+        self.tab_bar_layout.setSpacing(0)
+
+        self.tab_bar_layout.addWidget(self.tabs.tabBar(), stretch=0)
+        self.tab_bar_layout.addStretch()
+        self.tab_bar_layout.addWidget(self.corner_widget, stretch=0)
+
+        self.tab_layout.addLayout(self.tab_bar_layout)
+        self.tab_layout.addWidget(self.tabs)
         
-        containerLayout.addLayout(topLayout)
-        containerLayout.addWidget(self.tabs)
+
+        self.tab_wrapper.setLayout(self.tab_layout)
+        
+
+        containerLayout.addWidget(self.tab_wrapper)
+        containerLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.consoleLog.setReadOnly(True)
         self.consoleLog.setFixedHeight(150)
