@@ -2,9 +2,7 @@ from core.utils.data.state import state
 from .config import create_config
 
 
-def save_settings(thread_count=None, close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None):
-    if thread_count is not None:
-        state.aria2_threads = thread_count
+def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None):
     if apiurl is not None:
         state.api_url = apiurl
     if download_path is not None:
@@ -17,7 +15,10 @@ def save_settings(thread_count=None, close=lambda: None, apiurl=None, download_p
         state.image_path = image_path
     if autoresume is not None:
         state.autoresume = autoresume
-    
+    if max_connections is not None:
+        state.max_connections = max_connections
+    if max_downloads is not None:
+        state.max_downloads = max_downloads
     
     create_config()
     close()

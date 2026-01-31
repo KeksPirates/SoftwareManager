@@ -22,7 +22,7 @@ def settings_dialog(self):
         consoleLog("Settings dialog opened")
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
-        dialog.setFixedSize(800, 400)
+        dialog.setFixedSize(800, 550)
 
         dialog.setLayout(QVBoxLayout())
         dialog.layout().addWidget(QLabel("Settings"))
@@ -156,6 +156,43 @@ def settings_dialog(self):
         up_speed_limit.setFixedHeight(30)
         dialog.layout().addWidget(up_speed_limit_container)
 
+        ######################
+        # CONNECTION CONFIGS #
+        ######################
+
+        max_connections_container = QWidget()
+        max_connections_layout = QHBoxLayout()
+
+        max_connections_layout.addWidget(QLabel("Max Connections: "))
+        max_connections = QSpinBox()
+        max_connections.setMinimum(0)
+        max_connections.setMaximum(10000000)
+        max_connections.setValue(state.max_connections)
+        max_connections_container.setLayout(max_connections_layout)
+        max_connections_layout.addWidget(max_connections)
+        max_connections.setFixedWidth(180)
+        max_connections.setFixedHeight(30)
+        dialog.layout().addWidget(max_connections_container)
+
+        ####################
+        # DOWNLOAD CONFIGS #
+        ####################
+
+        max_downloads_container = QWidget()
+        max_downloads_layout = QHBoxLayout()
+
+        max_downloads_layout.addWidget(QLabel("Max Downloads: "))
+        max_downloads = QSpinBox()
+        max_downloads.setMinimum(0)
+        max_downloads.setMaximum(10000000)
+        max_downloads.setValue(state.max_downloads)
+        max_downloads_container.setLayout(max_downloads_layout)
+        max_downloads_layout.addWidget(max_downloads)
+        max_downloads.setFixedWidth(180)
+        max_downloads.setFixedHeight(30)
+        dialog.layout().addWidget(max_downloads_container)
+
+
         ###############
         # IMAGE PATH #
         ###############
@@ -188,7 +225,7 @@ def settings_dialog(self):
 
         save_btn = QPushButton("Save")
         cancel_btn = QPushButton("Cancel")
-        save_btn.clicked.connect(lambda: save_settings(thread_box.value(), close_settings, api_url.text(), download_path.text(), down_speed_limit.value(), up_speed_limit.value(), image_path.text()))
+        save_btn.clicked.connect(lambda: save_settings(close_settings, api_url.text(), download_path.text(), down_speed_limit.value(), up_speed_limit.value(), image_path.text(), None, max_connections.value(), max_downloads.value()))
 
         cancel_btn.clicked.connect(dialog.reject)
         layout.addWidget(cancel_btn)

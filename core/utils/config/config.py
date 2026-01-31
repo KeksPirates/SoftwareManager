@@ -6,8 +6,8 @@ from core.utils.data.state import state
 def create_config():
     config = configparser.ConfigParser()
 
-    config["General"] = {"debug": True, "api_url": f"{state.api_url}", "aria2_threads": f"{state.aria2_threads}", "download_path": f"{state.download_path}", f"download_speed_limit": f"{state.down_speed_limit}", f"upload_speed_limit": f"{state.up_speed_limit}", 
-                         "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}", "autoresume": f"{state.autoresume}"}
+    config["General"] = {"debug": True, "api_url": f"{state.api_url}", "download_path": f"{state.download_path}", f"download_speed_limit": f"{state.down_speed_limit}", f"upload_speed_limit": f"{state.up_speed_limit}", 
+                         "ignore_updates": f"{state.ignore_updates}", "image_path": f"{state.image_path}", "autoresume": f"{state.autoresume}", "max_connections": f"{state.max_connections}", "max_downloads": f"{state.max_downloads}"}
 
     if platform.system() == "Windows":
         config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
@@ -40,12 +40,13 @@ def read_config():
 
     state.debug = config.getboolean("General", "debug", fallback=state.debug)
     state.api_url = config.get("General", "api_url", fallback=state.api_url)
-    state.aria2_threads = config.getint("General", "aria2_threads", fallback=state.aria2_threads)
     state.download_path = config.get("General", "download_path", fallback=state.download_path)
     state.down_speed_limit = config.getint("General", "download_speed_limit", fallback=state.down_speed_limit)
     state.up_speed_limit = config.getint("General", "upload_speed_limit", fallback=state.up_speed_limit)
     state.ignore_updates = config.getboolean("General", "ignore_updates", fallback=state.ignore_updates)
     state.image_path = config.get("General", "image_path", fallback=state.image_path)
     state.autoresume = config.getboolean("General", "autoresume", fallback=state.autoresume)
+    state.max_connections = config.getint("General", "max_connections", fallback=state.max_connections)
+    state.max_downloads = config.getint("General", "max_downloads", fallback=state.max_downloads)
 
     create_config()
