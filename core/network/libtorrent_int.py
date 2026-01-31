@@ -100,4 +100,4 @@ def update_settings():
     }
 
     state.dl_session.apply_settings(settings)
-    consoleLog("Updated Settings")
+
