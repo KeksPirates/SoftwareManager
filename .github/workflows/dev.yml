@@ -44,30 +44,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libxcb-xinerama0 \
-            libxkbcommon-x11-0 \
-            libxcb-cursor0 \
-            libxcb-keysyms1 \
-            libxcb-render-util0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-shape0 \
-            libxcb-util1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.7"
+          enable-cache: true
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller backports.tarfile pillow
+          uv pip install -r requirements.txt
+          uv pip install pyinstaller backports.tarfile pillow
+        env:
+          UV_SYSTEM_PYTHON: 1
 
       - name: Generate version
         id: version
