@@ -206,8 +206,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     status = magnetdl.status()
                     
                     if col == 0:
-                        is_paused = magnetdl.status().paused
-                        return "▶︎" if is_paused else "⏸︎"
+                        pass
                     elif col == 1:
                         return status.name if status.has_metadata else "Fetching metadata..."
                     elif col == 2:
