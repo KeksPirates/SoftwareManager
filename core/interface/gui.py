@@ -152,7 +152,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Table Widget for Item List
         self.qtablewidget = QTableWidget()
-
+        
         self.qtablewidget.setColumnCount(2)
         self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.qtablewidget.verticalHeader().setVisible(False)

@@ -22,17 +22,16 @@ parser.add_argument("--debug", action="store_true")
 args = parser.parse_args()
 
 def run_gui():
-    app = QtWidgets.QApplication([])
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+    qdarktheme.setup_theme("auto")
     widget = MainWindow()
+    
     if state.window_transparency and platform.system() != "Windows":
-        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-    else:
-        qdarktheme.setup_theme("auto")
+        widget.setStyleSheet("MainWindow { background: transparent; }")
 
     from core.utils.general.logs import set_main_window
     set_main_window(widget)
-
     widget.show()
     sys.exit(app.exec())
 
