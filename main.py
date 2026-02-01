@@ -24,12 +24,11 @@ args = parser.parse_args()
 def run_gui():
     app = QtWidgets.QApplication([])
     widget = MainWindow()
-    if state.window_transparency is True:
-        if platform.system() != "Windows":
-            qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
-            widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        else:
-            qdarktheme.setup_theme("auto")
+    if state.window_transparency and platform.system() != "Windows":
+        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
+        widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+    else:
+        qdarktheme.setup_theme("auto")
 
     from core.utils.general.logs import set_main_window
     set_main_window(widget)
