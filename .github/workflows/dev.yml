@@ -86,7 +86,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
+          pyinstaller --onedir --windowed \
             --add-data "build_info.json;." \
             --add-data "build_info.json;core" \
             --add-data "build_info.json;core/interface" \
@@ -106,7 +106,7 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
+          pyinstaller --onedir --windowed \
             --add-data "build_info.json:." \
             --add-data "build_info.json:core" \
             --add-data "build_info.json:core/interface" \
