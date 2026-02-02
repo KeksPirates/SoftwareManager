@@ -128,7 +128,7 @@ jobs:
         run: |
           cd dist
           Compress-Archive -Path '${{ env.APP_NAME }}' -DestinationPath '${{ matrix.artifact_name }}'
-          ls -la
+          Get-ChildItem
 
       - name: Rename artifact (Unix)
         if: runner.os != 'Windows'
