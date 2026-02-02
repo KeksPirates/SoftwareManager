@@ -28,8 +28,8 @@ jobs:
             artifact_name: SoftwareManager-dev-${{ github.sha }}-linux
             asset_name: SoftwareManager-dev-${{ github.sha }}-linux
           - os: windows-latest
-            artifact_name: SoftwareManager-dev-${{ github.sha }}-windows.exe
-            asset_name: SoftwareManager-dev-${{ github.sha }}-windows.exe
+            artifact_name: SoftwareManager-dev-${{ github.sha }}-windows.zip
+            asset_name: SoftwareManager-dev-${{ github.sha }}-windows.zip
           - os: macos-latest
             artifact_name: SoftwareManager-dev-${{ github.sha }}-macos
             asset_name: SoftwareManager-dev-${{ github.sha }}-macos
@@ -86,7 +86,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
+          pyinstaller --onedir --windowed \
             --add-data "build_info.json;." \
             --add-data "build_info.json;core" \
             --add-data "build_info.json;core/interface" \
@@ -122,15 +122,21 @@ jobs:
             --name ${{ env.APP_NAME }} \
             main.py
 
-      - name: Make executable (Unix)
-        if: runner.os != 'Windows'
-        run: chmod +x dist/${{ env.APP_NAME }}
+      - name: Package and rename artifact (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          cd dist
+          Compress-Archive -Path '${{ env.APP_NAME }}' -DestinationPath '${{ matrix.artifact_name }}'
+          ls -la
 
-      - name: Rename artifact
+      - name: Rename artifact (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           cd dist
-          mv ${{ env.APP_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }} ${{ matrix.artifact_name }}
+          chmod +x ${{ env.APP_NAME }}
+          mv ${{ env.APP_NAME }} ${{ matrix.artifact_name }}
           ls -la
 
       - name: Upload build artifact
@@ -157,7 +163,7 @@ jobs:
           mkdir -p release
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
           cp artifacts/ubuntu-22.04-build/SoftwareManager-dev-*-linux release/SoftwareManager-dev-${SHORT_SHA}-linux
-          cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows.exe release/SoftwareManager-dev-${SHORT_SHA}-windows.exe
+          cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows.zip release/SoftwareManager-dev-${SHORT_SHA}-windows.zip
           cp artifacts/macos-latest-build/SoftwareManager-dev-*-macos release/SoftwareManager-dev-${SHORT_SHA}-macos
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
           ls -la release/
@@ -175,7 +181,7 @@ jobs:
           
           ### Downloads
           - Linux: \`SoftwareManager-dev-${SHORT_SHA}-linux\`
-          - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.exe\`
+          - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.zip\`
           - macOS: \`SoftwareManager-dev-${SHORT_SHA}-macos\`
           EOF
           cat release_notes.md
@@ -188,7 +194,7 @@ jobs:
           body_path: release_notes.md
           files: |
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-linux
-            release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.exe
+            release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.zip
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-macos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
