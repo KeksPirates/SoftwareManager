@@ -28,7 +28,7 @@ def run_gui():
     
     if state.window_transparency and platform.system() != "Windows":
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        widget.setStyleSheet("MainWindow { background: transparent; }")
+        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
 
     from core.utils.general.logs import set_main_window
     set_main_window(widget)
