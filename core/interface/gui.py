@@ -1,3 +1,4 @@
+from ctypes import alignment
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
 from PySide6.QtWidgets import (
@@ -377,7 +378,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.horizontal_layout.addWidget(self.qtablewidget)
 
         self.tab1 = create_tab("Search", self.searchbar, self.qtablewidget, self.tabs, self.dlbutton, self.horizontal_layout)
-        self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
+        # self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
         self.tab3 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
         if state.image_path is not None and os.path.exists(state.image_path):
@@ -405,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.tracker_list = QComboBox()
         self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
-        self.tracker_list.setCursor(Qt.PointingHandCursor)
+        self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)
 
@@ -417,15 +418,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         else:
             self.settings_btn.setIcon(QIcon(get_asset_path("settings_black.png")))
         self.settings_btn.setToolTip("Settings")
-        self.settings_btn.setCursor(Qt.PointingHandCursor)
+        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_btn.clicked.connect(lambda: settings_dialog(self))
         
-
-        
         self.corner_layout.addWidget(self.settings_btn)
-
-        
-
 
         self.tab_wrapper = QWidget()
         self.tab_layout = QVBoxLayout()
