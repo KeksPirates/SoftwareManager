@@ -273,13 +273,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 status = magnetdl.status()
                 
                 if status.state == lt.torrent_status.seeding:
-                    if state.download_path and os.path.exists(state.download_path):
+                    save_path = magnetdl.save_path()
+                    if save_path and os.path.exists(save_path):
                         if platform.system() == "Windows":
-                            os.startfile(os.path.normpath(state.download_path))
+                            os.startfile(os.path.normpath(save_path))
                         elif platform.system() == "Linux":
-                            subprocess.Popen(["xdg-open", state.download_path])
+                            subprocess.Popen(["xdg-open", save_path])
                         elif platform.system() == "Darwin":
-                            subprocess.Popen(["open", state.download_path])
+                            subprocess.Popen(["open", save_path])
                     return
                 
                 if status.paused:
