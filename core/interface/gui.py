@@ -74,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         def get_asset_path(filename):
             if getattr(sys, 'frozen', False):
-                base_path = sys._MEIPASS
+                base_path = sys._MEIPASS 
             else:
                 base_path = os.path.dirname(__file__)
 
@@ -134,18 +134,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.returnPressed.connect(lambda: run_thread(threading.Thread(target=return_pressed, args=(self,)))) # Triggers data function thread on enter
 
         self.dlbutton = QtWidgets.QPushButton("Download")
-        self.dlbutton.setCursor(Qt.PointingHandCursor)
+        self.dlbutton.setCursor(Qt.CursorShape.PointingHandCursor)
         self.libraryList = QListWidget()
 
         self.emptyResults = QLabel("No Results")
-        self.emptyResults.setAlignment(Qt.AlignCenter)
+        self.emptyResults.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.emptyResults.hide()
 
         self.download_model = None
         self.downloadList = QTableView()
         self.emptyLibrary = QLabel("No items in library.")
         self.emptyDownload = QLabel("No items in downloads.")
-        self.emptyDownload.setAlignment(Qt.AlignCenter)
+        self.emptyDownload.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.consoleLog = QTextEdit()
         self.progressbar = QProgressBar()
@@ -154,22 +154,22 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.qtablewidget = QTableWidget()
         
         self.qtablewidget.setColumnCount(2)
-        self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.qtablewidget.verticalHeader().setVisible(False)
         self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
 
         
 
         header = self.qtablewidget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Stretch) 
-        header.setSectionResizeMode(1, QHeaderView.Fixed)   
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
         header.setStretchLastSection(False)
 
-        self.qtablewidget.setAttribute(Qt.WA_TranslucentBackground)
-        self.qtablewidget.viewport().setAttribute(Qt.WA_TranslucentBackground)
+        self.qtablewidget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.qtablewidget.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) 
 
         header = self.qtablewidget.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.Fixed)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed) 
         header.resizeSection(1, 500)
 
         container = QWidget()
@@ -188,19 +188,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def columnCount(self, parent=QModelIndex()):
                 return len(self.headers)
 
-            def headerData(self, section, orientation, role=Qt.DisplayRole):
-                if role == Qt.DisplayRole and orientation == Qt.Horizontal:
+            def headerData(self, section, orientation, role=Qt.DisplayRole): 
+                if role == Qt.DisplayRole and orientation == Qt.Horizontal: 
                     return self.headers[section]
                 return None
 
-            def data(self, index, role=Qt.DisplayRole):
-                if role == Qt.DisplayRole:
+            def data(self, index, role=Qt.DisplayRole): 
+                if role == Qt.DisplayRole: 
                     col = index.column()
 
                     if index.row() >= len(state.active_downloads) or index.row() < 0:
                         return None
                     
-                    magnet_link = list(state.active_downloads.keys())[index.row()]
+                    magnet_link = list(state.active_downloads.keys())[index.row()] 
                     magnetdl = state.active_downloads[magnet_link]
                     
                     status = magnetdl.status()
@@ -210,9 +210,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     elif col == 1:
                         return status.name if status.has_metadata else "Fetching metadata..."
                     elif col == 2:
-                        if status.state == lt.torrent_status.downloading:
+                        if status.state == lt.torrent_status.downloading: 
                             return "Downloading"
-                        elif status.state == lt.torrent_status.seeding:
+                        elif status.state == lt.torrent_status.seeding: 
                             return "Seeding"
                         elif status.paused:
                             return "Paused"
@@ -256,8 +256,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         else:
                             return "∞" if status.paused else "Stalled"
                 
-                if role == Qt.UserRole and index.column() == 0:
-                    magnet_link = list(state.active_downloads.keys())[index.row()]
+                if role == Qt.UserRole and index.column() == 0: 
+                    magnet_link = list(state.active_downloads.keys())[index.row()] 
                     magnetdl = state.active_downloads[magnet_link]
                     return magnetdl.status().paused
                 
@@ -268,11 +268,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 if row >= len(state.active_downloads) or row < 0:
                     return
                     
-                magnet_link = list(state.active_downloads.keys())[row]
+                magnet_link = list(state.active_downloads.keys())[row] 
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
                 
-                if status.state == lt.torrent_status.seeding:
+                if status.state == lt.torrent_status.seeding: 
                     save_path = magnetdl.save_path()
                     if save_path and os.path.exists(save_path):
                         if platform.system() == "Windows":
@@ -299,18 +299,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
                 
-                magnet_link = list(state.active_downloads.keys())[index.row()]
+                magnet_link = list(state.active_downloads.keys())[index.row()] 
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
 
                 if button:
-                    if status.state == lt.torrent_status.seeding:
+                    if status.state == lt.torrent_status.seeding: 
                         button.setText("📁")
                     else:
                         button.setText("▶︎" if status.paused else "⏸︎")
 
             def createEditor(self, parent, option, index):
-                magnet_link = list(state.active_downloads.keys())[index.row()]
+                magnet_link = list(state.active_downloads.keys())[index.row()] 
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
 
@@ -318,7 +318,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 widget.setStyleSheet("border: none;")
                 layout = QHBoxLayout(widget)
                 layout.setContentsMargins(0, 0, 0, 0)
-                if status.state == lt.torrent_status.seeding:
+                if status.state == lt.torrent_status.seeding: 
                     btnPause = QtWidgets.QPushButton("📁")
                 else:
                     btnPause = QtWidgets.QPushButton("▶︎" if status.paused else "⏸︎")
@@ -338,10 +338,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.download_model = DownloadModel()
         self.downloadList.setModel(self.download_model)
         self.downloadList.horizontalHeader().setStretchLastSection(False)
-        self.downloadList.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.downloadList.setSelectionBehavior(QTableView.SelectRows)
-        self.downloadList.setAttribute(Qt.WA_TranslucentBackground)
-        self.downloadList.viewport().setAttribute(Qt.WA_TranslucentBackground)
+        self.downloadList.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.downloadList.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self.downloadList.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.downloadList.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         download_model = self.download_model
 
@@ -540,7 +540,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if row < 0 or row >= len(state.active_downloads):
             return
         
-        magnet_link = list(state.active_downloads.keys())[row]
+        magnet_link = list(state.active_downloads.keys())[row] 
         magnetdl = state.active_downloads[magnet_link]
 
         download_path = magnetdl.save_path()
@@ -561,7 +561,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if row < 0 or row >= len(state.active_downloads):
             return
         
-        magnet_link = list(state.active_downloads.keys())[row]
+        magnet_link = list(state.active_downloads.keys())[row] 
         
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(magnet_link)
@@ -574,7 +574,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if row < 0 or row >= len(state.active_downloads):
             return
         
-        magnet_link = list(state.active_downloads.keys())[row]
+        magnet_link = list(state.active_downloads.keys())[row] 
         magnetdl = state.active_downloads[magnet_link]
 
         confirm = QMessageBox.question(self, "Cancel Download", f"Are you sure you want to cancel the download of '{magnetdl.status().name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)

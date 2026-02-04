@@ -6,7 +6,7 @@ from core.utils.general.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
 from core.utils.general.loghandler import split_data, check_completed
-from core.network.interface import get_net_interfaces
+from core.network.interface import list_interfaces
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started check_completed thread")
     consoleLog("Fetching Network Interfaces...")
-    get_net_interfaces()
+    list_interfaces()
     consoleLog("Launching GUI")
     run_gui()
 
