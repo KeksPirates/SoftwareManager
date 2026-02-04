@@ -7,6 +7,3 @@ def add_magnet(uri):
         consoleLog("Magnet URI added to LibTorrent")
     else:
         consoleLog(f"Invalid Magnet Link: {uri}")
-
-
-
