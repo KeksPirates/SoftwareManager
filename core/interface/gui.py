@@ -1,4 +1,3 @@
-from ctypes import alignment
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
 from PySide6.QtWidgets import (
@@ -19,7 +18,7 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
 )
 
-from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap
+from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent
 import darkdetect
 import threading
 import platform
@@ -30,7 +29,7 @@ import libtorrent as lt
 import time
 import sys
 import json
-from core.utils.general.logs import consoleLog
+from core.utils.general.logs import consoleLog, remove_download_log
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
@@ -274,13 +273,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 status = magnetdl.status()
                 
                 if status.state == lt.torrent_status.seeding:
-                    if state.download_path is not None and os.path.exists(state.download_path):
+                    save_path = magnetdl.save_path()
+                    if save_path and os.path.exists(save_path):
                         if platform.system() == "Windows":
-                            os.startfile(os.path.normpath(state.download_path))
+                            os.startfile(os.path.normpath(save_path))
                         elif platform.system() == "Linux":
-                            subprocess.Popen(["xdg-open", state.download_path])
+                            subprocess.Popen(["xdg-open", save_path])
                         elif platform.system() == "Darwin":
-                            subprocess.Popen(["open", state.download_path])
+                            subprocess.Popen(["open", save_path])
                     return
                 
                 if status.paused:
@@ -329,7 +329,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 layout.addStretch()
                 widget.setLayout(layout)
                 return widget
-
             def editorEvent(self, event, model, option, index):
                 if index.column() == 0 and event.type() == QEvent.Type.MouseButtonPress:
                     self.clicked.emit(index.row())
@@ -459,6 +458,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.active_timer.timeout.connect(self.show_empty_downloads)
         self.active_timer.start(500)
 
+        self.context_menu = QtWidgets.QMenu(self)
+        self.context_menu.addAction("Open Containing Folder", self.openFolderAction)
+        self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
+        self.context_menu.addAction("Cancel Download", self.cancelDownload)
+
     @staticmethod
     def add_log(text):
         if MainWindow._instance:
@@ -515,3 +519,66 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().resizeEvent(event)
         table_width = self.qtablewidget.viewport().width()
         self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
+
+    def contextMenuEvent(self, event: QContextMenuEvent):
+        if self.downloadList.underMouse():
+            pos = self.downloadList.viewport().mapFromGlobal(event.globalPos())
+            index = self.downloadList.indexAt(pos)
+            
+            if index.isValid():
+                row = index.row()
+                self._context_menu_row = row
+                self.context_menu.exec(event.globalPos())
+        else:
+            super().contextMenuEvent(event)
+
+    def openFolderAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.active_downloads):
+            return
+        
+        magnet_link = list(state.active_downloads.keys())[row]
+        magnetdl = state.active_downloads[magnet_link]
+
+        download_path = magnetdl.save_path()
+        
+        if download_path and os.path.exists(download_path):
+            if platform.system() == "Windows":
+                os.startfile(os.path.normpath(download_path))
+            elif platform.system() == "Linux":
+                subprocess.Popen(["xdg-open", download_path])
+            elif platform.system() == "Darwin":
+                subprocess.Popen(["open", download_path])
+
+    def copyMagnetURIAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.active_downloads):
+            return
+        
+        magnet_link = list(state.active_downloads.keys())[row]
+        
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(magnet_link)
+
+    def cancelDownload(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.active_downloads):
+            return
+        
+        magnet_link = list(state.active_downloads.keys())[row]
+        magnetdl = state.active_downloads[magnet_link]
+
+        confirm = QMessageBox.question(self, "Cancel Download", f"Are you sure you want to cancel the download of '{magnetdl.status().name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if confirm == QMessageBox.StandardButton.Yes:
+            del state.active_downloads[magnet_link]
+            remove_download_log(magnet_link)
+            consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
