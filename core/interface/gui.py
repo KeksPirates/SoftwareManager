@@ -461,7 +461,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.context_menu = QtWidgets.QMenu(self)
         self.context_menu.addAction("Open Containing Folder", self.openFolderAction)
         self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
-        self.context_menu.addAction("Cancel Download", self.cancelDownload)
+        self.context_menu.addAction("Cancel Download", self.cancelDownloadAction)
+        self.context_menu.addAction("Delete File", self.deleteFileAction)
 
     @staticmethod
     def add_log(text):
@@ -566,7 +567,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(magnet_link)
 
-    def cancelDownload(self):
+    def cancelDownloadAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
         
@@ -582,3 +583,36 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             del state.active_downloads[magnet_link]
             remove_download_log(magnet_link)
             consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
+
+    def deleteFileAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.active_downloads):
+            return
+        
+        magnet_link = list(state.active_downloads.keys())[row]
+        magnetdl = state.active_downloads[magnet_link]
+        status = magnetdl.status()
+        save_path = status.save_path
+        torrent_name = status.name
+        download_path = os.path.join(save_path, torrent_name)
+        
+        confirm = QMessageBox.question(self, "Delete Files", f"Are you sure you want to delete the downloaded files of '{magnetdl.status().name}'? This action cannot be undone.", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if confirm == QMessageBox.StandardButton.Yes:
+            if download_path and os.path.exists(download_path):
+                try:
+                    if os.path.isfile(download_path):
+                        os.remove(download_path)
+                        del state.active_downloads[magnet_link]
+                        remove_download_log(magnet_link)
+                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
+                    else:
+                        import shutil
+                        shutil.rmtree(download_path)
+                        del state.active_downloads[magnet_link]
+                        remove_download_log(magnet_link)
+                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
+                except Exception as e:
+                    consoleLog(f"Error deleting files: {e}", True)
