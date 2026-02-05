@@ -27,6 +27,9 @@ SoftwareManager is a Python-based GUI/TUI tool that simplifies downloading and m
 - If you want to host your own server, clone the server branch of this repo, enter your cookie for rutracker.org and run server.py. Detailed Instructions on how to get your rutracker cookie are in the README of its branch.
 - This tool is for educational purposes only. Use it responsibly.
 
+## Activity
+
+![Alt](https://repobeats.axiom.co/api/embed/3a61ea02ffdeb9ed5dd948d974a21e0d6cfae36c.svg "Repobeats analytics image")
 
 ## Star History
 
