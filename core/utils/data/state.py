@@ -27,6 +27,8 @@ class AppState(QObject):
         self.dl_session: Any = None
         self.active_downloads: List[str] = {}
         self.window_transparency: bool = False
+        self.interfaces: List = []
+        self.active_interfaces: List = []
 
     @property
     def image_path(self) -> str:

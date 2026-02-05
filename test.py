@@ -20,7 +20,7 @@ def get_active_interfaces():
 
 
 
-get_active_interfaces()
+print(list(addrs.keys()))
 
 # print(addrs)
 # print()

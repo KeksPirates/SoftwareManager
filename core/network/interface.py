@@ -1,4 +1,5 @@
 from core.utils.general.logs import consoleLog
+from core.utils.data.state import state
 import psutil
 
 addrs = psutil.net_if_addrs()
@@ -38,3 +39,6 @@ def list_interfaces() -> None:
                     status = "INACTIVE"
         consoleLog(f"Found Interface: {interface} [{status}]")
 
+def init_interfaces():
+    state.interfaces = list(addrs.keys())
+    state.active_interfaces = get_active_interfaces()
