@@ -42,3 +42,11 @@ def list_interfaces() -> None:
 def init_interfaces():
     state.interfaces = list(addrs.keys())
     state.active_interfaces = get_active_interfaces()
+
+def get_interface_ip(interface_name):
+    if interface_name in addrs:
+        for addr in addrs[interface_name]:
+            if addr.family == 2:  # ipv4
+                if not addr.address.startswith("127.") and not addr.address.startswith("169.254"):
+                    return addr.address
+    return None

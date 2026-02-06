@@ -1,5 +1,6 @@
 import time
 from core.utils.general.wrappers import run_thread
+from core.network.interface import get_interface_ip
 import threading
 import libtorrent as lt
 from core.utils.data.state import state
@@ -15,6 +16,7 @@ def init_session():
 
     state.dl_session = lt.session()
 
+
     settings = {
         "upload_rate_limit": state.up_speed_limit,
         "download_rate_limit": state.down_speed_limit,
@@ -26,8 +28,15 @@ def init_session():
         "connections_limit": state.max_connections,
         "active_downloads": state.max_downloads
     }
-
     
+    if state.bound_interface:
+        interface_ip = get_interface_ip(state.bound_interface)
+        if interface_ip:
+            settings["outgoing_interfaces"] = interface_ip
+            settings["listen_interfaces"] = f"{interface_ip}:6881"
+            consoleLog(f"Binding to Interface IP: {interface_ip}")
+        else:
+            consoleLog(f"Error finding IP for Interface {state.bound_interface}")
 
     state.dl_session.apply_settings(settings)
 
@@ -44,7 +53,6 @@ def add_download(magnet_uri, dl_path=state.download_path):
     if magnet_uri in state.active_downloads:
         consoleLog("Skipping, download already running...")
         return
-
 
     magnetdl = lt.parse_magnet_uri(magnet_uri)
     magnetdl.save_path = dl_path
@@ -98,6 +106,21 @@ def update_settings():
         "connections_limit": state.max_connections,
         "active_downloads": state.max_downloads
     }
+    
+    if state.bound_interface:
+        interface_ip = get_interface_ip(state.bound_interface)
+        if interface_ip:
+            settings["outgoing_interfaces"] = interface_ip
+            settings["listen_interfaces"] = f"{interface_ip}:6881"
+            consoleLog(f"Binding to Interface IP: {interface_ip}")
+        else:
+            consoleLog(f"Error finding IP for Interface {state.bound_interface}")
 
+    state.dl_session.apply_settings(settings)
+
+def update_bound_interface():
+
+    settings = { "outgoing_interfaces": state.bound_interface }
+    
     state.dl_session.apply_settings(settings)
 

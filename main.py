@@ -7,6 +7,7 @@ from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
 from core.utils.general.loghandler import split_data, check_completed
 from core.network.interface import list_interfaces, init_interfaces
+from core.network.libtorrent_int import update_bound_interface
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
@@ -46,16 +47,17 @@ if __name__ == "__main__":
     if args.debug:
         state.debug = args.debug # override of read_config
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
-    run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
-    consoleLog("Started send_notification thread")
-    run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
-    consoleLog("Started update_log thread")
-    run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started check_completed thread")
     consoleLog("Fetching Network Interfaces...")
     list_interfaces()
     consoleLog("Initialiting Interface variables...")
     init_interfaces()
+    consoleLog(f"Current Bound: {state.bound_interface}")
+    run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
+    consoleLog("Started send_notification thread")
+    run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
+    consoleLog("Started update_log thread")
+    run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Launching GUI")
     run_gui()
 

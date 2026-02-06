@@ -29,6 +29,7 @@ class AppState(QObject):
         self.window_transparency: bool = False
         self.interfaces: List = []
         self.active_interfaces: List = []
+        self.bound_interface: str = None
 
     @property
     def image_path(self) -> str:
