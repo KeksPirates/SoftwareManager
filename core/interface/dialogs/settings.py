@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QCheckBox,
     QFileDialog,
+    QComboBox
 )
 import platform
 
@@ -56,7 +57,6 @@ def settings_dialog(self):
 
         autoresume_layout.addStretch()
         autoresume_checkbox.setChecked(state.autoresume)
-        autoresume_checkbox.toggled.connect(lambda checked: setattr(state, 'autoresume', checked))
         autoresume_layout.addWidget(autoresume_checkbox)
         dialog.layout().addWidget(autoresume_container)
 
@@ -206,6 +206,35 @@ def settings_dialog(self):
         max_downloads.setFixedHeight(30)
         dialog.layout().addWidget(max_downloads_container)
 
+        #####################
+        # INTERFACE BINDING #
+        #####################
+
+        interface_container = QWidget()
+        interface_layout = QHBoxLayout()
+
+        interface_label = QLabel("Network Interface:")
+        interface_layout.addWidget(interface_label)
+        interface_select = QComboBox()
+        interface_select.addItems(["None"] + state.interfaces)
+
+        target = state.bound_interface if state.bound_interface else "None"
+
+        index = interface_select.findText(target)
+        if index >= 0:
+            interface_select.setCurrentIndex(index)
+        else:
+            interface_select.setCurrentIndex(0)
+
+        interface_select.setFixedWidth(180)
+        interface_select.setFixedHeight(30)
+        interface_select.setFixedWidth(180)
+        interface_select.setFixedHeight(30)
+        interface_layout.addWidget(interface_select)
+        interface_container.setLayout(interface_layout)
+        dialog.layout().addWidget(interface_container)
+        
+
         ###############
         # SAVE/CANCEL #
         ###############
@@ -214,7 +243,17 @@ def settings_dialog(self):
 
         save_btn = QPushButton("Save")
         cancel_btn = QPushButton("Cancel")
-        save_btn.clicked.connect(lambda: save_settings(close_settings, api_url.text(), download_path.text(), down_speed_limit.value(), up_speed_limit.value(), image_path.text(), None, max_connections.value(), max_downloads.value()))
+        save_btn.clicked.connect(lambda: save_settings(
+            close_settings, 
+            api_url.text(), 
+            download_path.text(), 
+            down_speed_limit.value(), 
+            up_speed_limit.value(), 
+            image_path.text(), 
+            autoresume_checkbox.isChecked(), 
+            max_connections.value(), 
+            max_downloads.value(), 
+            interface_select.currentText()))
 
         cancel_btn.clicked.connect(dialog.reject)
         layout.addWidget(cancel_btn)
