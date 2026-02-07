@@ -253,9 +253,9 @@ def settings_dialog(self):
         layout.addWidget(save_btn)
 
         self.tabs = QTabWidget()
-        self.tab1 = general_tab("General", autoresume_container, transparent_window_container, self.tabs)
+        self.tab1 = general_tab("General", autoresume_container, update_checkbox_container, transparent_window_container, self.tabs)
         self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
-        self.tab3 = network_tab("Network", update_checkbox_container, interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
+        self.tab3 = network_tab("Network", interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
 
         dialog.layout().addWidget(self.tabs)
         dialog.layout().addLayout(layout)

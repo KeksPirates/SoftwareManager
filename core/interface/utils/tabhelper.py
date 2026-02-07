@@ -19,10 +19,11 @@ def create_tab(title, searchbar, software_list, tabs, dlbutton, layout2):
 #################
 # SETTINGS TABS #
 #################
-def general_tab(title, autoresume, transparent_window, tabs):
+def general_tab(title, autoresume, update_checkbox, transparent_window, tabs):
     tab = QWidget()
     layout = QVBoxLayout()
     layout.addWidget(autoresume)
+    layout.addWidget(update_checkbox)
     layout.addWidget(transparent_window)
     layout.addStretch()
     tab.setLayout(layout)
@@ -40,10 +41,9 @@ def paths_tab(title, download_path, image_path, tabs):
     return tab
     
 
-def network_tab(title, update_checkbox, network_interface, max_connections, max_downloads, up_speed_limit, down_speed_limit, api_url, tabs):
+def network_tab(title, network_interface, max_connections, max_downloads, up_speed_limit, down_speed_limit, api_url, tabs):
     tab = QWidget()
     layout = QVBoxLayout()
-    layout.addWidget(update_checkbox)
     layout.addWidget(network_interface)
     layout.addWidget(max_connections)
     layout.addWidget(max_downloads)
