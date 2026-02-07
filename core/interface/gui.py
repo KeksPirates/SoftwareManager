@@ -29,7 +29,7 @@ import libtorrent as lt
 import time
 import sys
 import json
-from core.utils.general.logs import consoleLog, remove_download_log
+from core.utils.general.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
@@ -149,6 +149,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.consoleLog = QTextEdit()
         self.progressbar = QProgressBar()
+
+        flush_log_buffer()
 
         # Table Widget for Item List
         self.qtablewidget = QTableWidget()

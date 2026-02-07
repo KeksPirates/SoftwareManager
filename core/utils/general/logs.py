@@ -6,6 +6,8 @@ import json
 import os
 import re
 
+_log_buffer = []
+
 
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     downloads_file = os.path.join(state.settings_path, "downloads.json")
@@ -189,15 +191,28 @@ def set_main_window(window):
     global _main_window
     _main_window = window
 
+def flush_log_buffer(): # credits to claude
+    global _log_buffer
+    if _log_buffer:
+        try:
+            from core.interface.gui import MainWindow
+            for log_entry in _log_buffer:
+                MainWindow.add_log(log_entry)
+            _log_buffer = []
+        except Exception:
+            pass
+
 def consoleLog(text, printAnyways = False):
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
+    formatted_text = f"[{current_time}] {text}"
 
     try:
         from core.interface.gui import MainWindow
-        MainWindow.add_log(f"[{current_time}] {text}")
+        MainWindow.add_log(formatted_text)
     except Exception:
-        pass
+        global _log_buffer
+        _log_buffer.append(formatted_text)
     
     if state.debug or printAnyways:
-        print(f"[{current_time}] {text}")
+        print(formatted_text)

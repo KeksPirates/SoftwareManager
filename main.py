@@ -47,7 +47,7 @@ if __name__ == "__main__":
     if args.debug:
         state.debug = args.debug # override of read_config
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
-    consoleLog("Started check_completed thread")
+    consoleLog("Starting SoftwareManager...")
     consoleLog("Fetching Network Interfaces...")
     list_interfaces()
     consoleLog("Initialiting Interface variables...")
@@ -58,6 +58,7 @@ if __name__ == "__main__":
     run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
+    consoleLog("Started Thread: check_completed")
     consoleLog("Launching GUI")
     run_gui()
 
