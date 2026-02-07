@@ -4,7 +4,7 @@ from core.utils.general.logs import consoleLog
 
 
 def scrape_rutracker(search_text):
-    search = requests.get(f"{state.api_url}/search/{search_text}")
+    search = requests.get(f"{state.api_url}/search?q={search_text}")
     consoleLog("Sent request to server")
     if search:
         try:
