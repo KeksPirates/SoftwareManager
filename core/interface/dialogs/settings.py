@@ -1,6 +1,9 @@
 from core.utils.config.settings import save_settings
 from core.utils.data.state import state
 from core.utils.general.logs import consoleLog
+from core.interface.utils.tabhelper import general_tab
+from core.interface.utils.tabhelper import paths_tab
+from core.interface.utils.tabhelper import network_tab
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QLineEdit, 
@@ -13,7 +16,8 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QCheckBox,
     QFileDialog,
-    QComboBox
+    QComboBox,
+    QTabWidget,
 )
 import platform
 
@@ -23,10 +27,9 @@ def settings_dialog(self):
         consoleLog("Settings dialog opened")
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
-        dialog.setFixedSize(800, 550)
+        dialog.setFixedSize(700, 450)
 
         dialog.setLayout(QVBoxLayout())
-        dialog.layout().addWidget(QLabel("Settings"))
 
         def close_settings():
             dialog.reject()
@@ -58,7 +61,6 @@ def settings_dialog(self):
         autoresume_layout.addStretch()
         autoresume_checkbox.setChecked(state.autoresume)
         autoresume_layout.addWidget(autoresume_checkbox)
-        dialog.layout().addWidget(autoresume_container)
 
 
         # transparent window checkbox
@@ -73,12 +75,11 @@ def settings_dialog(self):
         transparent_window_checkbox.setChecked(state.window_transparency)
         transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
         transparent_window_layout.addWidget(transparent_window_checkbox)
-        dialog.layout().addWidget(transparent_window_container)
 
         ##################
         # SERVER SETTING #
         ##################
-        
+
         api_url_container = QWidget()
         api_url_layout = QHBoxLayout()
 
@@ -88,7 +89,6 @@ def settings_dialog(self):
         api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         api_url_container.setLayout(api_url_layout)
         api_url.setText(state.api_url)
-        dialog.layout().addWidget(api_url_container)
 
         #################
         # DOWNLOAD PATH #
@@ -103,7 +103,6 @@ def settings_dialog(self):
         download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         download_path_container.setLayout(download_path_layout)
         download_path.setText(state.download_path)
-        dialog.layout().addWidget(download_path_container)
 
         def browse_download_path():
             dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
@@ -127,7 +126,6 @@ def settings_dialog(self):
         image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         image_path_container.setLayout(image_path_layout)
         image_path.setText(state.image_path)
-        dialog.layout().addWidget(image_path_container)
 
         def browse_image_path():
             file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
@@ -154,8 +152,7 @@ def settings_dialog(self):
         down_speed_limit_layout.addWidget(down_speed_limit)
         down_speed_limit.setFixedWidth(180)
         down_speed_limit.setFixedHeight(30)
-        dialog.layout().addWidget(down_speed_limit_container)
-        
+
         up_speed_limit_container = QWidget()
         up_speed_limit_layout = QHBoxLayout()
 
@@ -168,7 +165,6 @@ def settings_dialog(self):
         up_speed_limit_layout.addWidget(up_speed_limit)
         up_speed_limit.setFixedWidth(180)
         up_speed_limit.setFixedHeight(30)
-        dialog.layout().addWidget(up_speed_limit_container)
 
         ######################
         # CONNECTION CONFIGS #
@@ -186,7 +182,6 @@ def settings_dialog(self):
         max_connections_layout.addWidget(max_connections)
         max_connections.setFixedWidth(180)
         max_connections.setFixedHeight(30)
-        dialog.layout().addWidget(max_connections_container)
 
         ####################
         # DOWNLOAD CONFIGS #
@@ -204,7 +199,6 @@ def settings_dialog(self):
         max_downloads_layout.addWidget(max_downloads)
         max_downloads.setFixedWidth(180)
         max_downloads.setFixedHeight(30)
-        dialog.layout().addWidget(max_downloads_container)
 
         #####################
         # INTERFACE BINDING #
@@ -232,8 +226,7 @@ def settings_dialog(self):
         interface_select.setFixedHeight(30)
         interface_layout.addWidget(interface_select)
         interface_container.setLayout(interface_layout)
-        dialog.layout().addWidget(interface_container)
-        
+
 
         ###############
         # SAVE/CANCEL #
@@ -259,6 +252,12 @@ def settings_dialog(self):
         layout.addWidget(cancel_btn)
         layout.addWidget(save_btn)
 
+        self.tabs = QTabWidget()
+        self.tab1 = general_tab("General", autoresume_container, transparent_window_container, self.tabs)
+        self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
+        self.tab3 = network_tab("Network", update_checkbox_container, interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
+
+        dialog.layout().addWidget(self.tabs)
         dialog.layout().addLayout(layout)
-        
+
         dialog.exec()

@@ -362,7 +362,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Tabs
         self.tabs = QTabWidget()
-        self.tabs = QTabWidget()
         self.tabs.setStyleSheet("""
             QTabBar::tab {
                 font-size: 11px;
