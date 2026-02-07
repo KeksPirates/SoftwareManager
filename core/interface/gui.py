@@ -155,10 +155,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         # Table Widget for Item List
         self.qtablewidget = QTableWidget()
         
-        self.qtablewidget.setColumnCount(2)
+        self.qtablewidget.setColumnCount(4)
         self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.qtablewidget.verticalHeader().setVisible(False)
-        self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
+        self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author", "Seeders", "Leechers"])
 
         
 

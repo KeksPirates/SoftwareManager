@@ -44,15 +44,19 @@ def return_pressed(self):
                 self.qtablewidget.clear()
                 self.show_empty_results(True)
             else:
-                state.post_titles, _, state.post_author = format_data(state.posts)
+                state.post_titles, _, state.post_author, state.post_seeders, state.post_leechers = format_data(state.posts)
                 self.show_empty_results(False)
                 self.qtablewidget.clear()
-                self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
+                self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author", "Seeders", "Leechers"])
                 self.qtablewidget.setRowCount(len(state.post_titles))
                 for i, author in enumerate(state.post_author):
                     self.qtablewidget.setItem(i, 1, QTableWidgetItem(author))
                 for i, title in enumerate(state.post_titles):
                     self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
+                for i, seeders in enumerate(state.post_seeders):
+                    self.qtablewidget.setItem(i, 2, QTableWidgetItem(seeders))
+                for i, leechers in enumerate(state.post_leechers):
+                    self.qtablewidget.setItem(i, 3, QTableWidgetItem(leechers))
                 if state.debug == True:
                     consoleLog(f"Response Cached: {cached}")
         else:

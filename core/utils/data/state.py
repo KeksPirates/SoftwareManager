@@ -11,6 +11,8 @@ class AppState(QObject):
         self.post_titles: List[str] = []
         self.post_urls: List[str] = []
         self.post_author: List[str] = []
+        self.post_seeders: List[str] = []
+        self.post_leechers: List[str] = []
         self.version: str = "dev"
         self._image_path: str = ""
         self.ignore_updates: bool = False

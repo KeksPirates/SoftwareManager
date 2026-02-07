@@ -15,8 +15,10 @@ def format_data(data):
     post_author = [post["author"] for post in data]
     post_titles = [post["title"] for post in data]
     post_links = [post["url"] for post in data]
+    post_seeders = [post["seeders"] for post in data]
+    post_leechers = [post["leechers"] for post in data]
 
-    return post_titles, post_links, post_author
+    return post_titles, post_links, post_author, post_seeders, post_leechers
 
 
 
