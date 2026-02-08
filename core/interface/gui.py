@@ -383,16 +383,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         if state.image_path is not None and os.path.exists(state.image_path):
             self.image = QImage(state.image_path)
+            self.image = self.image.scaledToWidth(300, Qt.SmoothTransformation)
             self.pixmap = QPixmap.fromImage(self.image)
             self.overlay_label = QLabel(self)
             self.overlay_label.setPixmap(self.pixmap)
             self.overlay_label.adjustSize()
             self.overlay_label.raise_()
 
-            offset_x = -1350
-            offset_y = -550
-            x = self.width() - self.overlay_label.width() - offset_x
-            y = self.height() - self.overlay_label.height() - offset_y
+            # offset_x = -1350
+            # offset_y = -550
+            x = self.width() - self.overlay_label.width() # - offset_x
+            y = self.height() - self.overlay_label.height() # - offset_y
             self.overlay_label.move(x, y)
         
         # temporarily disabled

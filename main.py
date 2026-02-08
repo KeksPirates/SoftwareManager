@@ -17,6 +17,7 @@ import platform
 import signal
 import argparse
 import sys
+import time
 
 
 parser = argparse.ArgumentParser()
@@ -41,16 +42,17 @@ def keyboardinterrupthandler(signum, frame):
     closehelper()
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
     read_config()
     logs = get_download_logs()
-    count, downloads = split_data(logs)
+    _, downloads = split_data(logs)
     if args.debug:
         state.debug = args.debug # override of read_config
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
     consoleLog("Starting SoftwareManager...")
     consoleLog("Fetching Network Interfaces...")
     list_interfaces()
-    consoleLog("Initialiting Interface variables...")
+    consoleLog("Initializing Interface variables...")
     init_interfaces()
     consoleLog(f"Current Bound: {state.bound_interface}")
     run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
@@ -59,6 +61,7 @@ if __name__ == "__main__":
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started Thread: check_completed")
-    consoleLog("Launching GUI")
+    elapsed = time.perf_counter() - start_time
+    consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     run_gui()
 
