@@ -1,14 +1,16 @@
 import requests
 import asyncio
+import threading
 from bs4 import BeautifulSoup
 from core.utils.data.state import state
 from core.utils.general.logs import consoleLog
+from core.utils.general.wrappers import run_thread
 
 
 global url_uztracker
 url_uztracker = "https://uztracker.net/tracker.php?nm="
 
-async def init_uztracker():
+def init_uztracker():
     global up
     global soup
     try:
@@ -19,12 +21,12 @@ async def init_uztracker():
             up = False
             consoleLog(f"Uztracker seems down, status code: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        consoleLog(f"\nRequest Exception on {url_uztracker}:")
+        consoleLog(f"Request Exception on {url_uztracker}:")
         consoleLog(str(e))
-        consoleLog("\nIs the Site down?")
+        consoleLog("Is the Site down?")
         up = False
 
-asyncio.run(init_uztracker())
+run_thread(threading.Thread(target=init_uztracker))
 
 def scrape_uztracker(search):
     if up:

@@ -3,7 +3,7 @@ from core.utils.general.logs import consoleLog
 from core.data.scrapers.uztracker import scrape_uztracker
 from core.data.scrapers.rutracker import scrape_rutracker
 from core.data.scrapers.monkrus import scrape_monkrus_telegram
-from core.utils.network.jsonhandler import split_data, format_data
+from core.utils.network.jsonhandler import split_data, format_data, format_data_m0nkrus
 from core.utils.data.state import state
 
 def return_pressed(self):
@@ -72,7 +72,7 @@ def return_pressed(self):
             self.qtablewidget.clear()
             self.show_empty_results(True)
         else:
-            state.post_titles, _, state.post_author = format_data(state.posts)
+            state.post_titles, _, state.post_author = format_data_m0nkrus(state.posts)
             self.show_empty_results(False)
             self.qtablewidget.clear()
             self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
