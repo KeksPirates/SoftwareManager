@@ -30,13 +30,12 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
 ## Additional Information
 - SoftwareManager is still in Development and most likely contains issues. Please report any bugs you find via the Issues tab. Contributions are also greatly appreciated.
 - MacOS Builds haven't been properly tested - We're thankful to receive feedback.
-- This tool is for educational purposes only. Use it responsibly.
 - If you want to host your own server, clone the server branch of this repo, enter your cookie for rutracker.org and run server.py. Detailed Instructions on how to get your rutracker cookie are in the README of the server branch.
 
 ## Python Dependencies
 (also included in requirements.txt)
 
-   ```yml
+   ```bash
    requests (2.32.2)
    PySide6 (6.10.1)
    beautifulsoup (44.13.5)
