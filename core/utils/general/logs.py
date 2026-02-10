@@ -24,7 +24,12 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     
 
     if any(d.magnet_uri == magnet_uri or d.url == url for d in downloads):
-        consoleLog("Skipped Logging, download already in file")
+        if magnet_uri in state.active_downloads:
+            consoleLog("Skipping Logging, download already running...")
+            return
+        consoleLog("File already in Log, updating Download State...")
+        hash = extract_hash_from_magnet(magnet_uri)
+        update_download_completed_by_hash(hash, False)
         return DownloadList(data=downloads, count=len(downloads)) # thanks again claude (im stupid)
         
     

@@ -36,7 +36,7 @@ def init_session():
             settings["listen_interfaces"] = f"{interface_ip}:6881"
             consoleLog(f"Binding to Interface IP: {interface_ip}")
         else:
-            consoleLog(f"Error finding IP for Interface {state.bound_interface}")
+            consoleLog(f"Skipping Binding, no Interface set. ({state.bound_interface})")
 
     state.dl_session.apply_settings(settings)
 
@@ -51,7 +51,7 @@ def add_download(magnet_uri, dl_path=state.download_path):
     init_session()
 
     if magnet_uri in state.active_downloads:
-        consoleLog("Skipping, download already running...")
+        consoleLog("Skipping Downloading, download already running...")
         return
 
     magnetdl = lt.parse_magnet_uri(magnet_uri)
@@ -114,7 +114,7 @@ def update_settings():
             settings["listen_interfaces"] = f"{interface_ip}:6881"
             consoleLog(f"Binding to Interface IP: {interface_ip}")
         else:
-            consoleLog(f"Error finding IP for Interface {state.bound_interface}")
+            consoleLog(f"Skipping Binding, no Interface set. ({state.bound_interface})")
 
     state.dl_session.apply_settings(settings)
 
