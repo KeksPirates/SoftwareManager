@@ -285,10 +285,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                             subprocess.Popen(["open", save_path])
                     return
                 
-                if status.paused:
+                is_paused = bool(magnetdl.flags() & lt.torrent_flags.paused)
+                if is_paused:
+                    magnetdl.set_flags(lt.torrent_flags.auto_managed)
                     magnetdl.resume()
                     consoleLog(f"Resumed download: {status.name}", True)
                 else:
+                    magnetdl.unset_flags(lt.torrent_flags.auto_managed)
                     magnetdl.pause()
                     consoleLog(f"Paused download: {status.name}", True)
                 
