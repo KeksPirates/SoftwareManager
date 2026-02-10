@@ -36,7 +36,7 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
 ## Python Dependencies
 (also included in requirements.txt)
 
-   ```py
+   ```sh
    requests (2.32.2)
    PySide6 (6.10.1)
    beautifulsoup (44.13.5)
