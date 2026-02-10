@@ -1,11 +1,11 @@
-# SoftwareManager - A Download Manager/Launcher
-SoftwareManager is a Python-based GUI/TUI tool that simplifies downloading and managing free software from various sources.
+# SoftwareManager
+SoftwareManager is a Python-based GUI tool that simplifies searching and downloading software from various sources, including Rutracker, Uztracker and the official M0nkrus Telegram channel.
 
 ## Features
-- VPN Binding (impl. soon)
-- Bandwidth/Download speed limiting
-- Start downloads via a predefined magnet URI.
-- View detailed download information (name, speed, and status).
+- Searching & Downloading Software from various pages
+- Network Interface Binding
+- Simple UI, Speed Limiting etc.
+- No Logins required
 
 ## Installation
 1. Download the binary file for your operating system from releases 
@@ -14,18 +14,41 @@ SoftwareManager is a Python-based GUI/TUI tool that simplifies downloading and m
 
 ## Manual Installation
 1. Ensure Python 3.x is installed on your system.
+2. Clone the Repository:
+   ```bash
+   git clone https://github.com/KeksPirates/SoftwareManager.git && cd SoftwareManager
+   ```
 2. Install Dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 3. Run main.py:
    ```bash
-   python3 main.py
+   python main.py
    ```
 
-## Notes
-- If you want to host your own server, clone the server branch of this repo, enter your cookie for rutracker.org and run server.py. Detailed Instructions on how to get your rutracker cookie are in the README of its branch.
+## Additional Information
+- SoftwareManager is still in Development and most likely contains issues. Please report any bugs you find via the Issues tab. Contributions are also greatly appreciated.
+- MacOS Builds haven't been properly tested - We're thankful to receive feedback.
 - This tool is for educational purposes only. Use it responsibly.
+- If you want to host your own server, clone the server branch of this repo, enter your cookie for rutracker.org and run server.py. Detailed Instructions on how to get your rutracker cookie are in the README of the server branch.
+
+## Python Dependencies
+(also included in requirements.txt)
+
+   ```py
+   requests (2.32.2)
+   PySide6 (6.10.1)
+   beautifulsoup (44.13.5)
+   darkdetect (0.7.1)
+   pyinstaller (6.15.0)
+   PyQtDarkTheme-fork (2.3.4)
+   aiohttp (3.13.0)
+   plyer (2.1.0)
+   psutil (7.1.0)
+   libtorrent (2.0.11)
+   libtorrent-windows-dll (0.0.3)
+   ```
 
 ## Activity
 
@@ -39,6 +62,11 @@ SoftwareManager is a Python-based GUI/TUI tool that simplifies downloading and m
    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=KeksPirates/SoftwareManager&type=date&legend=top-left" />
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=KeksPirates/SoftwareManager&type=date&legend=top-left" />
  </picture>
+</a>
+
+## Contributors
+<a href="https://github.com/KeksPirates/SoftwareManager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=KeksPirates/SoftwareManager" />
 </a>
 
 ---
