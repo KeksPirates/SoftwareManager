@@ -88,11 +88,15 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
             7z x upx.zip -oupx-dir
-            echo "$(pwd)/upx-dir/upx-5.1.0-win64" >> $GITHUB_PATH
+            UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
+            echo "$UPX_DIR" >> $GITHUB_PATH
+            export PATH="$UPX_DIR:$PATH"
           elif [ "$RUNNER_OS" == "Linux" ]; then
             curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz -o upx.tar.xz
             tar xf upx.tar.xz
-            echo "$(pwd)/upx-5.1.0-amd64_linux" >> $GITHUB_PATH
+            UPX_DIR="$(pwd)/upx-5.1.0-amd64_linux"
+            echo "$UPX_DIR" >> $GITHUB_PATH
+            export PATH="$UPX_DIR:$PATH"
           else
             brew install upx
           fi
