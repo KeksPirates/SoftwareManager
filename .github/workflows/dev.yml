@@ -113,6 +113,7 @@ jobs:
             --onefile \
             --onefile-no-compression \
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --assume-yes-for-downloads \
             --windows-console-mode=disable \
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
@@ -132,6 +133,7 @@ jobs:
             --onefile \
             --onefile-no-compression \
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --assume-yes-for-downloads \
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
