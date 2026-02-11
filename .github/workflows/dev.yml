@@ -139,7 +139,7 @@ jobs:
         run: |
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:core" \
+            --add-data "build_info.json:src/core" \
             --add-data "build_info.json:src/core/interface" \
             --add-data "src/core/interface/assets:src/core/interface/assets" \
             --icon "src/core/interface/assets/logo.png" \
@@ -159,10 +159,10 @@ jobs:
         run: |
           pyinstaller --onefile \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:core" \
+            --add-data "build_info.json:src/core" \
             --add-data "build_info.json:src/core/interface" \
             --add-data "src/core/interface/assets:src/core/interface/assets" \
-            --icon "src/core/interface/assets/logo.png" \
+            --icon "src/core/interface/assets/fr logo.png" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
