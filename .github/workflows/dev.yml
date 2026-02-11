@@ -106,7 +106,7 @@ jobs:
         run: |
           python -c "
           from PIL import Image
-          img = Image.open('core/interface/assets/logo.png')
+          img = Image.open('src/coreinterface/assets/logo.png')
           img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
           print('Icon converted successfully')
           "
@@ -126,10 +126,10 @@ jobs:
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --include-data-dir=core/interface/assets=core/interface/assets \
+            --include-data-dir=src/coreinterface/assets=src/coreinterface/assets \
             --include-data-files=build_info.json=build_info.json \
-            --include-data-files=build_info.json=core/build_info.json \
-            --include-data-files=build_info.json=core/interface/build_info.json \
+            --include-data-files=build_info.json=src/build_info.json \
+            --include-data-files=build_info.json=src/core/interface/build_info.json \
             --output-filename=${{ env.APP_NAME }}.exe \
             src/main.py
 
@@ -140,9 +140,9 @@ jobs:
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
             --add-data "build_info.json:core" \
-            --add-data "build_info.json:core/interface" \
-            --add-data "core/interface/assets:core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
+            --add-data "build_info.json:src/core/interface" \
+            --add-data "src/coreinterface/assets:src/coreinterface/assets" \
+            --icon "src/coreinterface/assets/logo.png" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
@@ -160,9 +160,9 @@ jobs:
           pyinstaller --onefile \
             --add-data "build_info.json:." \
             --add-data "build_info.json:core" \
-            --add-data "build_info.json:core/interface" \
-            --add-data "core/interface/assets:core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
+            --add-data "build_info.json:src/core/interface" \
+            --add-data "src/coreinterface/assets:src/coreinterface/assets" \
+            --icon "src/coreinterface/assets/logo.png" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
