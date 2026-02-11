@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 env:
-  PYTHON_VERSION: "3.11"
+  PYTHON_VERSION: "3.12"
   APP_NAME: "SoftwareManager"
 
 jobs:
@@ -57,7 +57,13 @@ jobs:
       - name: Install Python dependencies
         run: |
           uv pip install -r requirements.txt
-          uv pip install pyinstaller backports.tarfile pillow
+          uv pip install Pillow
+        env:
+          UV_SYSTEM_PYTHON: 1
+
+      - name: Install Nuitka (Windows only)
+        if: runner.os == 'Windows'
+        run: uv pip install nuitka
         env:
           UV_SYSTEM_PYTHON: 1
 
@@ -82,28 +88,53 @@ jobs:
           }
           EOF
 
-      - name: Build executable with PyInstaller (Windows)
+      - name: Install UPX (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
-            --add-data "build_info.json;." \
-            --add-data "build_info.json;core" \
-            --add-data "build_info.json;core/interface" \
-            --add-data "core/interface/assets;core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
-            --exclude-module PyQt6 \
-            --exclude-module PyQt5 \
-            --hidden-import=backports.tarfile \
-            --hidden-import=backports \
-            --hidden-import=jaraco.context \
-            --hidden-import=jaraco.text \
-            --hidden-import=jaraco.functools \
-            --name ${{ env.APP_NAME }} \
+          curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
+          7z x upx.zip -oupx-dir
+          UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
+          echo "$UPX_DIR" >> $GITHUB_PATH
+          export PATH="$UPX_DIR:$PATH"
+          echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
+          upx --version | head -1
+
+      - name: Convert icon for Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -c "
+          from PIL import Image
+          img = Image.open('core/interface/assets/logo.png')
+          img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
+          print('Icon converted successfully')
+          "
+
+      - name: Build with Nuitka (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -m nuitka \
+            --onefile \
+            --onefile-no-compression \
+            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --assume-yes-for-downloads \
+            --windows-console-mode=disable \
+            --windows-icon-from-ico=app_icon.ico \
+            --enable-plugin=pyside6 \
+            --enable-plugin=upx \
+            --upx-binary="${{ env.UPX_BINARY }}" \
+            --noinclude-qt-translations \
+            --include-data-dir=core/interface/assets=core/interface/assets \
+            --include-data-files=build_info.json=build_info.json \
+            --include-data-files=build_info.json=core/build_info.json \
+            --include-data-files=build_info.json=core/interface/build_info.json \
+            --output-filename=${{ env.APP_NAME }}.exe \
             main.py
 
-      - name: Build executable with PyInstaller (Unix)
-        if: runner.os != 'Windows'
+      - name: Build with PyInstaller (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           pyinstaller --onefile --windowed \
@@ -122,22 +153,43 @@ jobs:
             --name ${{ env.APP_NAME }} \
             main.py
 
-      - name: Make executable (Unix)
-        if: runner.os != 'Windows'
-        run: chmod +x dist/${{ env.APP_NAME }}
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          pyinstaller --onefile \
+            --add-data "build_info.json:." \
+            --add-data "build_info.json:core" \
+            --add-data "build_info.json:core/interface" \
+            --add-data "core/interface/assets:core/interface/assets" \
+            --icon "core/interface/assets/logo.png" \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
+            --name ${{ env.APP_NAME }} \
+            main.py
 
       - name: Rename artifact
         shell: bash
         run: |
-          cd dist
-          mv ${{ env.APP_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }} ${{ matrix.artifact_name }}
-          ls -la
+          mkdir -p dist-final
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            mv ${{ env.APP_NAME }}.exe dist-final/${{ matrix.artifact_name }}
+          else
+            chmod +x dist/${{ env.APP_NAME }}
+            mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
+          fi
+          ls -la dist-final/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-build
-          path: dist/${{ matrix.artifact_name }}
+          path: dist-final/${{ matrix.artifact_name }}
           retention-days: 1
 
   release:
@@ -162,9 +214,16 @@ jobs:
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
           ls -la release/
 
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Generate release notes
         run: |
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
+          CHECKSUMS=$(cat release/SHA256SUMS.txt)
           cat > release_notes.md << EOF
           ## Development Build
           
@@ -177,6 +236,11 @@ jobs:
           - Linux: \`SoftwareManager-dev-${SHORT_SHA}-linux\`
           - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.exe\`
           - macOS: \`SoftwareManager-dev-${SHORT_SHA}-macos\`
+          
+          ### SHA-256 Checksums
+          \`\`\`
+          ${CHECKSUMS}
+          \`\`\`
           EOF
           cat release_notes.md
 
@@ -190,5 +254,6 @@ jobs:
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-linux
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.exe
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-macos
+            release/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
