@@ -57,7 +57,12 @@ jobs:
       - name: Install Python dependencies
         run: |
           uv pip install -r requirements.txt
-          uv pip install nuitka
+        env:
+          UV_SYSTEM_PYTHON: 1
+
+      - name: Install Nuitka (Windows only)
+        if: runner.os == 'Windows'
+        run: uv pip install nuitka
         env:
           UV_SYSTEM_PYTHON: 1
 
@@ -82,27 +87,16 @@ jobs:
           }
           EOF
 
-      - name: Install UPX
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
         shell: bash
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
-            7z x upx.zip -oupx-dir
-            UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
-            echo "$UPX_DIR" >> $GITHUB_PATH
-            export PATH="$UPX_DIR:$PATH"
-            echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
-          elif [ "$RUNNER_OS" == "Linux" ]; then
-            curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz -o upx.tar.xz
-            tar xf upx.tar.xz
-            UPX_DIR="$(pwd)/upx-5.1.0-amd64_linux"
-            echo "$UPX_DIR" >> $GITHUB_PATH
-            export PATH="$UPX_DIR:$PATH"
-            echo "UPX_BINARY=$UPX_DIR/upx" >> $GITHUB_ENV
-          else
-            brew install upx
-            echo "UPX_BINARY=$(which upx)" >> $GITHUB_ENV
-          fi
+          curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
+          7z x upx.zip -oupx-dir
+          UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
+          echo "$UPX_DIR" >> $GITHUB_PATH
+          export PATH="$UPX_DIR:$PATH"
+          echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
           upx --version | head -1
 
       - name: Convert icon for Windows
@@ -110,14 +104,14 @@ jobs:
         shell: bash
         run: |
           python -c "
-from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QApplication
-import sys
-app = QApplication.instance() or QApplication(sys.argv)
-img = QImage('core/interface/assets/logo.png')
-img.save('app_icon.ico')
-print('Icon converted successfully')
-"
+          from PySide6.QtGui import QImage
+          from PySide6.QtWidgets import QApplication
+          import sys
+          app = QApplication.instance() or QApplication(sys.argv)
+          img = QImage('core/interface/assets/logo.png')
+          img.save('app_icon.ico')
+          print('Icon converted successfully')
+          "
 
       - name: Build with Nuitka (Windows)
         if: runner.os == 'Windows'
@@ -134,46 +128,6 @@ print('Icon converted successfully')
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --nofollow-import-to=PySide6.QtWebEngineWidgets \
-            --nofollow-import-to=PySide6.QtWebEngineCore \
-            --nofollow-import-to=PySide6.QtWebChannel \
-            --nofollow-import-to=PySide6.QtMultimedia \
-            --nofollow-import-to=PySide6.QtMultimediaWidgets \
-            --nofollow-import-to=PySide6.QtQuick \
-            --nofollow-import-to=PySide6.QtQuickWidgets \
-            --nofollow-import-to=PySide6.QtQml \
-            --nofollow-import-to=PySide6.QtDesigner \
-            --nofollow-import-to=PySide6.Qt3DCore \
-            --nofollow-import-to=PySide6.Qt3DRender \
-            --nofollow-import-to=PySide6.Qt3DInput \
-            --nofollow-import-to=PySide6.QtBluetooth \
-            --nofollow-import-to=PySide6.QtNfc \
-            --nofollow-import-to=PySide6.QtSensors \
-            --nofollow-import-to=PySide6.QtSerialPort \
-            --nofollow-import-to=PySide6.QtTest \
-            --nofollow-import-to=PySide6.QtLocation \
-            --nofollow-import-to=PySide6.QtPdf \
-            --nofollow-import-to=PySide6.QtPdfWidgets \
-            --nofollow-import-to=PySide6.QtCharts \
-            --nofollow-import-to=PySide6.QtDataVisualization \
-            --nofollow-import-to=PySide6.QtGraphs \
-            --nofollow-import-to=PySide6.QtNetworkAuth \
-            --nofollow-import-to=PySide6.QtPositioning \
-            --nofollow-import-to=PySide6.QtRemoteObjects \
-            --nofollow-import-to=PySide6.QtScxml \
-            --nofollow-import-to=PySide6.QtSpatialAudio \
-            --nofollow-import-to=PySide6.QtSvgWidgets \
-            --nofollow-import-to=PySide6.QtSvg \
-            --nofollow-import-to=PySide6.QtTextToSpeech \
-            --nofollow-import-to=PySide6.QtHelp \
-            --nofollow-import-to=PySide6.QtOpenGL \
-            --nofollow-import-to=PySide6.QtOpenGLWidgets \
-            --nofollow-import-to=PySide6.QtDBus \
-            --nofollow-import-to=PySide6.QtSql \
-            --nofollow-import-to=PySide6.QtXml \
-            --nofollow-import-to=PySide6.QtConcurrent \
-            --nofollow-import-to=PySide6.QtHttpServer \
-            --nofollow-import-to=PySide6.QtStateMachine \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -181,139 +135,43 @@ print('Icon converted successfully')
             --output-filename=${{ env.APP_NAME }}.exe \
             main.py
 
-      - name: Build with Nuitka (Linux)
-        if: runner.os == 'Linux'
+      - name: Build with PyInstaller (Unix)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
-          python -m nuitka \
-            --onefile \
-            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
-            --assume-yes-for-downloads \
-            --enable-plugin=pyside6 \
-            --enable-plugin=upx \
-            --upx-binary="${{ env.UPX_BINARY }}" \
-            --noinclude-qt-translations \
-            --nofollow-import-to=PySide6.QtWebEngineWidgets \
-            --nofollow-import-to=PySide6.QtWebEngineCore \
-            --nofollow-import-to=PySide6.QtWebChannel \
-            --nofollow-import-to=PySide6.QtMultimedia \
-            --nofollow-import-to=PySide6.QtMultimediaWidgets \
-            --nofollow-import-to=PySide6.QtQuick \
-            --nofollow-import-to=PySide6.QtQuickWidgets \
-            --nofollow-import-to=PySide6.QtQml \
-            --nofollow-import-to=PySide6.QtDesigner \
-            --nofollow-import-to=PySide6.Qt3DCore \
-            --nofollow-import-to=PySide6.Qt3DRender \
-            --nofollow-import-to=PySide6.Qt3DInput \
-            --nofollow-import-to=PySide6.QtBluetooth \
-            --nofollow-import-to=PySide6.QtNfc \
-            --nofollow-import-to=PySide6.QtSensors \
-            --nofollow-import-to=PySide6.QtSerialPort \
-            --nofollow-import-to=PySide6.QtTest \
-            --nofollow-import-to=PySide6.QtLocation \
-            --nofollow-import-to=PySide6.QtPdf \
-            --nofollow-import-to=PySide6.QtPdfWidgets \
-            --nofollow-import-to=PySide6.QtCharts \
-            --nofollow-import-to=PySide6.QtDataVisualization \
-            --nofollow-import-to=PySide6.QtGraphs \
-            --nofollow-import-to=PySide6.QtNetworkAuth \
-            --nofollow-import-to=PySide6.QtPositioning \
-            --nofollow-import-to=PySide6.QtRemoteObjects \
-            --nofollow-import-to=PySide6.QtScxml \
-            --nofollow-import-to=PySide6.QtSpatialAudio \
-            --nofollow-import-to=PySide6.QtSvgWidgets \
-            --nofollow-import-to=PySide6.QtSvg \
-            --nofollow-import-to=PySide6.QtTextToSpeech \
-            --nofollow-import-to=PySide6.QtHelp \
-            --nofollow-import-to=PySide6.QtOpenGL \
-            --nofollow-import-to=PySide6.QtOpenGLWidgets \
-            --nofollow-import-to=PySide6.QtDBus \
-            --nofollow-import-to=PySide6.QtSql \
-            --nofollow-import-to=PySide6.QtXml \
-            --nofollow-import-to=PySide6.QtConcurrent \
-            --nofollow-import-to=PySide6.QtHttpServer \
-            --nofollow-import-to=PySide6.QtStateMachine \
-            --include-data-dir=core/interface/assets=core/interface/assets \
-            --include-data-files=build_info.json=build_info.json \
-            --include-data-files=build_info.json=core/build_info.json \
-            --include-data-files=build_info.json=core/interface/build_info.json \
-            --output-filename=${{ env.APP_NAME }} \
+          pyinstaller --onefile --windowed \
+            --add-data "build_info.json:." \
+            --add-data "build_info.json:core" \
+            --add-data "build_info.json:core/interface" \
+            --add-data "core/interface/assets:core/interface/assets" \
+            --icon "core/interface/assets/logo.png" \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
+            --name ${{ env.APP_NAME }} \
             main.py
 
-      - name: Build with Nuitka (macOS)
-        if: runner.os == 'macOS'
+      - name: Rename artifact
         shell: bash
         run: |
-          python -m nuitka \
-            --onefile \
-            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
-            --assume-yes-for-downloads \
-            --enable-plugin=pyside6 \
-            --noinclude-qt-translations \
-            --nofollow-import-to=PySide6.QtWebEngineWidgets \
-            --nofollow-import-to=PySide6.QtWebEngineCore \
-            --nofollow-import-to=PySide6.QtWebChannel \
-            --nofollow-import-to=PySide6.QtMultimedia \
-            --nofollow-import-to=PySide6.QtMultimediaWidgets \
-            --nofollow-import-to=PySide6.QtQuick \
-            --nofollow-import-to=PySide6.QtQuickWidgets \
-            --nofollow-import-to=PySide6.QtQml \
-            --nofollow-import-to=PySide6.QtDesigner \
-            --nofollow-import-to=PySide6.Qt3DCore \
-            --nofollow-import-to=PySide6.Qt3DRender \
-            --nofollow-import-to=PySide6.Qt3DInput \
-            --nofollow-import-to=PySide6.QtBluetooth \
-            --nofollow-import-to=PySide6.QtNfc \
-            --nofollow-import-to=PySide6.QtSensors \
-            --nofollow-import-to=PySide6.QtSerialPort \
-            --nofollow-import-to=PySide6.QtTest \
-            --nofollow-import-to=PySide6.QtLocation \
-            --nofollow-import-to=PySide6.QtPdf \
-            --nofollow-import-to=PySide6.QtPdfWidgets \
-            --nofollow-import-to=PySide6.QtCharts \
-            --nofollow-import-to=PySide6.QtDataVisualization \
-            --nofollow-import-to=PySide6.QtGraphs \
-            --nofollow-import-to=PySide6.QtNetworkAuth \
-            --nofollow-import-to=PySide6.QtPositioning \
-            --nofollow-import-to=PySide6.QtRemoteObjects \
-            --nofollow-import-to=PySide6.QtScxml \
-            --nofollow-import-to=PySide6.QtSpatialAudio \
-            --nofollow-import-to=PySide6.QtSvgWidgets \
-            --nofollow-import-to=PySide6.QtSvg \
-            --nofollow-import-to=PySide6.QtTextToSpeech \
-            --nofollow-import-to=PySide6.QtHelp \
-            --nofollow-import-to=PySide6.QtOpenGL \
-            --nofollow-import-to=PySide6.QtOpenGLWidgets \
-            --nofollow-import-to=PySide6.QtDBus \
-            --nofollow-import-to=PySide6.QtSql \
-            --nofollow-import-to=PySide6.QtXml \
-            --nofollow-import-to=PySide6.QtConcurrent \
-            --nofollow-import-to=PySide6.QtHttpServer \
-            --nofollow-import-to=PySide6.QtStateMachine \
-            --include-data-dir=core/interface/assets=core/interface/assets \
-            --include-data-files=build_info.json=build_info.json \
-            --include-data-files=build_info.json=core/build_info.json \
-            --include-data-files=build_info.json=core/interface/build_info.json \
-            --output-filename=${{ env.APP_NAME }} \
-            main.py
-
-      - name: Prepare artifact
-        shell: bash
-        run: |
-          mkdir -p dist
+          mkdir -p dist-final
           if [ "$RUNNER_OS" == "Windows" ]; then
-            mv ${{ env.APP_NAME }}.exe dist/${{ matrix.artifact_name }}
+            mv ${{ env.APP_NAME }}.exe dist-final/${{ matrix.artifact_name }}
           else
-            mv ${{ env.APP_NAME }} dist/${{ matrix.artifact_name }}
-            chmod +x dist/${{ matrix.artifact_name }}
+            chmod +x dist/${{ env.APP_NAME }}
+            mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
           fi
-          ls -la dist/
+          ls -la dist-final/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-build
-          path: dist/${{ matrix.artifact_name }}
+          path: dist-final/${{ matrix.artifact_name }}
           retention-days: 1
 
   release:
