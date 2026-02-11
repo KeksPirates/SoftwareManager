@@ -131,12 +131,9 @@ jobs:
         run: |
           python -m nuitka \
             --onefile \
-            --onefile-no-compression \
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
             --assume-yes-for-downloads \
             --enable-plugin=pyside6 \
-            --enable-plugin=upx \
-            --upx-binary="${{ env.UPX_BINARY }}" \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -185,9 +182,16 @@ jobs:
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
           ls -la release/
 
+      - name: Generate checksums
+        run: |
+          cd release
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Generate release notes
         run: |
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
+          CHECKSUMS=$(cat release/SHA256SUMS.txt)
           cat > release_notes.md << EOF
           ## Development Build
           
@@ -200,6 +204,11 @@ jobs:
           - Linux: \`SoftwareManager-dev-${SHORT_SHA}-linux\`
           - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.exe\`
           - macOS: \`SoftwareManager-dev-${SHORT_SHA}-macos\`
+          
+          ### SHA-256 Checksums
+          \`\`\`
+          ${CHECKSUMS}
+          \`\`\`
           EOF
           cat release_notes.md
 
@@ -213,5 +222,6 @@ jobs:
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-linux
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.exe
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-macos
+            release/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

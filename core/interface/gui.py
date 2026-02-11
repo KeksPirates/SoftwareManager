@@ -73,14 +73,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.log_signal.connect(self._on_log_signal)
 
         def get_asset_path(filename):
-            if getattr(sys, 'frozen', False):
-                base_path = sys._MEIPASS 
-            else:
-                base_path = os.path.dirname(__file__)
-
-            asset_path = os.path.join(base_path, 'core', 'interface', 'assets', filename)
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            asset_path = os.path.join(base_path, 'assets', filename)
             if os.path.exists(asset_path):
                 return asset_path
+
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                asset_path = os.path.join(sys._MEIPASS, 'core', 'interface', 'assets', filename)
+                if os.path.exists(asset_path):
+                    return asset_path
 
             return os.path.join('core', 'interface', 'assets', filename)
         
