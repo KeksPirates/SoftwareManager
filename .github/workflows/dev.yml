@@ -131,7 +131,7 @@ jobs:
             --include-data-files=build_info.json=core/build_info.json \
             --include-data-files=build_info.json=core/interface/build_info.json \
             --output-filename=${{ env.APP_NAME }}.exe \
-            main.py
+            src/main.py
 
       - name: Build with PyInstaller (Linux)
         if: runner.os == 'Linux'
@@ -151,7 +151,7 @@ jobs:
             --hidden-import=jaraco.text \
             --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
-            main.py
+            src/main.py
 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
@@ -171,7 +171,7 @@ jobs:
             --hidden-import=jaraco.text \
             --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
-            main.py
+            src/main.py
 
       - name: Rename artifact
         shell: bash
