@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 env:
-  PYTHON_VERSION: "3.11"
+  PYTHON_VERSION: "3.12"
   APP_NAME: "SoftwareManager"
 
 jobs:
@@ -57,7 +57,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           uv pip install -r requirements.txt
-          uv pip install pyinstaller backports.tarfile pillow
+          uv pip install nuitka
         env:
           UV_SYSTEM_PYTHON: 1
 
@@ -82,56 +82,68 @@ jobs:
           }
           EOF
 
-      - name: Build executable with PyInstaller (Windows)
+      - name: Install UPX
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
+            7z x upx.zip -oupx-dir
+            echo "$(pwd)/upx-dir" >> $GITHUB_PATH
+          elif [ "$RUNNER_OS" == "Linux" ]; then
+            curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz -o upx.tar.xz
+            tar xf upx.tar.xz
+            echo "$(pwd)/upx-5.1.0-amd64_linux" >> $GITHUB_PATH
+          else
+            brew install upx
+          fi
+          upx --version | head -1
+
+      - name: Build with Nuitka (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
-            --add-data "build_info.json;." \
-            --add-data "build_info.json;core" \
-            --add-data "build_info.json;core/interface" \
-            --add-data "core/interface/assets;core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
-            --exclude-module PyQt6 \
-            --exclude-module PyQt5 \
-            --hidden-import=backports.tarfile \
-            --hidden-import=backports \
-            --hidden-import=jaraco.context \
-            --hidden-import=jaraco.text \
-            --hidden-import=jaraco.functools \
-            --name ${{ env.APP_NAME }} \
+          python -m nuitka \
+            --onefile \
+            --onefile-no-compression \
+            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --windows-console-mode=disable \
+            --enable-plugin=pyside6 \
+            --enable-plugin=upx \
+            --include-data-dir=core/interface/assets=core/interface/assets \
+            --include-data-files=build_info.json=build_info.json \
+            --include-data-files=build_info.json=core/build_info.json \
+            --include-data-files=build_info.json=core/interface/build_info.json \
+            --output-filename=${{ env.APP_NAME }}.exe \
             main.py
 
-      - name: Build executable with PyInstaller (Unix)
+      - name: Build with Nuitka (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          pyinstaller --onefile --windowed \
-            --add-data "build_info.json:." \
-            --add-data "build_info.json:core" \
-            --add-data "build_info.json:core/interface" \
-            --add-data "core/interface/assets:core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
-            --exclude-module PyQt6 \
-            --exclude-module PyQt5 \
-            --hidden-import=backports.tarfile \
-            --hidden-import=backports \
-            --hidden-import=jaraco.context \
-            --hidden-import=jaraco.text \
-            --hidden-import=jaraco.functools \
-            --name ${{ env.APP_NAME }} \
+          python -m nuitka \
+            --onefile \
+            --onefile-no-compression \
+            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --enable-plugin=pyside6 \
+            --enable-plugin=upx \
+            --include-data-dir=core/interface/assets=core/interface/assets \
+            --include-data-files=build_info.json=build_info.json \
+            --include-data-files=build_info.json=core/build_info.json \
+            --include-data-files=build_info.json=core/interface/build_info.json \
+            --output-filename=${{ env.APP_NAME }} \
             main.py
 
-      - name: Make executable (Unix)
-        if: runner.os != 'Windows'
-        run: chmod +x dist/${{ env.APP_NAME }}
-
-      - name: Rename artifact
+      - name: Prepare artifact
         shell: bash
         run: |
-          cd dist
-          mv ${{ env.APP_NAME }}${{ runner.os == 'Windows' && '.exe' || '' }} ${{ matrix.artifact_name }}
-          ls -la
+          mkdir -p dist
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            mv ${{ env.APP_NAME }}.exe dist/${{ matrix.artifact_name }}
+          else
+            mv ${{ env.APP_NAME }} dist/${{ matrix.artifact_name }}
+            chmod +x dist/${{ matrix.artifact_name }}
+          fi
+          ls -la dist/
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
