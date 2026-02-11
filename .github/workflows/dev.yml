@@ -105,6 +105,20 @@ jobs:
           fi
           upx --version | head -1
 
+      - name: Convert icon for Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -c "
+from PySide6.QtGui import QImage
+from PySide6.QtWidgets import QApplication
+import sys
+app = QApplication.instance() or QApplication(sys.argv)
+img = QImage('core/interface/assets/logo.png')
+img.save('app_icon.ico')
+print('Icon converted successfully')
+"
+
       - name: Build with Nuitka (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -115,23 +129,51 @@ jobs:
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
             --assume-yes-for-downloads \
             --windows-console-mode=disable \
+            --windows-icon-from-ico=app_icon.ico \
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --noinclude-dlls='Qt6WebEngine*' \
-            --noinclude-dlls='Qt6Multimedia*' \
-            --noinclude-dlls='Qt6Quick*' \
-            --noinclude-dlls='Qt6Qml*' \
-            --noinclude-dlls='Qt6Designer*' \
-            --noinclude-dlls='Qt63D*' \
-            --noinclude-dlls='Qt6Bluetooth*' \
-            --noinclude-dlls='Qt6Nfc*' \
-            --noinclude-dlls='Qt6Sensors*' \
-            --noinclude-dlls='Qt6Serial*' \
-            --noinclude-dlls='Qt6Test*' \
-            --noinclude-dlls='Qt6Location*' \
-            --noinclude-dlls='Qt6Pdf*' \
+            --nofollow-import-to=PySide6.QtWebEngineWidgets \
+            --nofollow-import-to=PySide6.QtWebEngineCore \
+            --nofollow-import-to=PySide6.QtWebChannel \
+            --nofollow-import-to=PySide6.QtMultimedia \
+            --nofollow-import-to=PySide6.QtMultimediaWidgets \
+            --nofollow-import-to=PySide6.QtQuick \
+            --nofollow-import-to=PySide6.QtQuickWidgets \
+            --nofollow-import-to=PySide6.QtQml \
+            --nofollow-import-to=PySide6.QtDesigner \
+            --nofollow-import-to=PySide6.Qt3DCore \
+            --nofollow-import-to=PySide6.Qt3DRender \
+            --nofollow-import-to=PySide6.Qt3DInput \
+            --nofollow-import-to=PySide6.QtBluetooth \
+            --nofollow-import-to=PySide6.QtNfc \
+            --nofollow-import-to=PySide6.QtSensors \
+            --nofollow-import-to=PySide6.QtSerialPort \
+            --nofollow-import-to=PySide6.QtTest \
+            --nofollow-import-to=PySide6.QtLocation \
+            --nofollow-import-to=PySide6.QtPdf \
+            --nofollow-import-to=PySide6.QtPdfWidgets \
+            --nofollow-import-to=PySide6.QtCharts \
+            --nofollow-import-to=PySide6.QtDataVisualization \
+            --nofollow-import-to=PySide6.QtGraphs \
+            --nofollow-import-to=PySide6.QtNetworkAuth \
+            --nofollow-import-to=PySide6.QtPositioning \
+            --nofollow-import-to=PySide6.QtRemoteObjects \
+            --nofollow-import-to=PySide6.QtScxml \
+            --nofollow-import-to=PySide6.QtSpatialAudio \
+            --nofollow-import-to=PySide6.QtSvgWidgets \
+            --nofollow-import-to=PySide6.QtSvg \
+            --nofollow-import-to=PySide6.QtTextToSpeech \
+            --nofollow-import-to=PySide6.QtHelp \
+            --nofollow-import-to=PySide6.QtOpenGL \
+            --nofollow-import-to=PySide6.QtOpenGLWidgets \
+            --nofollow-import-to=PySide6.QtDBus \
+            --nofollow-import-to=PySide6.QtSql \
+            --nofollow-import-to=PySide6.QtXml \
+            --nofollow-import-to=PySide6.QtConcurrent \
+            --nofollow-import-to=PySide6.QtHttpServer \
+            --nofollow-import-to=PySide6.QtStateMachine \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -151,19 +193,46 @@ jobs:
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --noinclude-dlls='libQt6WebEngine*' \
-            --noinclude-dlls='libQt6Multimedia*' \
-            --noinclude-dlls='libQt6Quick*' \
-            --noinclude-dlls='libQt6Qml*' \
-            --noinclude-dlls='libQt6Designer*' \
-            --noinclude-dlls='libQt63D*' \
-            --noinclude-dlls='libQt6Bluetooth*' \
-            --noinclude-dlls='libQt6Nfc*' \
-            --noinclude-dlls='libQt6Sensors*' \
-            --noinclude-dlls='libQt6Serial*' \
-            --noinclude-dlls='libQt6Test*' \
-            --noinclude-dlls='libQt6Location*' \
-            --noinclude-dlls='libQt6Pdf*' \
+            --nofollow-import-to=PySide6.QtWebEngineWidgets \
+            --nofollow-import-to=PySide6.QtWebEngineCore \
+            --nofollow-import-to=PySide6.QtWebChannel \
+            --nofollow-import-to=PySide6.QtMultimedia \
+            --nofollow-import-to=PySide6.QtMultimediaWidgets \
+            --nofollow-import-to=PySide6.QtQuick \
+            --nofollow-import-to=PySide6.QtQuickWidgets \
+            --nofollow-import-to=PySide6.QtQml \
+            --nofollow-import-to=PySide6.QtDesigner \
+            --nofollow-import-to=PySide6.Qt3DCore \
+            --nofollow-import-to=PySide6.Qt3DRender \
+            --nofollow-import-to=PySide6.Qt3DInput \
+            --nofollow-import-to=PySide6.QtBluetooth \
+            --nofollow-import-to=PySide6.QtNfc \
+            --nofollow-import-to=PySide6.QtSensors \
+            --nofollow-import-to=PySide6.QtSerialPort \
+            --nofollow-import-to=PySide6.QtTest \
+            --nofollow-import-to=PySide6.QtLocation \
+            --nofollow-import-to=PySide6.QtPdf \
+            --nofollow-import-to=PySide6.QtPdfWidgets \
+            --nofollow-import-to=PySide6.QtCharts \
+            --nofollow-import-to=PySide6.QtDataVisualization \
+            --nofollow-import-to=PySide6.QtGraphs \
+            --nofollow-import-to=PySide6.QtNetworkAuth \
+            --nofollow-import-to=PySide6.QtPositioning \
+            --nofollow-import-to=PySide6.QtRemoteObjects \
+            --nofollow-import-to=PySide6.QtScxml \
+            --nofollow-import-to=PySide6.QtSpatialAudio \
+            --nofollow-import-to=PySide6.QtSvgWidgets \
+            --nofollow-import-to=PySide6.QtSvg \
+            --nofollow-import-to=PySide6.QtTextToSpeech \
+            --nofollow-import-to=PySide6.QtHelp \
+            --nofollow-import-to=PySide6.QtOpenGL \
+            --nofollow-import-to=PySide6.QtOpenGLWidgets \
+            --nofollow-import-to=PySide6.QtDBus \
+            --nofollow-import-to=PySide6.QtSql \
+            --nofollow-import-to=PySide6.QtXml \
+            --nofollow-import-to=PySide6.QtConcurrent \
+            --nofollow-import-to=PySide6.QtHttpServer \
+            --nofollow-import-to=PySide6.QtStateMachine \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -181,19 +250,46 @@ jobs:
             --assume-yes-for-downloads \
             --enable-plugin=pyside6 \
             --noinclude-qt-translations \
-            --noinclude-dlls='libQt6WebEngine*' \
-            --noinclude-dlls='libQt6Multimedia*' \
-            --noinclude-dlls='libQt6Quick*' \
-            --noinclude-dlls='libQt6Qml*' \
-            --noinclude-dlls='libQt6Designer*' \
-            --noinclude-dlls='libQt63D*' \
-            --noinclude-dlls='libQt6Bluetooth*' \
-            --noinclude-dlls='libQt6Nfc*' \
-            --noinclude-dlls='libQt6Sensors*' \
-            --noinclude-dlls='libQt6Serial*' \
-            --noinclude-dlls='libQt6Test*' \
-            --noinclude-dlls='libQt6Location*' \
-            --noinclude-dlls='libQt6Pdf*' \
+            --nofollow-import-to=PySide6.QtWebEngineWidgets \
+            --nofollow-import-to=PySide6.QtWebEngineCore \
+            --nofollow-import-to=PySide6.QtWebChannel \
+            --nofollow-import-to=PySide6.QtMultimedia \
+            --nofollow-import-to=PySide6.QtMultimediaWidgets \
+            --nofollow-import-to=PySide6.QtQuick \
+            --nofollow-import-to=PySide6.QtQuickWidgets \
+            --nofollow-import-to=PySide6.QtQml \
+            --nofollow-import-to=PySide6.QtDesigner \
+            --nofollow-import-to=PySide6.Qt3DCore \
+            --nofollow-import-to=PySide6.Qt3DRender \
+            --nofollow-import-to=PySide6.Qt3DInput \
+            --nofollow-import-to=PySide6.QtBluetooth \
+            --nofollow-import-to=PySide6.QtNfc \
+            --nofollow-import-to=PySide6.QtSensors \
+            --nofollow-import-to=PySide6.QtSerialPort \
+            --nofollow-import-to=PySide6.QtTest \
+            --nofollow-import-to=PySide6.QtLocation \
+            --nofollow-import-to=PySide6.QtPdf \
+            --nofollow-import-to=PySide6.QtPdfWidgets \
+            --nofollow-import-to=PySide6.QtCharts \
+            --nofollow-import-to=PySide6.QtDataVisualization \
+            --nofollow-import-to=PySide6.QtGraphs \
+            --nofollow-import-to=PySide6.QtNetworkAuth \
+            --nofollow-import-to=PySide6.QtPositioning \
+            --nofollow-import-to=PySide6.QtRemoteObjects \
+            --nofollow-import-to=PySide6.QtScxml \
+            --nofollow-import-to=PySide6.QtSpatialAudio \
+            --nofollow-import-to=PySide6.QtSvgWidgets \
+            --nofollow-import-to=PySide6.QtSvg \
+            --nofollow-import-to=PySide6.QtTextToSpeech \
+            --nofollow-import-to=PySide6.QtHelp \
+            --nofollow-import-to=PySide6.QtOpenGL \
+            --nofollow-import-to=PySide6.QtOpenGLWidgets \
+            --nofollow-import-to=PySide6.QtDBus \
+            --nofollow-import-to=PySide6.QtSql \
+            --nofollow-import-to=PySide6.QtXml \
+            --nofollow-import-to=PySide6.QtConcurrent \
+            --nofollow-import-to=PySide6.QtHttpServer \
+            --nofollow-import-to=PySide6.QtStateMachine \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
