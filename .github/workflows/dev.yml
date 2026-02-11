@@ -88,7 +88,7 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
             7z x upx.zip -oupx-dir
-            echo "$(pwd)/upx-dir" >> $GITHUB_PATH
+            echo "$(pwd)/upx-dir/upx-5.1.0-win64" >> $GITHUB_PATH
           elif [ "$RUNNER_OS" == "Linux" ]; then
             curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz -o upx.tar.xz
             tar xf upx.tar.xz
