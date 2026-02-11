@@ -118,6 +118,20 @@ jobs:
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
+            --noinclude-qt-translations \
+            --noinclude-dlls='Qt6WebEngine*' \
+            --noinclude-dlls='Qt6Multimedia*' \
+            --noinclude-dlls='Qt6Quick*' \
+            --noinclude-dlls='Qt6Qml*' \
+            --noinclude-dlls='Qt6Designer*' \
+            --noinclude-dlls='Qt63D*' \
+            --noinclude-dlls='Qt6Bluetooth*' \
+            --noinclude-dlls='Qt6Nfc*' \
+            --noinclude-dlls='Qt6Sensors*' \
+            --noinclude-dlls='Qt6Serial*' \
+            --noinclude-dlls='Qt6Test*' \
+            --noinclude-dlls='Qt6Location*' \
+            --noinclude-dlls='Qt6Pdf*' \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -125,8 +139,8 @@ jobs:
             --output-filename=${{ env.APP_NAME }}.exe \
             main.py
 
-      - name: Build with Nuitka (Unix)
-        if: runner.os != 'Windows'
+      - name: Build with Nuitka (Linux)
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           python -m nuitka \
@@ -134,6 +148,52 @@ jobs:
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
             --assume-yes-for-downloads \
             --enable-plugin=pyside6 \
+            --enable-plugin=upx \
+            --upx-binary="${{ env.UPX_BINARY }}" \
+            --noinclude-qt-translations \
+            --noinclude-dlls='libQt6WebEngine*' \
+            --noinclude-dlls='libQt6Multimedia*' \
+            --noinclude-dlls='libQt6Quick*' \
+            --noinclude-dlls='libQt6Qml*' \
+            --noinclude-dlls='libQt6Designer*' \
+            --noinclude-dlls='libQt63D*' \
+            --noinclude-dlls='libQt6Bluetooth*' \
+            --noinclude-dlls='libQt6Nfc*' \
+            --noinclude-dlls='libQt6Sensors*' \
+            --noinclude-dlls='libQt6Serial*' \
+            --noinclude-dlls='libQt6Test*' \
+            --noinclude-dlls='libQt6Location*' \
+            --noinclude-dlls='libQt6Pdf*' \
+            --include-data-dir=core/interface/assets=core/interface/assets \
+            --include-data-files=build_info.json=build_info.json \
+            --include-data-files=build_info.json=core/build_info.json \
+            --include-data-files=build_info.json=core/interface/build_info.json \
+            --output-filename=${{ env.APP_NAME }} \
+            main.py
+
+      - name: Build with Nuitka (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          python -m nuitka \
+            --onefile \
+            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --assume-yes-for-downloads \
+            --enable-plugin=pyside6 \
+            --noinclude-qt-translations \
+            --noinclude-dlls='libQt6WebEngine*' \
+            --noinclude-dlls='libQt6Multimedia*' \
+            --noinclude-dlls='libQt6Quick*' \
+            --noinclude-dlls='libQt6Qml*' \
+            --noinclude-dlls='libQt6Designer*' \
+            --noinclude-dlls='libQt63D*' \
+            --noinclude-dlls='libQt6Bluetooth*' \
+            --noinclude-dlls='libQt6Nfc*' \
+            --noinclude-dlls='libQt6Sensors*' \
+            --noinclude-dlls='libQt6Serial*' \
+            --noinclude-dlls='libQt6Test*' \
+            --noinclude-dlls='libQt6Location*' \
+            --noinclude-dlls='libQt6Pdf*' \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
