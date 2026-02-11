@@ -91,14 +91,17 @@ jobs:
             UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
             echo "$UPX_DIR" >> $GITHUB_PATH
             export PATH="$UPX_DIR:$PATH"
+            echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
           elif [ "$RUNNER_OS" == "Linux" ]; then
             curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-amd64_linux.tar.xz -o upx.tar.xz
             tar xf upx.tar.xz
             UPX_DIR="$(pwd)/upx-5.1.0-amd64_linux"
             echo "$UPX_DIR" >> $GITHUB_PATH
             export PATH="$UPX_DIR:$PATH"
+            echo "UPX_BINARY=$UPX_DIR/upx" >> $GITHUB_ENV
           else
             brew install upx
+            echo "UPX_BINARY=$(which upx)" >> $GITHUB_ENV
           fi
           upx --version | head -1
 
@@ -113,6 +116,7 @@ jobs:
             --windows-console-mode=disable \
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
+            --upx-binary="${{ env.UPX_BINARY }}" \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
@@ -130,6 +134,7 @@ jobs:
             --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
             --enable-plugin=pyside6 \
             --enable-plugin=upx \
+            --upx-binary="${{ env.UPX_BINARY }}" \
             --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=core/build_info.json \
