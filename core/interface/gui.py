@@ -29,6 +29,7 @@ import libtorrent as lt
 import time
 import sys
 import json
+import asyncio
 from core.utils.general.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
@@ -103,23 +104,22 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 state.version = build_info.get("version")
 
         # Check for updates on Windows
-        if state.ignore_updates is False:
-            if platform.system() == "Windows":
-                result = check_for_updates()
-                if result != (None, None):
-                    assets, latest_version = result
+        if state.ignore_updates is False and platform.system() == "Windows":
+            result = check_for_updates()
+            if result != (None, None):
+                assets, latest_version = result
 
-                    if assets:
-                        msg = QMessageBox()
-                        msg.setIcon(QMessageBox.Icon.Information)
-                        msg.setWindowTitle("Update Available")
-                        msg.setText("A new version is available.")
-                        msg.setInformativeText("Press Ok to download the update.")
-                        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
+                if assets:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Icon.Information)
+                    msg.setWindowTitle("Update Available")
+                    msg.setText("A new version is available.")
+                    msg.setInformativeText("Press Ok to download the update.")
+                    msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
 
-                        response = msg.exec_()
-                        if response == QMessageBox.StandardButton.Ok:
-                            download_update(latest_version)
+                    response = msg.exec_()
+                    if response == QMessageBox.StandardButton.Ok:
+                        download_update(latest_version)
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
@@ -476,10 +476,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             MainWindow._instance.log_signal.emit(text)
     
     def _on_log_signal(self, text):
-        self.consoleLog.append(text)
-        self.consoleLog.verticalScrollBar().setValue(
-            self.consoleLog.verticalScrollBar().maximum()
-        )
+        if hasattr(self, 'consoleLog'):
+            self.consoleLog.append(text)
+            self.consoleLog.verticalScrollBar().setValue(
+                self.consoleLog.verticalScrollBar().maximum()
+            )
 
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)
