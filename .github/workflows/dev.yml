@@ -100,17 +100,6 @@ jobs:
           echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
           upx --version | head -1
 
-      - name: Convert icon for Windows
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          python -c "
-          from PIL import Image
-          img = Image.open('src/core/interface/assets/logo.png')
-          img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
-          print('Icon converted successfully')
-          "
-
       - name: Build with Nuitka (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -126,7 +115,6 @@ jobs:
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --include-data-dir=src/core/interface/assets=src/core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
             --include-data-files=build_info.json=src/build_info.json \
             --include-data-files=build_info.json=src/core/interface/build_info.json \
@@ -141,8 +129,6 @@ jobs:
             --add-data "build_info.json:." \
             --add-data "build_info.json:src/core" \
             --add-data "build_info.json:src/core/interface" \
-            --add-data "src/core/interface/assets:src/core/interface/assets" \
-            --icon "src/core/interface/assets/logo.png" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
@@ -161,8 +147,6 @@ jobs:
             --add-data "build_info.json:." \
             --add-data "build_info.json:src/core" \
             --add-data "build_info.json:src/core/interface" \
-            --add-data "src/core/interface/assets:src/core/interface/assets" \
-            --icon "src/core/interface/assets/fr logo.png" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
