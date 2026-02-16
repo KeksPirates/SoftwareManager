@@ -80,11 +80,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return asset_path
 
             if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-                asset_path = os.path.join(sys._MEIPASS, 'core', 'interface', 'assets', filename)
+                asset_path = os.path.join(sys._MEIPASS, 'src', 'core', 'interface', 'assets', filename)
                 if os.path.exists(asset_path):
                     return asset_path
 
-            return os.path.join('core', 'interface', 'assets', filename)
+            return os.path.join('src', 'core', 'interface', 'assets', filename)
         
         self.setWindowIcon(QIcon(get_asset_path("logo.png")))
 
