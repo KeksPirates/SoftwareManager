@@ -1,4 +1,4 @@
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -29,7 +29,7 @@ import libtorrent as lt
 import time
 import sys
 import json
-import asyncio
+import base64
 from core.utils.general.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
@@ -38,6 +38,9 @@ from core.utils.network.update_checker import check_for_updates
 from core.interface.utils.tabhelper import create_tab
 from core.interface.utils.searchhelper import return_pressed
 from core.interface.dialogs.settings import settings_dialog
+from core.interface.assets.base64_icons import settings_black_base64
+from core.interface.assets.base64_icons import settings_white_base64
+from core.interface.assets.base64_icons import logo_base64
 from core.network.libtorrent_misc import cleanup_session
 from core.utils.general.shutdown import closehelper
 
@@ -73,21 +76,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
 
-        def get_asset_path(filename):
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            asset_path = os.path.join(base_path, 'assets', filename)
-            if os.path.exists(asset_path):
-                return asset_path
-
-            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-                asset_path = os.path.join(sys._MEIPASS, 'core', 'interface', 'assets', filename)
-                if os.path.exists(asset_path):
-                    return asset_path
-
-            return os.path.join('core', 'interface', 'assets', filename)
-        
-        self.setWindowIcon(QIcon(get_asset_path("logo.png")))
-
+        pixmap = QPixmap()
+        image_data = base64.b64decode(logo_base64)
+        pixmap.loadFromData(image_data)
+        self.setWindowIcon(QIcon(pixmap))
 
         if platform.system() == "Windows":
             try:
@@ -418,10 +410,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.settings_btn = QtWidgets.QToolButton()
         self.settings_btn.setIconSize(QSize(21, 21))
         self.settings_btn.setStyleSheet("background: transparent;")
+
         if darkdetect.isDark():
-            self.settings_btn.setIcon(QIcon(get_asset_path("settings_white.png")))
+            settings_white_pixmap = QPixmap()
+            settings_white = base64.b64decode(settings_white_base64)
+            settings_white_pixmap.loadFromData(settings_white)
+            self.settings_btn.setIcon(QIcon(settings_white_pixmap))
         else:
-            self.settings_btn.setIcon(QIcon(get_asset_path("settings_black.png")))
+            settings_black_pixmap = QPixmap()
+            settings_black = base64.b64decode(settings_black_base64)
+            settings_black_pixmap.loadFromData(settings_black)
+            self.settings_btn.setIcon(QIcon(settings_black_pixmap))
+
         self.settings_btn.setToolTip("Settings")
         self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_btn.clicked.connect(lambda: settings_dialog(self))

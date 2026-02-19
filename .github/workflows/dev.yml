@@ -106,7 +106,7 @@ jobs:
         run: |
           python -c "
           from PIL import Image
-          img = Image.open('core/interface/assets/logo.png')
+          img = Image.open('src/core/interface/assets/logo.png')
           img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
           print('Icon converted successfully')
           "
@@ -126,12 +126,11 @@ jobs:
             --enable-plugin=upx \
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
-            --include-data-dir=core/interface/assets=core/interface/assets \
             --include-data-files=build_info.json=build_info.json \
-            --include-data-files=build_info.json=core/build_info.json \
-            --include-data-files=build_info.json=core/interface/build_info.json \
+            --include-data-files=build_info.json=src/build_info.json \
+            --include-data-files=build_info.json=src/core/interface/build_info.json \
             --output-filename=${{ env.APP_NAME }}.exe \
-            main.py
+            src/main.py
 
       - name: Build with PyInstaller (Linux)
         if: runner.os == 'Linux'
@@ -139,10 +138,8 @@ jobs:
         run: |
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:core" \
-            --add-data "build_info.json:core/interface" \
-            --add-data "core/interface/assets:core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
+            --add-data "build_info.json:src/core" \
+            --add-data "build_info.json:src/core/interface" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
@@ -151,7 +148,7 @@ jobs:
             --hidden-import=jaraco.text \
             --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
-            main.py
+            src/main.py
 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
@@ -159,10 +156,8 @@ jobs:
         run: |
           pyinstaller --onefile \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:core" \
-            --add-data "build_info.json:core/interface" \
-            --add-data "core/interface/assets:core/interface/assets" \
-            --icon "core/interface/assets/logo.png" \
+            --add-data "build_info.json:src/core" \
+            --add-data "build_info.json:src/core/interface" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
@@ -171,7 +166,7 @@ jobs:
             --hidden-import=jaraco.text \
             --hidden-import=jaraco.functools \
             --name ${{ env.APP_NAME }} \
-            main.py
+            src/main.py
 
       - name: Rename artifact
         shell: bash
