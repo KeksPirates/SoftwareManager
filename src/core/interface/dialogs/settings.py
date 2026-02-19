@@ -4,7 +4,7 @@ from core.utils.general.logs import consoleLog
 from core.interface.utils.tabhelper import general_tab
 from core.interface.utils.tabhelper import paths_tab
 from core.interface.utils.tabhelper import network_tab
-from PySide6 import QtWidgets, Qt
+from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLineEdit, 
@@ -32,7 +32,7 @@ def settings_dialog(self):
 
         dialog.setLayout(QVBoxLayout())
 
-        if state.window_transparency and platform.system() != "Windows":
+        if state.window_transparency and platform.system() != "Windows" and dialog:
             dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         def close_settings():
