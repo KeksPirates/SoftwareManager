@@ -17,18 +17,23 @@ def scrape_steamrip_links(text = None):
         return []
 
     links = []
-    for i, gamehtml in enumerate(games):
-        if i == 0: print(gamehtml)
+    names = []
+    for gamehtml in games:
         link = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
         links += re.findall('(?<=href=")[^"]*', link.__str__())
+        name = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
+        names += re.findall('(?<=\/">)[^<]*', name.__str__())
+
+    print(names)
+
 
 
     # construct the list[dict[str,str]]
 
     ret = []
 
-    for link in links:
-        ret.append({"name" : link})
+    for i in range(len(names)-1):
+        ret.append({"name" : names[i], "link" : links[i]})
 
     return ret
 

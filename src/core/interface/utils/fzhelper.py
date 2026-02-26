@@ -2,7 +2,7 @@ import fuzzyfinder
 from PySide6 import QtCore, QtWidgets, QtGui
 from sys import exit
 
-class FuzzySearchWindow(QtWidgets.QWidget):
+class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
     """
     The dict should contain a:
     name : str
@@ -15,17 +15,26 @@ class FuzzySearchWindow(QtWidgets.QWidget):
 
     The key will be at the Top of the Table
     The value will be listed for each element
+
+    keys in ignorekeys will be ignored and not displayed, e.g. if oyu have links in the database which arent relevant
     """
-    def __init__(self, options: list[dict[str, str]]):
+    def __init__(self, options: list[dict[str, str]], ignorekeys: list[str] = []):
         super().__init__()
 
         self.opts: list[dict[str, str]] = options
+        self.ignorekeys = ignorekeys
 
         self.searchbox = QtWidgets.QLineEdit()
         self.searchbox.placeholderText = "Search for a game"
 
         self.table = QtWidgets.QTableWidget()
-        headers = self.opts[1].keys()
+
+        headers = []
+        for key in self.opts[1].keys():
+            if key not in self.ignorekeys:
+                headers.append(key)
+
+
 
         print(headers)
         self.table.setColumnCount(len(headers))
@@ -34,7 +43,9 @@ class FuzzySearchWindow(QtWidgets.QWidget):
         self.table.setRowCount(len(self.opts))
         for row_index, row_data in enumerate(self.opts):
             for col_index, key in enumerate(headers):
-                value = row_data.get(key, "")[1:-1].replace("-", " ")
+                if key in self.ignorekeys:
+                    continue
+                value = row_data.get(key, "")
                 item = QtWidgets.QTableWidgetItem(value)
                 self.table.setItem(row_index, col_index, item)
 
@@ -59,6 +70,8 @@ class FuzzySearchWindow(QtWidgets.QWidget):
 
         for row_index, row_data in enumerate(options):
             for col_index, key in enumerate(row_data.keys()):
+                if key in self.ignorekeys:
+                    continue
                 value = row_data.get(key, "")
                 self.table.setItem(
                     row_index,
@@ -71,7 +84,7 @@ if __name__ == "__main__":
     import core.data.scrapers.steamrip as sr
 
     app = QtWidgets.QApplication([])
-    widget = FuzzySearchWindow(sr.offline_scrape_steamrip_links())
+    widget = FuzzySearchWindow(sr.offline_scrape_steamrip_links(), ["link"])
     widget.resize(600,400)
     widget.show()
 
