@@ -25,7 +25,7 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
         self.ignorekeys = ignorekeys
 
         self.searchbox = QtWidgets.QLineEdit()
-        self.searchbox.placeholderText = "Search for a game"
+        self.searchbox.setPlaceholderText("Search for a game on Steamrip")
 
         self.table = QtWidgets.QTableWidget()
 

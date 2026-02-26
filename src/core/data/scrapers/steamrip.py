@@ -24,8 +24,6 @@ def scrape_steamrip_links(text = None):
         name = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
         names += re.findall('(?<=\/">)[^<]*', name.__str__())
 
-    print(names)
-
 
 
     # construct the list[dict[str,str]]
