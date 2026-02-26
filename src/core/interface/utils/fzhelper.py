@@ -28,6 +28,10 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
         self.searchbox.setPlaceholderText("Search for a game on Steamrip")
 
         self.table = QtWidgets.QTableWidget()
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)  # disable editing
+        self.table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)     # no selection highlight
+        self.table.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.searchbox.setFocus()
 
         headers = []
         for key in self.opts[1].keys():
