@@ -20,9 +20,9 @@ def scrape_steamrip_links(text = None):
     names = []
     for gamehtml in games:
         link = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
-        links += re.findall('(?<=href=")[^"]*', link.__str__())
+        links += re.findall(r'(?<=href=")[^"]*', link.__str__())
         name = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
-        names += re.findall('(?<=\/">)[^<]*', name.__str__())
+        names += re.findall(r'(?<=\/">)[^<]*', name.__str__())
 
 
 
@@ -42,5 +42,38 @@ def offline_scrape_steamrip_links():
 
     return scrape_steamrip_links(text)
 
+def scrape_steamrip_game_downloads(gamelink):
+    url = "https://steamrip.com" + gamelink
+    response = requests.get(url)
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    download_link_elements = soup.find_all("a",class_="shortc-button")
+
+    download_links = ["b", "g", "v", "m"]
+
+    for download_link in download_link_elements:
+        pure = download_link.attrs.get("href")
+        if pure[2] == "b":
+            download_links[0] = "https:" + pure
+        if pure[2] == "g":
+            download_links[1] = "https:" + pure
+        if pure[2] == "v":
+            download_links[2] = "https:" + pure
+        if pure[2] == "m":
+            download_links[3] = "https:" + pure
+
+    ret = []
+
+    for link in download_links:
+        if len(link) != 1:
+            ret.append(link)
+
+
+
+    return ret
+
+
 if __name__ == "__main__":
-    print(offline_scrape_steamrip_links())
+    #print(offline_scrape_steamrip_links())
+    print(scrape_steamrip_game_downloads("/r-e-p-o-free-download/"))
