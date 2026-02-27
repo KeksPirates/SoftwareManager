@@ -1,5 +1,4 @@
 import requests
-import asyncio
 import threading
 from bs4 import BeautifulSoup
 from core.utils.data.state import state
