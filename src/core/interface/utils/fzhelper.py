@@ -1,6 +1,8 @@
+from typing import Generator
 import fuzzyfinder
 from PySide6 import QtCore, QtWidgets, QtGui
 from sys import exit
+from copy import deepcopy
 
 class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
     """
@@ -18,11 +20,13 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
 
     keys in ignorekeys will be ignored and not displayed, e.g. if oyu have links in the database which arent relevant
     """
-    def __init__(self, options: list[dict[str, str]], ignorekeys: list[str] = []):
+    def __init__(self, options: list[dict[str, str]], ignorekeys: list[str] = [], columnClicklShouldReturn = 1):
         super().__init__()
 
         self.opts: list[dict[str, str]] = options
+        self.filtered_opts = deepcopy(self.opts)
         self.ignorekeys = ignorekeys
+        self.returncolumn = columnClicklShouldReturn
 
         self.searchbox = QtWidgets.QLineEdit()
         self.searchbox.setPlaceholderText("Search for a game on Steamrip")
@@ -57,7 +61,7 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
 
         self.searchbox.textChanged.connect(self.filter_table)
 
-
+        self.table.cellClicked.connect(self.cellClick)
 
         layout = QtWidgets.QGridLayout(self)
         layout.addWidget(self.searchbox, 0, 0)
@@ -70,9 +74,12 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
 
         searchquery = self.searchbox.text()
 
-        options = fuzzyfinder.main.fuzzyfinder(searchquery, self.opts, accessor=lambda x: x["name"])
+        options: Generator = fuzzyfinder.main.fuzzyfinder(searchquery, self.opts, accessor=lambda x: x["name"])
+
+        self.filtered_opts = []
 
         for row_index, row_data in enumerate(options):
+            self.filtered_opts.append(row_data)
             for col_index, key in enumerate(row_data.keys()):
                 if key in self.ignorekeys:
                     continue
@@ -83,12 +90,20 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
                     QtWidgets.QTableWidgetItem(value)
                 )
 
+    def cellClick(self, row: int, column: int):
+        item = self.table.item(row, self.returncolumn)
+
+        if item is not None:
+            value = item.text()
+            print(value)
+
+
 if __name__ == "__main__":
 
     import core.data.scrapers.steamrip as sr
 
     app = QtWidgets.QApplication([])
-    widget = FuzzySearchWindow(sr.offline_scrape_steamrip_links(), ["link"])
+    widget = FuzzySearchWindow(sr.offline_scrape_steamrip_links())
     widget.resize(600,400)
     widget.show()
 
