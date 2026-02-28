@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QTableWidget
 from typing import Optional, Any, List, Dict
 from pathlib import Path
 
@@ -19,6 +20,7 @@ class AppState(QObject):
         self.debug: bool = False
         self.autoresume: bool = True
         self.tracker: str = "rutracker"
+        self.tracker_list: dict[str, QTableWidget] = {}
         self.api_url: str = "https://api.michijackson.xyz"
         self.download_path: str = str(Path.home() / "Downloads")
         self.up_speed_limit: int = 0

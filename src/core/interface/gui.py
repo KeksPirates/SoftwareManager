@@ -145,32 +145,38 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         flush_log_buffer()
 
-        # Table Widget for Item List
-        self.qtablewidget = QTableWidget()
-        
-        self.qtablewidget.setColumnCount(4)
-        self.qtablewidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.qtablewidget.verticalHeader().setVisible(False)
-        self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author", "Seeders", "Leechers"])
+        def create_tracker_table(headers):
+            table = QTableWidget()
+            table.setColumnCount(len(headers))
+            table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+            table.verticalHeader().setVisible(False)
+            table.setHorizontalHeaderLabels(headers)
 
-        
+            header = table.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
+            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
+            header.resizeSection(1, 500)
+            header.setStretchLastSection(False)
 
-        header = self.qtablewidget.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
-        header.setStretchLastSection(False)
+            return table
+            
 
-        self.qtablewidget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.qtablewidget.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) 
+        self.rutrackerlist = create_tracker_table(["Post Title", "Author", "Seeders", "Leechers"])
+        self.uztrackerlist = create_tracker_table(["Post Title", "Author"])
+        self.monkruslist = create_tracker_table(["Post Title", "Author"])
 
-        header = self.qtablewidget.horizontalHeader()
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed) 
-        header.resizeSection(1, 500)
+        state.tracker_list.update({"rutracker": self.rutrackerlist, "uztracker": self.uztrackerlist, "m0nkrus": self.monkruslist})
+
+        self.rutrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.rutrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self.uztrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.uztrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) 
 
         container = QWidget()
         containerLayout = QVBoxLayout()
         containerLayout.addWidget(self.searchbar)
-        containerLayout.addWidget(self.qtablewidget)
+        containerLayout.addWidget(state.tracker_list[state.tracker])
 
         class DownloadModel(QAbstractTableModel):
             def __init__(self):
@@ -351,7 +357,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         delegate.clicked.connect(on_pause_resume_clicked)
 
         # download button triggers
-        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(self.qtablewidget.currentItem(), state.posts, state.post_titles))))
+        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.tracker_list[state.tracker].currentItem(), state.posts, state.post_titles))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
@@ -371,15 +377,16 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
-        self.horizontal_layout.addWidget(self.qtablewidget)
+        self.tracker_widget = state.tracker_list[state.tracker]
+        self.horizontal_layout.addWidget(self.tracker_widget)
 
-        self.tab1 = create_tab("Search", self.searchbar, self.qtablewidget, self.tabs, self.dlbutton, self.horizontal_layout)
+        self.tab1 = create_tab("Search", self.searchbar, state.tracker_list[state.tracker], self.tabs, self.dlbutton, self.horizontal_layout)
         # self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
         self.tab3 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
         if state.image_path is not None and os.path.exists(state.image_path):
             self.image = QImage(state.image_path)
-            self.image = self.image.scaledToWidth(300, Qt.SmoothTransformation)
+            self.image = self.image.scaledToWidth(300, Qt.TransformationMode.SmoothTransformation)
             self.pixmap = QPixmap.fromImage(self.image)
             self.overlay_label = QLabel(self)
             self.overlay_label.setPixmap(self.pixmap)
@@ -506,12 +513,20 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     def set_tracker(self, _):
         state.tracker = self.tracker_list.currentText()
 
+        while self.horizontal_layout.count():
+            item = self.horizontal_layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
+
+        tracker_widget = state.tracker_list[state.tracker]
+        self.horizontal_layout.addWidget(tracker_widget)
+
     def show_empty_results(self, show: bool):
         if show:
-            self.qtablewidget.hide()
+            state.tracker_list[state.tracker].hide()
             self.emptyResults.show()
         else:
-            self.qtablewidget.show()
+            state.tracker_list[state.tracker].show()
             self.emptyResults.hide()
 
     def show_empty_downloads(self):
@@ -525,8 +540,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     # thank you claude
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        table_width = self.qtablewidget.viewport().width()
-        self.qtablewidget.setColumnWidth(1, int(table_width * 0.3))
+        table_width = state.tracker_list[state.tracker].viewport().width()
+        state.tracker_list[state.tracker].setColumnWidth(1, int(table_width * 0.3))
 
     def contextMenuEvent(self, event: QContextMenuEvent):
         if self.downloadList.underMouse():
