@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QTableWidgetItem
-from core.utils.general.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.data.scrapers.uztracker import scrape_uztracker
 from core.data.scrapers.rutracker import scrape_rutracker
 from core.data.scrapers.monkrus import scrape_monkrus_telegram

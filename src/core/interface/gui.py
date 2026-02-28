@@ -1,5 +1,5 @@
-from PySide6 import QtWidgets, QtCore, QtGui
-from PySide6.QtCore import Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
+from PySide6 import QtWidgets
+from PySide6.QtCore import QPersistentModelIndex, Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
 from PySide6.QtWidgets import (
     QLineEdit,
     QTableView,
@@ -30,7 +30,7 @@ import time
 import sys
 import json
 import base64
-from core.utils.general.logs import consoleLog, remove_download_log, flush_log_buffer
+from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
@@ -41,7 +41,6 @@ from core.interface.dialogs.settings import settings_dialog
 from core.interface.assets.base64_icons import settings_black_base64
 from core.interface.assets.base64_icons import settings_white_base64
 from core.interface.assets.base64_icons import logo_base64
-from core.network.libtorrent_misc import cleanup_session
 from core.utils.general.shutdown import closehelper
 
 
@@ -183,19 +182,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 super().__init__()
                 self.headers = ["Action", "Name", "Status", "Progress", "Speed", "Size", "Total Size"]
 
-            def rowCount(self, parent=QModelIndex()):
+            def rowCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()) -> int:
                 return len(state.active_downloads)
             
-            def columnCount(self, parent=QModelIndex()):
+            def columnCount(self, parent: QModelIndex | QPersistentModelIndex = QModelIndex()):
                 return len(self.headers)
 
-            def headerData(self, section, orientation, role=Qt.DisplayRole): 
-                if role == Qt.DisplayRole and orientation == Qt.Horizontal: 
+            def headerData(self, section, orientation, role: int = Qt.ItemDataRole.DisplayRole): 
+                if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal: 
                     return self.headers[section]
                 return None
 
-            def data(self, index, role=Qt.DisplayRole): 
-                if role == Qt.DisplayRole: 
+            def data(self, index: QModelIndex | QPersistentModelIndex, role: int = Qt.ItemDataRole.DisplayRole): 
+                if role == Qt.ItemDataRole.DisplayRole: 
                     col = index.column()
 
                     if index.row() >= len(state.active_downloads) or index.row() < 0:
@@ -211,9 +210,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     elif col == 1:
                         return status.name if status.has_metadata else "Fetching metadata..."
                     elif col == 2:
-                        if status.state == lt.torrent_status.downloading: 
+                        if status.state == lt.torrent_status.downloading:
                             return "Downloading"
-                        elif status.state == lt.torrent_status.seeding: 
+                        elif status.state == lt.torrent_status.seeding:
                             return "Seeding"
                         elif status.paused:
                             return "Paused"
@@ -257,7 +256,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         else:
                             return "∞" if status.paused else "Stalled"
                 
-                if role == Qt.UserRole and index.column() == 0: 
+                if role == Qt.ItemDataRole.UserRole and index.column() == 0: 
                     magnet_link = list(state.active_downloads.keys())[index.row()] 
                     magnetdl = state.active_downloads[magnet_link]
                     return magnetdl.status().paused

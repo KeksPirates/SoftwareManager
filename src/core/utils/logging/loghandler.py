@@ -1,4 +1,4 @@
-from core.utils.general.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.utils.network.download import run_download_direct
 
 def split_data(data):

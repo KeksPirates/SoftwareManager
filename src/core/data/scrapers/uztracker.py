@@ -2,7 +2,7 @@ import requests
 import threading
 from bs4 import BeautifulSoup
 from core.utils.data.state import state
-from core.utils.general.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.utils.general.wrappers import run_thread
 
 

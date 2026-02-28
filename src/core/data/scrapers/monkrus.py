@@ -1,16 +1,28 @@
 from bs4 import BeautifulSoup
 import requests
-from core.utils.general.logs import consoleLog
+import time
 
-def scrape_monkrus_telegram(query):
+cache = {
+    "data": [],
+    "last_fetched": 0
+}
+
+cache_expiry = 300
+
+def _get_telegram_posts():
     post = 100
     max_posts = 250
-    posts: list[dict] = []
+    posts = []
     added = set()
-    
+
+    current_time = time.time()
+
+    if cache["data"] and (current_time - cache["last_fetched"] < cache_expiry):
+        return cache["data"]
+
     while post <= max_posts:
         url = f"https://t.me/s/real_monkrus/{post}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
         bubbles = soup.find_all("div", class_="tgme_widget_message_bubble")
         
@@ -25,7 +37,7 @@ def scrape_monkrus_telegram(query):
             title = post_txt.b.text
             link = bubble.find("a", href=lambda x: x and x.startswith("https://uztracker.net"))
             
-            if query.lower() in title.lower() and link:
+            if link:
                 post_url = link["href"]
                 if post_url not in added:
                     added.add(post_url)
@@ -39,4 +51,20 @@ def scrape_monkrus_telegram(query):
         post += 22
 
     posts.reverse()
+
+    cache["data"] = posts
+    cache["last_fetched"] = current_time
+
     return(posts)
+
+def scrape_monkrus_telegram(query):
+    posts = _get_telegram_posts()
+    filtered_posts = []
+
+    for post in posts:
+        if query.lower() in post["title"].lower():
+            filtered_post = post.copy()
+            filtered_post["id"] = len(filtered_posts) + 1
+            filtered_posts.append(filtered_post)
+
+    return filtered_posts

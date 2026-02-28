@@ -9,8 +9,8 @@ class AppState(QObject):
     def __init__(self):
         super().__init__()
         self.posts: List[Dict[str, Any]] = []
-        self.post_titles: List[str] = []
-        self.post_urls: List[str] = []
+        self.post_titles: Optional[List] = None
+        self.post_urls: Optional[List] = None
         self.post_author: List[str] = []
         self.post_seeders: List[str] = []
         self.post_leechers: List[str] = []
@@ -29,11 +29,11 @@ class AppState(QObject):
         self.max_downloads: int = 10
         self.settings_path: str = "" 
         self.dl_session: Any = None
-        self.active_downloads: List[str] = {}
+        self.active_downloads: Dict = {}
         self.window_transparency: bool = False
         self.interfaces: List = []
         self.active_interfaces: List = []
-        self.bound_interface: str = None
+        self.bound_interface: Any = None
 
     @property
     def image_path(self) -> str:

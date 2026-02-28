@@ -1,4 +1,4 @@
-from core.utils.general.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
 import psutil
 

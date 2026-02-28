@@ -7,6 +7,7 @@ class Download:
     title: str
     url: str
     magnet_uri: str
+    path: str
     completed: bool
 
 @dataclass
