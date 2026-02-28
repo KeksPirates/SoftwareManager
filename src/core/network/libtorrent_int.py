@@ -4,7 +4,7 @@ from core.network.interface import get_interface_ip
 import threading
 import libtorrent as lt
 from core.utils.data.state import state
-from core.utils.logs.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 
 
 global loop_running

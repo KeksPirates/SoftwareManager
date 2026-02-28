@@ -1,6 +1,6 @@
 from core.network.libtorrent_int import update_settings
 from core.utils.data.state import state
-from core.utils.logs.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from .config import create_config
 
 

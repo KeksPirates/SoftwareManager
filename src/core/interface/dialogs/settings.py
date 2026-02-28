@@ -1,6 +1,6 @@
 from core.utils.config.settings import save_settings
 from core.utils.data.state import state
-from core.utils.logs.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.interface.utils.tabhelper import general_tab
 from core.interface.utils.tabhelper import paths_tab
 from core.interface.utils.tabhelper import network_tab

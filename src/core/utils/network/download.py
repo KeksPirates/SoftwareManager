@@ -1,10 +1,10 @@
 from core.utils.data.state import state
-from core.utils.logs.logs import consoleLog
+from core.utils.logging.logs import consoleLog
 from core.utils.data.tracker import get_item_url
 from core.utils.data.tracker import get_magnet_link
 from core.network.libtorrent_wrapper import add_download
 from core.utils.general.wrappers import run_thread
-from core.utils.logs.logs import add_download_log
+from core.utils.logging.logs import add_download_log
 
 import threading
 
