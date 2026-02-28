@@ -17,22 +17,22 @@ def return_pressed(self):
         response = scrape_uztracker(search_text)
         if response:
             state.post_titles, state.post_urls = response
-            self.qtablewidget.clear()
+            state.tracker_list[state.tracker].clear()
             if state.post_titles and len(state.post_titles) > 0:
-                self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
-                self.qtablewidget.setRowCount(len(state.post_titles))
+                state.tracker_list[state.tracker].setHorizontalHeaderLabels(["Post Title", "Author"])
+                state.tracker_list[state.tracker].setRowCount(len(state.post_titles))
                 for i, author in enumerate(state.post_author):
-                    self.qtablewidget.setItem(i, 1, QTableWidgetItem(author))
+                    state.tracker_list[state.tracker].setItem(i, 1, QTableWidgetItem(author))
                 for i, title in enumerate(state.post_titles):
-                    self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
+                    state.tracker_list[state.tracker].setItem(i, 0, QTableWidgetItem(title))
                 self.show_empty_results(False)
             else:
                 consoleLog(f"No Results for {search_text}")
-                self.qtablewidget.clear()
+                state.tracker_list[state.tracker].clear()
                 self.show_empty_results(True)
         else:
             consoleLog(f"No response from uztracker")
-            self.qtablewidget.clear()
+            state.tracker_list[state.tracker].clear()
             self.show_empty_results(True)
     
     elif state.tracker == "rutracker":
@@ -41,27 +41,27 @@ def return_pressed(self):
             _, state.posts, _, _, cached = split_data(response)
             if state.posts == []:
                 consoleLog(f"No Results for {search_text}")
-                self.qtablewidget.clear()
+                state.tracker_list[state.tracker].clear()
                 self.show_empty_results(True)
             else:
                 state.post_titles, _, state.post_author, state.post_seeders, state.post_leechers = format_data(state.posts)
                 self.show_empty_results(False)
-                self.qtablewidget.clear()
-                self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author", "Seeders", "Leechers"])
-                self.qtablewidget.setRowCount(len(state.post_titles))
+                state.tracker_list[state.tracker].clear()
+                state.tracker_list[state.tracker].setHorizontalHeaderLabels(["Post Title", "Author", "Seeders", "Leechers"])
+                state.tracker_list[state.tracker].setRowCount(len(state.post_titles))
                 for i, author in enumerate(state.post_author):
-                    self.qtablewidget.setItem(i, 1, QTableWidgetItem(author))
+                    state.tracker_list[state.tracker].setItem(i, 1, QTableWidgetItem(author))
                 for i, title in enumerate(state.post_titles):
-                    self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
+                    state.tracker_list[state.tracker].setItem(i, 0, QTableWidgetItem(title))
                 for i, seeders in enumerate(state.post_seeders):
-                    self.qtablewidget.setItem(i, 2, QTableWidgetItem(seeders))
+                    state.tracker_list[state.tracker].setItem(i, 2, QTableWidgetItem(seeders))
                 for i, leechers in enumerate(state.post_leechers):
-                    self.qtablewidget.setItem(i, 3, QTableWidgetItem(leechers))
+                    state.tracker_list[state.tracker].setItem(i, 3, QTableWidgetItem(leechers))
                 if state.debug == True:
                     consoleLog(f"Response Cached: {cached}")
         else:
             consoleLog(f"No response from rutracker")
-            self.qtablewidget.clear()
+            state.tracker_list[state.tracker].clear()
             self.show_empty_results(True)
 
     elif state.tracker == "m0nkrus":
@@ -69,15 +69,15 @@ def return_pressed(self):
 
         if state.posts == []:
             consoleLog(f"No Results for {search_text}")
-            self.qtablewidget.clear()
+            state.tracker_list[state.tracker].clear()
             self.show_empty_results(True)
         else:
             state.post_titles, _, state.post_author = format_data_m0nkrus(state.posts)
             self.show_empty_results(False)
-            self.qtablewidget.clear()
-            self.qtablewidget.setHorizontalHeaderLabels(["Post Title", "Author"])
-            self.qtablewidget.setRowCount(len(state.post_titles))
+            state.tracker_list[state.tracker].clear()
+            state.tracker_list[state.tracker].setHorizontalHeaderLabels(["Post Title", "Author"])
+            state.tracker_list[state.tracker].setRowCount(len(state.post_titles))
             for i, author in enumerate(state.post_author):
-                self.qtablewidget.setItem(i, 1, QTableWidgetItem(author))
+                state.tracker_list[state.tracker].setItem(i, 1, QTableWidgetItem(author))
             for i, title in enumerate(state.post_titles):
-                self.qtablewidget.setItem(i, 0, QTableWidgetItem(title))
+                state.tracker_list[state.tracker].setItem(i, 0, QTableWidgetItem(title))
