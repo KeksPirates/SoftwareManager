@@ -30,7 +30,7 @@ import time
 import sys
 import json
 import base64
-from core.utils.general.logs import consoleLog, remove_download_log, flush_log_buffer
+from core.utils.logs.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected

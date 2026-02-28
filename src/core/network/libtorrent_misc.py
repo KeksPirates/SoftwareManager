@@ -1,6 +1,6 @@
 from core.utils.data.state import state
-from core.utils.general.logs import update_download_completed_by_hash
-from core.utils.general.logs import consoleLog
+from core.utils.logs.logs import update_download_completed_by_hash
+from core.utils.logs.logs import consoleLog
 from plyer import notification
 import libtorrent as lt
 import time

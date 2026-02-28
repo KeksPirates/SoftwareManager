@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
 import time
-from core.utils.general.logs import consoleLog
 
 cache = {
     "data": [],

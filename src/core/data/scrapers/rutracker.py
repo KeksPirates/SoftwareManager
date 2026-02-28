@@ -1,6 +1,6 @@
 import requests
 from core.utils.data.state import state
-from core.utils.general.logs import consoleLog
+from core.utils.logs.logs import consoleLog
 
 
 def scrape_rutracker(search_text):

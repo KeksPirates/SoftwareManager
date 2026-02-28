@@ -1,13 +1,12 @@
 from core.interface.gui import MainWindow
 from core.utils.data.state import state
-from core.utils.general.logs import consoleLog
+from core.utils.logs.logs import consoleLog
 from core.network.libtorrent_misc import send_notification, update_log
-from core.utils.general.logs import get_download_logs
+from core.utils.logs.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
-from core.utils.general.loghandler import split_data, check_completed
+from core.utils.logs.loghandler import split_data, check_completed
 from core.network.interface import list_interfaces, init_interfaces
-from core.network.libtorrent_int import update_bound_interface
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
@@ -33,7 +32,7 @@ def run_gui():
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
 
-    from core.utils.general.logs import set_main_window
+    from core.utils.logs.logs import set_main_window
     set_main_window(widget)
     widget.show()
     sys.exit(app.exec())
