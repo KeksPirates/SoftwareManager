@@ -5,6 +5,7 @@ from datetime import datetime
 import json
 import os
 import re
+import time
 
 _log_buffer = []
 
@@ -21,7 +22,21 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
             downloads = []
     else:
         downloads = []
-    
+
+    magnetdl = state.active_downloads.get(magnet_uri)
+    if magnetdl:
+        status = magnetdl.status()
+        timeout = 60
+        start = time.time()
+        while not status.has_metadata and (time.time() - start) < timeout:
+            time.sleep(0.5)
+            status = magnetdl.status()
+        torrent_name = status.name
+        save_path = status.save_path
+        consoleLog(f"Torrent name (has_metadata={status.has_metadata}): {torrent_name}")
+        path = os.path.join(save_path, torrent_name)
+    else:
+        path = os.path.join(state.download_path, title)
 
     if any(d.magnet_uri == magnet_uri or d.url == url for d in downloads):
         if magnet_uri in state.active_downloads:
@@ -37,7 +52,8 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
         title=title,
         url=url,
         magnet_uri=magnet_uri,
-        completed=completed,
+        path=path,
+        completed=completed
     ))
 
     consoleLog(f"Added {title} to Log File")

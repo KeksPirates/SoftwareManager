@@ -5,6 +5,7 @@ from core.utils.data.tracker import get_magnet_link
 from core.network.libtorrent_wrapper import add_download
 from core.utils.general.wrappers import run_thread
 from core.utils.logging.logs import add_download_log
+import time
 
 import threading
 
@@ -21,8 +22,8 @@ def run_download(item, posts, post_titles):
     consoleLog(f"Selected URL: {post_url}")
     magnet_uri = get_magnet_link(post_url)
 
-    add_download_log(item, post_url, magnet_uri, False)
     add_download(magnet_uri)
+    add_download_log(item, post_url, magnet_uri, False)
 
 def run_download_direct(magnet_uri):
     add_download(magnet_uri)    
