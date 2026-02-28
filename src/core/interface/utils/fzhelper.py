@@ -103,7 +103,7 @@ if __name__ == "__main__":
     import core.data.scrapers.steamrip as sr
 
     app = QtWidgets.QApplication([])
-    widget = FuzzySearchWindow(sr.offline_scrape_steamrip_links())
+    widget = FuzzySearchWindow(sr.scrape_steamrip_links())
     widget.resize(600,400)
     widget.show()
 

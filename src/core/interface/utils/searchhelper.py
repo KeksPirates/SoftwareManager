@@ -3,8 +3,10 @@ from core.utils.logging.logs import consoleLog
 from core.data.scrapers.uztracker import scrape_uztracker
 from core.data.scrapers.rutracker import scrape_rutracker
 from core.data.scrapers.monkrus import scrape_monkrus_telegram
+from core.data.scrapers.steamrip import scrape_steamrip_links, scrape_steamrip_game_downloads
 from core.utils.network.jsonhandler import split_data, format_data, format_data_m0nkrus
 from core.utils.data.state import state
+import fuzzyfinder
 
 def return_pressed(self):
     search_text = self.searchbar.text()
@@ -81,3 +83,18 @@ def return_pressed(self):
                 state.tracker_list[state.tracker].setItem(i, 1, QTableWidgetItem(author))
             for i, title in enumerate(state.post_titles):
                 state.tracker_list[state.tracker].setItem(i, 0, QTableWidgetItem(title))
+    
+    elif state.tracker == "steamrip":
+        games = scrape_steamrip_links()
+
+        options: Generator = fuzzyfinder.main.fuzzyfinder(search_text, self.opts, accessor=lambda x: x["name"])
+
+        filtered_opts = [*options]
+
+        if filtered_opts == []:
+            consoleLog(f"No results for {search_text}")
+            state.tracker_list[state.tracker].clear()
+            self.show_empty_results(True)
+        else:
+            state
+        

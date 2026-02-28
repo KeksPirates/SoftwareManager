@@ -144,7 +144,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         flush_log_buffer()
 
-        def create_tracker_table(headers):
+        def create_tracker_table(headers, key):
             table = QTableWidget()
             table.setColumnCount(len(headers))
             table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -156,21 +156,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
             header.resizeSection(1, 500)
             header.setStretchLastSection(False)
+        
+            table.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            table.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-            return table
+            state.tracker_list.update({key: table})
             
 
-        self.rutrackerlist = create_tracker_table(["Post Title", "Author", "Seeders", "Leechers"])
-        self.uztrackerlist = create_tracker_table(["Post Title", "Author"])
-        self.monkruslist = create_tracker_table(["Post Title", "Author"])
-
-        state.tracker_list.update({"rutracker": self.rutrackerlist, "uztracker": self.uztrackerlist, "m0nkrus": self.monkruslist})
-
-        self.rutrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.rutrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        self.uztrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.uztrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) 
+        create_tracker_table(["Post Title", "Author", "Seeders", "Leechers"], "rutracker")
+        create_tracker_table(["Post Title", "Author"], "uztracker")
+        create_tracker_table(["Post Title", "Author"], "m0nkrus")
+        create_tracker_table(["Game", "Availible Downloads"], "steamrip")
 
         container = QWidget()
         containerLayout = QVBoxLayout()
@@ -408,7 +404,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
 
         self.tracker_list = QComboBox()
-        self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
+        self.tracker_list.addItems(list(state.tracker_list.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)

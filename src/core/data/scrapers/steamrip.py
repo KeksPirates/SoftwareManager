@@ -35,13 +35,6 @@ def scrape_steamrip_links(text = None):
 
     return ret
 
-def offline_scrape_steamrip_links():
-    text = ""
-    with open("example.html", encoding = "utf-8") as f:
-        text=f.read()
-
-    return scrape_steamrip_links(text)
-
 def scrape_steamrip_game_downloads(gamelink):
     url = "https://steamrip.com" + gamelink
     response = requests.get(url)
