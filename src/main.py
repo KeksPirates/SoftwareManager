@@ -5,7 +5,7 @@ from core.network.libtorrent_misc import send_notification, update_log
 from core.utils.logging.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
-from core.utils.logging.loghandler import split_data, check_completed
+from core.utils.logging.loghandler import split_data, check_completed, check_downloads
 from core.network.interface import list_interfaces, init_interfaces
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
@@ -60,6 +60,7 @@ if __name__ == "__main__":
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started Thread: check_completed")
+    check_downloads(downloads)
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     run_gui()

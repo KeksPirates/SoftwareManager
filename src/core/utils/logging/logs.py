@@ -77,10 +77,12 @@ def remove_download_log(magnet_uri) -> DownloadList:
     else:
         downloads = []
 
+
     magnet_link = (magnet_uri or "").strip()
+    title = next((getattr(d, 'title', 'Unknown') for d in downloads if (getattr(d, 'magnet_uri', None) or '').strip() == magnet_link or (getattr(d, 'url', None) or '').strip() == magnet_link))
     downloads = [d for d in downloads if (getattr(d, 'magnet_uri', None) or "").strip() != magnet_link and (getattr(d, 'url', None) or "").strip() != magnet_link]
 
-    consoleLog(f"Removed {magnet_link} from Log File")
+    consoleLog(f"Removed {title} from Log File")
 
     download_list = DownloadList(data=downloads, count=len(downloads))
     with open(downloads_file, "w") as file:
