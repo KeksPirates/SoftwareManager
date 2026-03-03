@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
 )
 
-from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent
+from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent, QGuiApplication
 import darkdetect
 import threading
 import platform
@@ -67,6 +67,9 @@ def download_update(latest_version):
     sys.exit(0)
 
 
+def windowCloseHelper():
+    QGuiApplication.quit()
+    
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
     
