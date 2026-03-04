@@ -1,10 +1,7 @@
 import requests
-import threading
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
-from core.utils.general.wrappers import run_thread
 
 def scrape_uztracker(query):
     base_url="https://uztracker.net/"
@@ -13,7 +10,10 @@ def scrape_uztracker(query):
     posts = []
 
     try:
-        response = requests.get(search_url)
+        response = requests.get(
+            f"{search_url.rstrip('/')}/tracker.php",
+            params={'nm': query},
+        )
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         links = soup.find_all('a', class_="genmed tLink", href=lambda x: x and x.startswith('./viewtopic'))
@@ -35,8 +35,7 @@ def scrape_uztracker(query):
         return posts
 
     except requests.RequestException as e:
-        if posts:
-            consoleLog(f"Failed to fetch {search_url}: {e}")
+        consoleLog(f"Failed to fetch {search_url}: {e}")
         return None
 
 
