@@ -55,7 +55,7 @@ def return_pressed(self):
             state.tracker_list[state.tracker].clear()
             self.show_empty_results(True)
         else:
-            state.post_author, state.post_titles, state.post_urls  = format_data_minimal(state.posts)
+            state.post_author, state.post_titles, state.post_urls = format_data_minimal(state.posts)
             self.show_empty_results(False)
             state.tracker_list[state.tracker].clear()
             state.tracker_list[state.tracker].setHorizontalHeaderLabels(["Post Title", "Author"])
