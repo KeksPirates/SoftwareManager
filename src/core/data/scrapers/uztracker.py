@@ -10,7 +10,10 @@ def scrape_uztracker(query):
     posts = []
 
     try:
-        response = requests.get(search_url)
+        response = requests.get(
+            f"{search_url.rstrip('/')}/tracker.php",
+            params={'nm': query},
+        )
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         links = soup.find_all('tr', class_="tCenter hl-tr", id=lambda x: x and x.startswith('tor_'))
