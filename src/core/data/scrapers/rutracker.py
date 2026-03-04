@@ -3,8 +3,8 @@ from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
 
 
-def scrape_rutracker(search_text):
-    search = requests.get(f"{state.api_url}/search?q={search_text}")
+def scrape_rutracker(query):
+    search = requests.get(f"{state.api_url}/search?q={query}")
     consoleLog("Sent request to server")
     if search:
         try:
