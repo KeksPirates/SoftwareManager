@@ -25,7 +25,7 @@ def format_data_minimal(data):
     post_titles = [post["title"] for post in data]
     post_links = [post["url"] for post in data]
 
-    return  post_author, post_titles, post_links
+    return post_author, post_titles, post_links
 
 
 

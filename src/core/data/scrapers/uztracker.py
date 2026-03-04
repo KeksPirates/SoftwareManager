@@ -1,10 +1,7 @@
 import requests
-import threading
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
-from core.utils.general.wrappers import run_thread
 
 def scrape_uztracker(query):
     base_url="https://uztracker.net/"
@@ -16,27 +13,25 @@ def scrape_uztracker(query):
         response = requests.get(search_url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        links = soup.find_all('a', class_="genmed tLink", href=lambda x: x and x.startswith('./viewtopic'))
-        
+        links = soup.find_all('tr', class_="tCenter hl-tr", id=lambda x: x and x.startswith('tor_'))
         for link in links:
-            if link.b:
-                title = link.b.text
-                url = urljoin(base_url, link['href'])
+            
+            theme_link = link.find('a', class_="genmed tLink", href=lambda x: x and x.startswith('./viewtopic')) 
+            url = urljoin(base_url, theme_link['href'])
+            title = theme_link.b.text
+            author_link = link.find('a', class_="med")
+            author = author_link.text.strip() if author_link else "Unknown"
 
-                author_link = link.find_parent('td').find('a', class_="med ts-text")
-                author = author_link.text.strip() if author_link else "Unknown"
-
-                posts.append(dict(
-                    title=title,
-                    url=url,
-                    author=author
-                ))
+            posts.append(dict(
+                title=title,
+                url=url,
+                author=author
+            ))
 
         return posts
 
     except requests.RequestException as e:
-        if posts:
-            consoleLog(f"Failed to fetch {search_url}: {e}")
+        consoleLog(f"Failed to fetch {search_url}: {e}")
         return None
 
 
