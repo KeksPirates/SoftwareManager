@@ -157,7 +157,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             header = table.horizontalHeader()
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
             header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
-            header.resizeSection(1, 500)
+            header.resizeSection(1, 200)
             header.setStretchLastSection(False)
 
             return table
