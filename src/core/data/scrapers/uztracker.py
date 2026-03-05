@@ -33,6 +33,3 @@ def scrape_uztracker(query):
     except requests.RequestException as e:
         consoleLog(f"Failed to fetch {search_url}: {e}")
         return None
-
-
-
