@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QStyledItemDelegate,
 )
 
-from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent
+from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent, QGuiApplication
 import darkdetect
 import threading
 import platform
@@ -67,6 +67,9 @@ def download_update(latest_version):
     sys.exit(0)
 
 
+def windowCloseHelper():
+    QGuiApplication.quit()
+    
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
     
@@ -506,12 +509,12 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         event.accept()
 
     def set_tracker(self, _):
+        old_tracker = state.tracker
         state.tracker = self.tracker_list.currentText()
 
-        while self.horizontal_layout.count():
-            item = self.horizontal_layout.takeAt(0)
-            if item.widget():
-                item.widget().setParent(None)
+        old_widget = state.tracker_list[old_tracker]
+        self.horizontal_layout.removeWidget(old_widget)
+        old_widget.setParent(None)
 
         tracker_widget = state.tracker_list[state.tracker]
         self.horizontal_layout.addWidget(tracker_widget)

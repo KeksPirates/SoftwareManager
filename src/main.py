@@ -1,11 +1,11 @@
-from core.interface.gui import MainWindow
+from core.interface.gui import MainWindow, windowCloseHelper
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
 from core.network.libtorrent_misc import send_notification, update_log
 from core.utils.logging.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
-from core.utils.logging.loghandler import split_data, check_completed
+from core.utils.logging.loghandler import split_data, check_completed, check_downloads
 from core.network.interface import list_interfaces, init_interfaces
 from core.utils.config.config import read_config
 from PySide6 import QtWidgets
@@ -14,14 +14,8 @@ import qdarktheme
 import threading
 import platform
 import signal
-import argparse
 import sys
 import time
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--debug", action="store_true")
-args = parser.parse_args()
 
 def run_gui():
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
@@ -39,14 +33,13 @@ def run_gui():
 
 def keyboardinterrupthandler(signum, frame):
     closehelper()
+    windowCloseHelper()
 
-if __name__ == "__main__":
+def main():
     start_time = time.perf_counter()
     read_config()
     logs = get_download_logs()
     _, downloads = split_data(logs)
-    if args.debug:
-        state.debug = args.debug # override of read_config
     signal.signal(signal.SIGINT, keyboardinterrupthandler)
     consoleLog("Starting SoftwareManager...")
     consoleLog("Fetching Network Interfaces...")
@@ -60,7 +53,10 @@ if __name__ == "__main__":
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started Thread: check_completed")
+    check_downloads(downloads)
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     run_gui()
 
+if __name__ == "__main__":
+    main()

@@ -57,7 +57,7 @@ def _get_telegram_posts():
 
     return(posts)
 
-def scrape_monkrus_telegram(query):
+def scrape_m0nkrus(query):
     posts = _get_telegram_posts()
     filtered_posts = []
 

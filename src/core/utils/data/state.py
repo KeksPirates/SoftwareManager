@@ -8,7 +8,7 @@ class AppState(QObject):
 
     def __init__(self):
         super().__init__()
-        self.posts: List[Dict[str, Any]] = [] # title, url, author, seeders, leachers
+        self.posts: list[Any] | None = None
         self.post_titles: Optional[List] = None
         self.post_urls: Optional[List] = None
         self.post_author: List[str] = []
