@@ -881,15 +881,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             if download_path and os.path.exists(download_path):
                 try:
                     if os.path.isfile(download_path):
+                        remove_download_log(magnet_link)
                         os.remove(download_path)
                         del state.active_downloads[magnet_link]
-                        remove_download_log(magnet_link)
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                     else:
                         import shutil
-                        shutil.rmtree(download_path)
                         del state.active_downloads[magnet_link]
                         remove_download_log(magnet_link)
+                        shutil.rmtree(download_path)
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                 except Exception as e:
                     consoleLog(f"Error deleting files: {e}", True)
