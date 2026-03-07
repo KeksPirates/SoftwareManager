@@ -76,7 +76,6 @@ def check_deleted_files(shutdown_event):
                         consoleLog(f"Registered File Deletion: {status.name}")
                         state.dl_session.remove_torrent(magnetdl)
                         del state.active_downloads[magnet_uri]
-
         except Exception:
             pass
         time.sleep(5)
