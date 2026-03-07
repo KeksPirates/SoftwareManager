@@ -6,23 +6,14 @@ import json
 import os
 import re
 import time
+import threading
 
 _log_buffer = []
+_downloads_lock = threading.RLock()
 
 
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except json.JSONDecodeError:
-            downloads = []
-    else:
-        downloads = []
-
+    # wait for metadata outside the lock to avoid blocking other threads
     magnetdl = state.active_downloads.get(magnet_uri)
     if magnetdl:
         status = magnetdl.status()
@@ -37,6 +28,21 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
         path = os.path.join(save_path, torrent_name)
     else:
         path = os.path.join(state.download_path, title)
+    with _downloads_lock:
+        return _add_download_log_inner(title, url, magnet_uri, completed, path)
+
+def _add_download_log_inner(title, url, magnet_uri, completed, path) -> DownloadList:
+    downloads_file = os.path.join(state.settings_path, "downloads.json")
+    
+    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
+        try:
+            with open(downloads_file, "r") as file:
+                existing_data = json.load(file)
+                downloads = [Download(**d) for d in existing_data.get("data", [])]
+        except json.JSONDecodeError:
+            downloads = []
+    else:
+        downloads = []
 
     if any(d.magnet_uri == magnet_uri or d.url == url for d in downloads):
         if magnet_uri in state.active_downloads:
@@ -65,6 +71,10 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     return download_list
 
 def remove_download_log(magnet_uri) -> DownloadList:
+    with _downloads_lock:
+        return _remove_download_log_inner(magnet_uri)
+
+def _remove_download_log_inner(magnet_uri) -> DownloadList:
     downloads_file = os.path.join(state.settings_path, "downloads.json")
     
     if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
@@ -91,6 +101,10 @@ def remove_download_log(magnet_uri) -> DownloadList:
     return download_list
 
 def update_download_completed(magnet_uri, completed) -> DownloadList:
+    with _downloads_lock:
+        return _update_download_completed_inner(magnet_uri, completed)
+
+def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
     downloads_file = os.path.join(state.settings_path, "downloads.json")
     
     if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
@@ -143,6 +157,10 @@ def update_download_completed(magnet_uri, completed) -> DownloadList:
     
 
 def get_download_logs() -> DownloadList:
+    with _downloads_lock:
+        return _get_download_logs_inner()
+
+def _get_download_logs_inner() -> DownloadList:
     downloads_file = os.path.join(state.settings_path, "downloads.json")
     
     if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
@@ -166,6 +184,10 @@ def extract_hash_from_magnet(magnet_uri): # full credits to claude for this
 
 
 def update_download_completed_by_hash(info_hash, completed) -> DownloadList:
+    with _downloads_lock:
+        return _update_download_completed_by_hash_inner(info_hash, completed)
+
+def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadList:
     downloads_file = os.path.join(state.settings_path, "downloads.json")
     
     if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:

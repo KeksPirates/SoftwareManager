@@ -296,7 +296,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         elif status.state == lt.torrent_status.seeding:
                             return "Seeding"
                         elif status.paused:
-                            return "Paused"
+                            is_auto = bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                            return "Queued" if is_auto else "Paused"
                         else:
                             return "Queued"
                     elif col == 3:
@@ -407,7 +408,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         button.setIcon(_svg_icon(SVG_FOLDER, 18))
                         button.setText("")
                     else:
-                        button.setIcon(_svg_icon(SVG_PLAY if status.paused else SVG_PAUSE, 18))
+                        is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                        button.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
                         button.setText("")
 
             def createEditor(self, parent, option, index):
@@ -424,7 +426,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     btnPause.setIcon(_svg_icon(SVG_FOLDER, 18))
                 else:
                     btnPause = QtWidgets.QPushButton()
-                    btnPause.setIcon(_svg_icon(SVG_PLAY if status.paused else SVG_PAUSE, 18))
+                    is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                    btnPause.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
                 btnPause.setIconSize(QSize(18, 18))
                 btnPause.setFixedSize(30, 30)
                 btnPause.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -442,9 +445,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 widget.setLayout(layout)
                 return widget
             def editorEvent(self, event, model, option, index):
-                if index.column() == 0 and event.type() == QEvent.Type.MouseButtonPress:
-                    self.clicked.emit(index.row())
-                    return True
                 return False
 
         self.download_model = DownloadModel()
@@ -453,6 +453,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.downloadList.horizontalHeader().resizeSection(0, 70)
         self.downloadList.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.downloadList.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.downloadList.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
         self.downloadList.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
         self.downloadList.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
@@ -666,12 +668,34 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
     def download_list_update(self):
         if self.download_model:
-            self.download_model.layoutAboutToBeChanged.emit()
-            self.download_model.layoutChanged.emit()
-            for row in range(self.download_model.rowCount()):
-                idx = self.download_model.index(row, 0)
-                self.downloadList.closePersistentEditor(idx)
-                self.downloadList.openPersistentEditor(idx)
+            row_count = self.download_model.rowCount()
+            if row_count > 0:
+                top_left = self.download_model.index(0, 0)
+                bottom_right = self.download_model.index(row_count - 1, self.download_model.columnCount() - 1)
+                self.download_model.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
+
+            if not hasattr(self, '_last_dl_row_count'):
+                self._last_dl_row_count = 0
+            if row_count != self._last_dl_row_count:
+
+                for row in range(row_count, self._last_dl_row_count):
+                    idx = self.download_model.index(row, 0)
+                    self.downloadList.closePersistentEditor(idx)
+                self._last_dl_row_count = row_count
+                self.download_model.layoutAboutToBeChanged.emit()
+                self.download_model.layoutChanged.emit()
+                for row in range(row_count):
+                    idx = self.download_model.index(row, 0)
+                    self.downloadList.closePersistentEditor(idx)
+                    self.downloadList.openPersistentEditor(idx)
+            else:
+
+                delegate = self.downloadList.itemDelegateForColumn(0)
+                for row in range(row_count):
+                    idx = self.download_model.index(row, 0)
+                    editor = self.downloadList.indexWidget(idx)
+                    if editor and delegate:
+                        delegate.setEditorData(editor, idx)
         self._update_speed_label()
 
     def _update_speed_label(self):
@@ -703,35 +727,38 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         event.accept()
 
     def eventFilter(self, obj, event):
-        for tbl in (self.rutrackerlist, self.uztrackerlist, self.monkruslist):
-            if obj == tbl.viewport():
+        try:
+            for tbl in (self.rutrackerlist, self.uztrackerlist, self.monkruslist):
+                if obj == tbl.viewport():
+                    if event.type() == QEvent.Type.MouseMove:
+                        pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                        idx = tbl.indexAt(pos)
+                        new_row = idx.row() if idx.isValid() else -1
+                        if new_row != self._tracker_hovered_row or tbl is not self._tracker_hovered_table:
+                            self._tracker_hovered_row = new_row
+                            self._tracker_hovered_table = tbl
+                            tbl.viewport().update()
+                    elif event.type() == QEvent.Type.Leave:
+                        self._tracker_hovered_row = -1
+                        self._tracker_hovered_table = None
+                        tbl.viewport().update()
+                    break
+            if obj == self.downloadList.viewport():
                 if event.type() == QEvent.Type.MouseMove:
                     pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
-                    idx = tbl.indexAt(pos)
+                    idx = self.downloadList.indexAt(pos)
                     new_row = idx.row() if idx.isValid() else -1
-                    if new_row != self._tracker_hovered_row or tbl is not self._tracker_hovered_table:
-                        self._tracker_hovered_row = new_row
-                        self._tracker_hovered_table = tbl
-                        tbl.viewport().update()
+                    if new_row != self._hovered_row:
+                        old_row = self._hovered_row
+                        self._hovered_row = new_row
+                        self._invalidate_hover_row(old_row)
+                        self._invalidate_hover_row(new_row)
                 elif event.type() == QEvent.Type.Leave:
-                    self._tracker_hovered_row = -1
-                    self._tracker_hovered_table = None
-                    tbl.viewport().update()
-                break
-        if obj == self.downloadList.viewport():
-            if event.type() == QEvent.Type.MouseMove:
-                pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
-                idx = self.downloadList.indexAt(pos)
-                new_row = idx.row() if idx.isValid() else -1
-                if new_row != self._hovered_row:
                     old_row = self._hovered_row
-                    self._hovered_row = new_row
+                    self._hovered_row = -1
                     self._invalidate_hover_row(old_row)
-                    self._invalidate_hover_row(new_row)
-            elif event.type() == QEvent.Type.Leave:
-                old_row = self._hovered_row
-                self._hovered_row = -1
-                self._invalidate_hover_row(old_row)
+        except RuntimeError:
+            pass
         return super().eventFilter(obj, event)
 
     def _invalidate_hover_row(self, row):
