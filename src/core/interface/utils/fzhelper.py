@@ -7,7 +7,7 @@ from copy import deepcopy
 class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
     """
     The dict should contain a:
-    name : str
+    $(keytosortby) : str
     THIS IS REQUIRED
 
     all other things will be displayed alphabetically after it.
@@ -20,13 +20,14 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
 
     keys in ignorekeys will be ignored and not displayed, e.g. if oyu have links in the database which arent relevant
     """
-    def __init__(self, options: list[dict[str, str]], ignorekeys: list[str] = [], columnClicklShouldReturn = 1):
+    def __init__(self, options: list[dict[str, str]], ignorekeys: list[str] = [], columnClicklShouldReturn = 1, keytosortby = "name"):
         super().__init__()
 
         self.opts: list[dict[str, str]] = options
         self.filtered_opts = deepcopy(self.opts)
         self.ignorekeys = ignorekeys
         self.returncolumn = columnClicklShouldReturn
+        self.sortkey = keytosortby
 
         self.searchbox = QtWidgets.QLineEdit()
         self.searchbox.setPlaceholderText("Search for a game on Steamrip")
@@ -74,7 +75,7 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
 
         searchquery = self.searchbox.text()
 
-        options: Generator = fuzzyfinder.main.fuzzyfinder(searchquery, self.opts, accessor=lambda x: x["name"])
+        options: Generator = fuzzyfinder.main.fuzzyfinder(searchquery, self.opts, accessor=lambda x: x[self.sortkey])
 
         self.filtered_opts = []
 
@@ -90,7 +91,7 @@ class FuzzySearchWindow(QtWidgets.QWidget): # should work everywhere
                     QtWidgets.QTableWidgetItem(value)
                 )
 
-    def cellClick(self, row: int, column: int):
+    def cellClick(self, row: int, _: int):
         item = self.table.item(row, self.returncolumn)
 
         if item is not None:

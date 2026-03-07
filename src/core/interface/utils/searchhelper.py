@@ -19,7 +19,7 @@ def return_pressed(self):
         return
     consoleLog(f"User searched for: {search_text}")
     
-    if state.tracker == "rutracker":
+    if state.currenttracker == "rutracker":
         response = scrape_rutracker(search_text)
         if response:
             _, state.posts, _, _, cached = split_data(response)

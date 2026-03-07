@@ -2,7 +2,14 @@
 from bs4 import BeautifulSoup
 import requests
 import re
-#from core.utils.general.logs import consoleLog
+
+Metadata = {
+    "headers" : ["Game", "Availible Downloads"],
+    "name" : "steamrip",
+}
+
+def get_Metadata():
+    return Metadata
 
 def scrape_steamrip_links(text = None):
     if text is None:

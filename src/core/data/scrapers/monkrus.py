@@ -2,6 +2,14 @@ from bs4 import BeautifulSoup
 import requests
 import time
 
+Metadata = {
+    "headers" : ["Post Title", "Author"],
+    "name" : "m0nkrus",
+}
+
+def get_Metadata():
+    return Metadata
+
 cache = {
     "data": [],
     "last_fetched": 0
@@ -68,3 +76,6 @@ def scrape_m0nkrus(query):
             filtered_posts.append(filtered_post)
 
     return filtered_posts
+
+if __name__ == "__main__":
+    print(scrape_m0nkrus("adobe"))

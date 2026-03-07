@@ -3,6 +3,14 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from core.utils.logging.logs import consoleLog
 
+Metadata = {
+    "headers" : ["Post Title", "Author"],
+    "name" : "uztracker",
+}
+
+def get_Metadata():
+    return Metadata
+
 def scrape_uztracker(query):
     base_url="https://uztracker.net/"
     search_url = f"{base_url.rstrip('/')}/tracker.php?nm={query}"

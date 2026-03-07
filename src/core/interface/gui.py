@@ -147,30 +147,25 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         flush_log_buffer()
 
-        def create_tracker_table(headers, key):
-            table = QTableWidget()
-            table.setColumnCount(len(headers))
-            table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-            table.verticalHeader().setVisible(False)
-            table.setHorizontalHeaderLabels(headers)
+        # create tracker tables
+        state.trackertable 
+        table = QTableWidget()
+        table.setColumnCount(len(headers))
+        table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.verticalHeader().setVisible(False)
+        table.setHorizontalHeaderLabels(headers)
 
-            header = table.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
-            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
-            header.resizeSection(1, 500)
-            header.setStretchLastSection(False)
-        
-            table.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-            table.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
+        header.resizeSection(1, 500)
+        header.setStretchLastSection(False)
+    
+        table.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        table.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-            state.tracker_list.update({key: table})
+        state.tracker_list.update({key: table})
             
-
-        create_tracker_table(["Post Title", "Author", "Seeders", "Leechers"], "rutracker")
-        create_tracker_table(["Post Title", "Author"], "uztracker")
-        create_tracker_table(["Post Title", "Author"], "m0nkrus")
-        create_tracker_table(["Game", "Availible Downloads"], "steamrip")
-
         container = QWidget()
         containerLayout = QVBoxLayout()
         containerLayout.addWidget(self.searchbar)
