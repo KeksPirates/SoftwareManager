@@ -28,8 +28,8 @@ jobs:
             artifact_name: SoftwareManager-dev-${{ github.sha }}-linux
             asset_name: SoftwareManager-dev-${{ github.sha }}-linux
           - os: windows-latest
-            artifact_name: SoftwareManager-dev-${{ github.sha }}-windows.exe
-            asset_name: SoftwareManager-dev-${{ github.sha }}-windows.exe
+            artifact_name: SoftwareManager-dev-${{ github.sha }}-windows
+            asset_name: SoftwareManager-dev-${{ github.sha }}-windows
           - os: macos-latest
             artifact_name: SoftwareManager-dev-${{ github.sha }}-macos
             asset_name: SoftwareManager-dev-${{ github.sha }}-macos
@@ -116,9 +116,7 @@ jobs:
         shell: bash
         run: |
           python -m nuitka \
-            --onefile \
-            --onefile-no-compression \
-            --onefile-tempdir-spec="{CACHE_DIR}/${{ env.APP_NAME }}/${{ env.VERSION }}" \
+            --standalone \
             --assume-yes-for-downloads \
             --windows-console-mode=disable \
             --windows-icon-from-ico=app_icon.ico \
@@ -130,6 +128,7 @@ jobs:
             --include-data-files=build_info.json=src/build_info.json \
             --include-data-files=build_info.json=src/core/interface/build_info.json \
             --output-filename=${{ env.APP_NAME }}.exe \
+            --output-dir=nuitka-build \
             src/main.py
 
       - name: Build with PyInstaller (Linux)
@@ -173,14 +172,48 @@ jobs:
         run: |
           mkdir -p dist-final
           if [ "$RUNNER_OS" == "Windows" ]; then
-            mv ${{ env.APP_NAME }}.exe dist-final/${{ matrix.artifact_name }}
+            mv nuitka-build/main.dist dist-final/${{ env.APP_NAME }}
+            ls -la dist-final/${{ env.APP_NAME }}/
           else
             chmod +x dist/${{ env.APP_NAME }}
             mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
           fi
           ls -la dist-final/
 
-      - name: Upload build artifact
+      - name: Create ZIP (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist-final/${{ env.APP_NAME }}/*" -DestinationPath "dist-final/${{ matrix.artifact_name }}.zip"
+          Write-Host "Created ZIP: ${{ matrix.artifact_name }}.zip"
+
+      - name: Build Installer (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          SETUP_NAME="SoftwareManager-dev-${SHORT_SHA}-windows-setup"
+          iscc //DMyAppVersion="${{ env.VERSION }}" \
+               //DMySourceDir="dist-final\\${{ env.APP_NAME }}" \
+               //DMyOutputDir="dist-final" \
+               //DMyOutputFilename="${SETUP_NAME}" \
+               installer.iss
+          echo "SETUP_NAME=${SETUP_NAME}" >> $GITHUB_ENV
+          ls -la dist-final/
+
+      - name: Upload build artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            dist-final/${{ matrix.artifact_name }}.zip
+            dist-final/${{ env.SETUP_NAME }}.exe
+          retention-days: 1
+
+      - name: Upload build artifact (Linux/macOS)
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-build
@@ -204,7 +237,8 @@ jobs:
           mkdir -p release
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
           cp artifacts/ubuntu-22.04-build/SoftwareManager-dev-*-linux release/SoftwareManager-dev-${SHORT_SHA}-linux
-          cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows.exe release/SoftwareManager-dev-${SHORT_SHA}-windows.exe
+          cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows.zip release/SoftwareManager-dev-${SHORT_SHA}-windows.zip
+          cp artifacts/windows-latest-build/SoftwareManager-dev-*-windows-setup.exe release/SoftwareManager-dev-${SHORT_SHA}-windows-setup.exe
           cp artifacts/macos-latest-build/SoftwareManager-dev-*-macos release/SoftwareManager-dev-${SHORT_SHA}-macos
           chmod +x release/SoftwareManager-dev-*-linux release/SoftwareManager-dev-*-macos
           ls -la release/
@@ -229,7 +263,8 @@ jobs:
           
           ### Downloads
           - Linux: \`SoftwareManager-dev-${SHORT_SHA}-linux\`
-          - Windows: \`SoftwareManager-dev-${SHORT_SHA}-windows.exe\`
+          - Windows (Portable ZIP): \`SoftwareManager-dev-${SHORT_SHA}-windows.zip\`
+          - Windows (Installer): \`SoftwareManager-dev-${SHORT_SHA}-windows-setup.exe\`
           - macOS: \`SoftwareManager-dev-${SHORT_SHA}-macos\`
           
           ### SHA-256 Checksums
@@ -247,7 +282,8 @@ jobs:
           body_path: release_notes.md
           files: |
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-linux
-            release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.exe
+            release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows.zip
+            release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-windows-setup.exe
             release/SoftwareManager-dev-${{ needs.build.outputs.short_sha }}-macos
             release/SHA256SUMS.txt
         env:
