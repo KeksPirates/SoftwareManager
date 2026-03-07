@@ -121,24 +121,24 @@ def settings_dialog(self):
         # IMAGE PATH #
         ###############
 
-        image_path_container = QWidget()
-        image_path_layout = QHBoxLayout()
+        # image_path_container = QWidget()
+        # image_path_layout = QHBoxLayout()
 
-        image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path (requires restart):"))
-        image_path_layout.addWidget(image_path)
-        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        image_path_container.setLayout(image_path_layout)
-        image_path.setText(state.image_path)
+        # image_path = QLineEdit()
+        # image_path_layout.addWidget(QLabel("Image Path (requires restart):"))
+        # image_path_layout.addWidget(image_path)
+        # image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        # image_path_container.setLayout(image_path_layout)
+        # image_path.setText(state.image_path)
 
-        def browse_image_path():
-            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
-            if file_path:
-                image_path.setText(file_path)
+        # def browse_image_path():
+        #     file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
+        #     if file_path:
+        #         image_path.setText(file_path)
 
-        browse_button = QPushButton("📁")
-        image_path_layout.addWidget(browse_button)
-        browse_button.clicked.connect(browse_image_path)
+        # browse_button = QPushButton("📁")
+        # image_path_layout.addWidget(browse_button)
+        # browse_button.clicked.connect(browse_image_path)
 
         ##################
         # SPEED LIMITING #
@@ -246,7 +246,7 @@ def settings_dialog(self):
             download_path.text(), 
             down_speed_limit.value(), 
             up_speed_limit.value(), 
-            image_path.text(), 
+            # image_path.text(), 
             autoresume_checkbox.isChecked(), 
             max_connections.value(), 
             max_downloads.value(), 
@@ -258,7 +258,7 @@ def settings_dialog(self):
 
         self.tabs = QTabWidget()
         self.tab1 = general_tab("General", autoresume_container, update_checkbox_container, transparent_window_container, self.tabs)
-        self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
+        self.tab2 = paths_tab("Paths", download_path_container, self.tabs)
         self.tab3 = network_tab("Network", interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
 
         dialog.layout().addWidget(self.tabs)

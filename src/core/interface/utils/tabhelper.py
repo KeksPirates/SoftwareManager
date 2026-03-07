@@ -30,11 +30,11 @@ def general_tab(title, autoresume, update_checkbox, transparent_window, tabs):
     tabs.addTab(tab, title)
     return tab
 
-def paths_tab(title, download_path, image_path, tabs):
+def paths_tab(title, download_path, tabs):
     tab = QWidget()
     layout = QVBoxLayout()
     layout.addWidget(download_path)
-    layout.addWidget(image_path)
+    # layout.addWidget(image_path)
     layout.addStretch()
     tab.setLayout(layout)
     tabs.addTab(tab, title)
