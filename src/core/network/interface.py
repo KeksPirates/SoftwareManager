@@ -19,7 +19,7 @@ def get_active_interfaces():
         for addr in addr_list:
             if addr.family == 2: # ipv4
                 ipv4 = addr.address
-                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up == True:
+                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up:
                     active.append(interface)
                     consoleLog(f"Found Active: {interface}")
 
@@ -33,7 +33,7 @@ def list_interfaces() -> None:
         for addr in addr_list:
             if addr.family == 2: # ipv4
                 ipv4 = addr.address
-                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up == True:
+                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up:
                     status = "ACTIVE"
                 else:
                     status = "INACTIVE"

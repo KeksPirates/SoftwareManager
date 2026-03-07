@@ -3,6 +3,7 @@ from core.utils.logging.logs import update_download_completed_by_hash
 from core.utils.logging.logs import consoleLog
 from plyer import notification
 import libtorrent as lt
+import os
 import time
 
 
@@ -50,11 +51,32 @@ def update_log(shutdown_event):
                 
                 status = magnetdl.status()
                 
-                if status.state == lt.torrent_status.seeding and magnet_uri not in updated:
+                if status.state == lt.torrent_status.seeding and magnet_uri not in updated and magnet_uri not in state.seeded_magnets:
                     consoleLog(f"Marking {status.name} as completed")
                     info_hash = str(status.info_hash)
                     update_download_completed_by_hash(info_hash, True)
                     updated.add(magnet_uri)
+        except Exception:
+            pass
+        time.sleep(5)
+
+def check_deleted_files(shutdown_event):
+    while not shutdown_event.is_set():
+        try:
+            for magnet_uri, magnetdl in list(state.active_downloads.items()):
+                if isinstance(magnetdl, dict):
+                    continue
+                
+                status = magnetdl.status()
+                
+                if status.state == lt.torrent_status.seeding and status.has_metadata:
+                    file_path = os.path.join(status.save_path, status.name)
+
+                    if not os.path.exists(file_path):
+                        consoleLog(f"Registered File Deletion: {status.name}")
+                        state.dl_session.remove_torrent(magnetdl)
+                        del state.active_downloads[magnet_uri]
+
         except Exception:
             pass
         time.sleep(5)

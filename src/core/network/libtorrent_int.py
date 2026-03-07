@@ -1,4 +1,5 @@
 import time
+import os
 from core.utils.general.wrappers import run_thread
 from core.network.interface import get_interface_ip
 import threading
@@ -51,8 +52,26 @@ def add_download(magnet_uri, dl_path=state.download_path):
     init_session()
 
     if magnet_uri in state.active_downloads:
-        consoleLog("Skipping Downloading, download already running...")
-        return
+        try:
+            handle = state.active_downloads[magnet_uri]
+            status = handle.status()
+        except RuntimeError as e:
+            consoleLog(f"Error in LibTorrent Handle: {e}")
+
+        if status.has_metadata:
+            filepath = os.path.join(status.save_path, status.name)
+
+            if not os.path.exists(filepath):
+
+                consoleLog(f"File Deleted, redownloading: {status.name}")
+                state.dl_session.remove_torrent(handle)
+                del state.active_downloads[magnet_uri]
+            else:
+                consoleLog("Skipping Downloading, download already running...")
+                return False
+        else:
+            consoleLog("Skipping Downloading, download already running... ")
+            return False
 
     magnetdl = lt.parse_magnet_uri(magnet_uri)
     magnetdl.save_path = dl_path
@@ -62,7 +81,26 @@ def add_download(magnet_uri, dl_path=state.download_path):
     consoleLog(f"Added {magnet_uri} to downloads")
 
     run_thread(threading.Thread(target=dl_status_loop))
+    return True
 
+
+def add_seed(magnet_uri, file_path):
+    if state.active_downloads is None:
+        state.active_downloads = {}
+
+    init_session()
+
+    if magnet_uri in state.active_downloads:
+        consoleLog("Already seeding this torrent")
+        return False
+
+    magnetdl = lt.parse_magnet_uri(magnet_uri)
+    magnetdl.save_path = os.path.dirname(file_path)
+
+    handle = state.dl_session.add_torrent(magnetdl)
+    state.active_downloads[magnet_uri] = handle
+    state.seeded_magnets.add(magnet_uri)
+    return True
 
 
 def dl_status_loop():

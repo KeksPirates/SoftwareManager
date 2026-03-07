@@ -1,7 +1,7 @@
 from core.interface.gui import MainWindow, windowCloseHelper
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
-from core.network.libtorrent_misc import send_notification, update_log
+from core.network.libtorrent_misc import send_notification, update_log, check_deleted_files
 from core.utils.logging.logs import get_download_logs
 from core.utils.general.shutdown import closehelper, shutdown_event
 from core.utils.general.wrappers import run_thread
@@ -53,6 +53,8 @@ def main():
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started Thread: check_completed")
+    run_thread(threading.Thread(target=check_deleted_files, args=(shutdown_event,), daemon=True))
+    consoleLog("Started Thread: check_deleted_files")
     check_downloads(downloads)
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")

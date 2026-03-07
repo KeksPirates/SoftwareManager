@@ -30,6 +30,7 @@ class AppState(QObject):
         self.settings_path: str = "" 
         self.dl_session: Any = None
         self.active_downloads: Dict = {}
+        self.seeded_magnets: set = set()
         self.window_transparency: bool = False
         self.interfaces: List = []
         self.active_interfaces: List = []
