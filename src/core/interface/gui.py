@@ -135,8 +135,8 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 
 
 def download_update(latest_version):
-    new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
-    url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
+    new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
+    url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
 
     print("Downloading update...", True)
     response = r.get(url, allow_redirects=True)
@@ -144,7 +144,8 @@ def download_update(latest_version):
         f.write(response.content)
     if not os.path.exists(new_filename):
         raise FileNotFoundError("Executable not found")
-    subprocess.Popen([new_filename], shell=True)
+    subprocess.run([new_filename, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-"])
+    subprocess.Popen(["SoftwareManager.exe"])
     time.sleep(0.5)
 
     msg = QMessageBox()
