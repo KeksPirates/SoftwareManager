@@ -23,4 +23,6 @@ def run_download(item, posts, post_titles):
     add_download_log(item, post_url, magnet_uri, False)
 
 def run_download_direct(magnet_uri):
-    add_download(magnet_uri)    
+    consoleLog(f"Direct download: {magnet_uri[:60]}")
+    add_download(magnet_uri)
+    add_download_log("Direct Download", "", magnet_uri, False)
