@@ -33,7 +33,8 @@ def run_gui():
 
 def keyboardinterrupthandler(signum, frame):
     closehelper()
-    windowCloseHelper()
+    from core.utils.general.shutdown import force_exit
+    force_exit()
 
 def main():
     start_time = time.perf_counter()

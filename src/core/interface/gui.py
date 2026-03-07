@@ -725,6 +725,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     def closeEvent(self, event: QCloseEvent):
         closehelper()
         event.accept()
+        from core.utils.general.shutdown import force_exit
+        force_exit()
 
     def eventFilter(self, obj, event):
         try:

@@ -6,6 +6,7 @@ import threading
 import libtorrent as lt
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
+from core.utils.general.shutdown import shutdown_event
 
 
 global loop_running
@@ -116,9 +117,12 @@ def dl_status_loop():
         loop_running = False
         return
     
-    while state.active_downloads:
+    while state.active_downloads and not shutdown_event.is_set():
         for magnet_uri, magnetdl in list(state.active_downloads.items()):
-            status = magnetdl.status()
+            try:
+                status = magnetdl.status()
+            except RuntimeError:
+                continue
             
             if status.state == lt.torrent_status.seeding and magnet_uri not in completed_set:
                 consoleLog(f"Download completed: {status.name}")
