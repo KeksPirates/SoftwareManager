@@ -8,12 +8,19 @@ from core.network.libtorrent_int import add_seed
 import threading
 
 
-def download_selected(item, posts, post_titles):
-    if item is not None:
-        consoleLog(f"Downloading {item.text()}")
-        run_thread(threading.Thread(target=run_download, args=(item.text(), posts, post_titles)))
-    else:
+def download_selected(items, posts, post_titles):
+    if not items:
         consoleLog("No item selected for download.")
+        return
+    seen = set()
+    for item in items:
+        if item.column() != 0:
+            continue
+        text = item.text()
+        if text and text not in seen:
+            seen.add(text)
+            consoleLog(f"Downloading {text}")
+            run_thread(threading.Thread(target=run_download, args=(text, posts, post_titles)))
 
 def run_download(item, posts, post_titles):
     post_url = get_item_url(item, posts, post_titles)

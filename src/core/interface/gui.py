@@ -1,5 +1,5 @@
 from PySide6 import QtWidgets
-from PySide6.QtCore import QPersistentModelIndex, Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize
+from PySide6.QtCore import QPersistentModelIndex, Qt, QTimer, QModelIndex, QAbstractTableModel, Signal, QEvent, QSize, QByteArray
 from PySide6.QtWidgets import (
     QLineEdit,
     QTableView,
@@ -10,15 +10,16 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QComboBox,
     QTabWidget,
-    QProgressBar,
     QHeaderView,
     QMessageBox,
     QTableWidget,
     QTextEdit,
     QStyledItemDelegate,
+    QStatusBar
 )
 
-from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent, QGuiApplication
+from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent, QGuiApplication, QColor, QBrush
+from PySide6.QtSvg import QSvgRenderer
 import darkdetect
 import threading
 import platform
@@ -44,9 +45,98 @@ from core.interface.assets.base64_icons import logo_base64
 from core.utils.general.shutdown import closehelper
 
 
+def _is_dark_mode():
+    return darkdetect.isDark()
+
+
+def _theme_colors():
+    dark = _is_dark_mode()
+    if dark:
+        return {
+            "text": "rgba(255, 255, 255, 0.9)",
+            "border": "rgba(255, 255, 255, 0.06)",
+            "selected": "rgba(255, 255, 255, 0.04)",
+            "header_text": "rgba(255, 255, 255, 0.5)",
+            "header_border": "rgba(255, 255, 255, 0.1)",
+            "hover": QColor(255, 255, 255, 15),
+        }
+    else:
+        return {
+            "text": "rgba(0, 0, 0, 0.87)",
+            "border": "rgba(0, 0, 0, 0.08)",
+            "selected": "rgba(0, 0, 0, 0.06)",
+            "header_text": "rgba(0, 0, 0, 0.6)",
+            "header_border": "rgba(0, 0, 0, 0.12)",
+            "hover": QColor(0, 0, 0, 15),
+        }
+
+
+def _table_stylesheet(view_type="QTableWidget"):
+    c = _theme_colors()
+    dark = _is_dark_mode()
+    color_rule = "" if dark else f"color: {c['text']};"
+    return f"""
+        {view_type} {{
+            border: none;
+            outline: 0;
+            font-size: 13px;
+            {color_rule}
+        }}
+        {view_type}::item {{
+            border-bottom: 1px solid {c["border"]};
+            padding: 6px 14px;
+            {color_rule}
+        }}
+        {view_type}::item:selected {{
+            background: {c["selected"]};
+        }}
+        QHeaderView {{
+            background: transparent;
+        }}
+        QHeaderView::section {{
+            background: transparent;
+            color: {c["header_text"]};
+            font-weight: normal;
+            border: none;
+            border-bottom: 1px solid {c["header_border"]};
+            padding: 6px 14px;
+        }}
+        QHeaderView::section:checked {{
+            background: transparent;
+            color: {c["header_text"]};
+            font-weight: normal;
+        }}
+    """
+
+
+def _svg_icon(svg_str, size=20):
+    app = QtWidgets.QApplication.instance()
+    if app:
+        if _is_dark_mode():
+            color = "white"
+        else:
+            color = "#555555"
+    else:
+        color = "white"
+    svg = svg_str.replace("{color}", color)
+    renderer = QSvgRenderer(QByteArray(svg.encode()))
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    from PySide6.QtGui import QPainter
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+    return QIcon(pixmap)
+
+
+SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" fill="{color}"/></svg>'
+SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
+SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
+
+
 def download_update(latest_version):
-    new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
-    url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows.exe"
+    new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
+    url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
 
     print("Downloading update...", True)
     response = r.get(url, allow_redirects=True)
@@ -54,7 +144,7 @@ def download_update(latest_version):
         f.write(response.content)
     if not os.path.exists(new_filename):
         raise FileNotFoundError("Executable not found")
-    subprocess.Popen([new_filename], shell=True)
+    subprocess.run([new_filename, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-"])
     time.sleep(0.5)
 
     msg = QMessageBox()
@@ -138,12 +228,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.download_model = None
         self.downloadList = QTableView()
+        self.downloadList.setMouseTracking(True)
+        self._hovered_row = -1
+        self._tracker_hovered_row = -1
+        self._tracker_hovered_table = None
+        self.downloadList.viewport().installEventFilter(self)
         self.emptyLibrary = QLabel("No items in library.")
         self.emptyDownload = QLabel("No items in downloads.")
         self.emptyDownload.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.consoleLog = QTextEdit()
-        self.progressbar = QProgressBar()
+        self.statusbar = QStatusBar()
 
         flush_log_buffer()
 
@@ -155,6 +250,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         state.trackertable.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         
         
+        class TrackerHoverDelegate(QStyledItemDelegate):
+            def paint(self, painter, option, index):
+                if index.row() == MainWindow._instance._tracker_hovered_row:
+                    painter.save()
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
+                    painter.restore()
+                super().paint(painter, option, index)
+
+        state.trackertable.viewport().installEventFilter(self)
 
         container = QWidget()
         containerLayout = QVBoxLayout()
@@ -199,17 +303,18 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         elif status.state == lt.torrent_status.seeding:
                             return "Seeding"
                         elif status.paused:
-                            return "Paused"
+                            is_auto = bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                            return "Queued" if is_auto else "Paused"
                         else:
                             return "Queued"
                     elif col == 3:
                         return f"{status.progress * 100:.1f}%"
                     elif col == 4:
-                        speed_kbs = status.download_rate / 1024
-                        if speed_kbs > 1024:
-                            return f"{speed_kbs / 1024:.1f} MB/s"
-                        else:
-                            return f"{speed_kbs:.1f} kB/s"
+                        down_kb = status.download_rate / 1024
+                        up_kb = status.upload_rate / 1024
+                        down_text = f"{down_kb / 1024:.1f} MB/s" if down_kb > 1024 else f"{down_kb:.1f} kB/s"
+                        up_text = f"{up_kb / 1024:.1f} MB/s" if up_kb > 1024 else f"{up_kb:.1f} kB/s"
+                        return f"↓ {down_text} ↑ {up_text}"
                     elif col == 5:
                         downloaded_mb = status.total_wanted_done / (1024 * 1024)
                         if downloaded_mb > 1024:
@@ -280,8 +385,23 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 idx = self.index(row, 0)
                 self.dataChanged.emit(idx, idx, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
 
+        class HoverRowDelegate(QStyledItemDelegate):
+            def paint(self, painter, option, index):
+                if index.row() == MainWindow._instance._hovered_row:
+                    painter.save()
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
+                    painter.restore()
+                super().paint(painter, option, index)
+
         class PauseResumeDelegate(QStyledItemDelegate):
             clicked = Signal(int)
+
+            def paint(self, painter, option, index):
+                if index.row() == MainWindow._instance._hovered_row:
+                    painter.save()
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
+                    painter.restore()
+                super().paint(painter, option, index)
 
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
@@ -292,9 +412,12 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
                 if button:
                     if status.state == lt.torrent_status.seeding: 
-                        button.setText("📁")
+                        button.setIcon(_svg_icon(SVG_FOLDER, 18))
+                        button.setText("")
                     else:
-                        button.setText("▶︎" if status.paused else "⏸︎")
+                        is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                        button.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                        button.setText("")
 
             def createEditor(self, parent, option, index):
                 magnet_link = list(state.active_downloads.keys())[index.row()] 
@@ -302,14 +425,26 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 status = magnetdl.status()
 
                 widget = QWidget(parent)
-                widget.setStyleSheet("border: none;")
+                widget.setStyleSheet("border: none; background: transparent;")
                 layout = QHBoxLayout(widget)
                 layout.setContentsMargins(0, 0, 0, 0)
                 if status.state == lt.torrent_status.seeding: 
-                    btnPause = QtWidgets.QPushButton("📁")
+                    btnPause = QtWidgets.QPushButton()
+                    btnPause.setIcon(_svg_icon(SVG_FOLDER, 18))
                 else:
-                    btnPause = QtWidgets.QPushButton("▶︎" if status.paused else "⏸︎")
-                btnPause.setFixedSize(40, 30)
+                    btnPause = QtWidgets.QPushButton()
+                    is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
+                    btnPause.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                btnPause.setIconSize(QSize(18, 18))
+                btnPause.setFixedSize(30, 30)
+                btnPause.setCursor(Qt.CursorShape.PointingHandCursor)
+                btnPause.setStyleSheet("""
+                    QPushButton {
+                        border: none;
+                        background: transparent;
+                        padding: 0px;
+                    }
+                """)
                 btnPause.clicked.connect(lambda: self.clicked.emit(index.row()))
                 layout.addStretch()
                 layout.addWidget(btnPause)
@@ -317,16 +452,29 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 widget.setLayout(layout)
                 return widget
             def editorEvent(self, event, model, option, index):
-                if index.column() == 0 and event.type() == QEvent.Type.MouseButtonPress:
-                    self.clicked.emit(index.row())
-                    return True
                 return False
 
         self.download_model = DownloadModel()
         self.downloadList.setModel(self.download_model)
         self.downloadList.horizontalHeader().setStretchLastSection(False)
+        self.downloadList.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.downloadList.horizontalHeader().resizeSection(0, 70)
         self.downloadList.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.downloadList.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        self.downloadList.horizontalHeader().setMinimumSectionSize(60)
+        self.downloadList.verticalHeader().setDefaultSectionSize(40)
         self.downloadList.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self.downloadList.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.downloadList.verticalHeader().setVisible(False)
+        self.downloadList.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.downloadList.horizontalHeader().setHighlightSections(False)
+        self.downloadList.setMouseTracking(True)
+        self.downloadList.setShowGrid(False)
+        self.downloadList.setStyleSheet(_table_stylesheet("QTableView"))
         self.downloadList.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.downloadList.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -334,6 +482,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         def on_pause_resume_clicked(row):
             download_model.toggle_pause_resume(row)
+
+        self.downloadList.viewport().setMouseTracking(True)
+        hover_delegate = HoverRowDelegate(self.downloadList)
+        self.downloadList.setItemDelegate(hover_delegate)
 
         delegate = PauseResumeDelegate(self.downloadList)
         self.downloadList.setItemDelegateForColumn(0, delegate)
@@ -360,8 +512,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
-        self.tracker_widget = state.trackertable
-        self.horizontal_layout.addWidget(self.tracker_widget)
         self.horizontal_layout.addWidget(state.trackertable)
 
         self.tab1 = create_tab("Search", self.searchbar, state.trackertable, self.tabs, self.dlbutton, self.horizontal_layout)
@@ -445,7 +595,20 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.consoleLog.setReadOnly(True)
         self.consoleLog.setFixedHeight(150)
+        self.consoleLog.setStyleSheet("margin-bottom: 0px; background: transparent;")
         containerLayout.addWidget(self.consoleLog)
+
+        self.statusbar.show()
+        self.statusbar.setStyleSheet("background: transparent; border: none; padding-right: 1px; padding-left: 6px; padding-bottom: 1px; margin-top: -8px")
+
+        self.version = QLabel(f"Version: {state.version}")
+        self.statusbar.addPermanentWidget(self.version, Qt.AlignmentFlag.AlignLeft)
+
+        self.speed_label = QLabel("\u2193 0.0 kB/s  \u2191 0.0 kB/s")
+        self.speed_label.setStyleSheet("padding-right: 6px;")
+        self.statusbar.addPermanentWidget(self.speed_label)
+
+        self.setStatusBar(self.statusbar)
 
         self.download_timer = QTimer()
         self.download_timer.timeout.connect(self.download_list_update)
@@ -482,17 +645,105 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
     def download_list_update(self):
         if self.download_model:
-            self.download_model.layoutAboutToBeChanged.emit()
-            self.download_model.layoutChanged.emit()
-            for row in range(self.download_model.rowCount()):
-                idx = self.download_model.index(row, 0)
-                self.downloadList.closePersistentEditor(idx)
-                self.downloadList.openPersistentEditor(idx)
+            row_count = self.download_model.rowCount()
+            if row_count > 0:
+                top_left = self.download_model.index(0, 0)
+                bottom_right = self.download_model.index(row_count - 1, self.download_model.columnCount() - 1)
+                self.download_model.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.UserRole])
+
+            if not hasattr(self, '_last_dl_row_count'):
+                self._last_dl_row_count = 0
+            if row_count != self._last_dl_row_count:
+
+                for row in range(row_count, self._last_dl_row_count):
+                    idx = self.download_model.index(row, 0)
+                    self.downloadList.closePersistentEditor(idx)
+                self._last_dl_row_count = row_count
+                self.download_model.layoutAboutToBeChanged.emit()
+                self.download_model.layoutChanged.emit()
+                for row in range(row_count):
+                    idx = self.download_model.index(row, 0)
+                    self.downloadList.closePersistentEditor(idx)
+                    self.downloadList.openPersistentEditor(idx)
+            else:
+
+                delegate = self.downloadList.itemDelegateForColumn(0)
+                for row in range(row_count):
+                    idx = self.download_model.index(row, 0)
+                    editor = self.downloadList.indexWidget(idx)
+                    if editor and delegate:
+                        delegate.setEditorData(editor, idx)
+        self._update_speed_label()
+
+    def _update_speed_label(self):
+        total_down = 0
+        total_up = 0
+        for handle in state.active_downloads.values():
+            try:
+                s = handle.status()
+                total_down += s.download_rate
+                total_up += s.upload_rate
+            except Exception:
+                pass
+        down_kb = total_down / 1024
+        up_kb = total_up / 1024
+        down_text = f"{down_kb / 1024:.1f} MB/s" if down_kb > 1024 else f"{down_kb:.1f} kB/s"
+        up_text = f"{up_kb / 1024:.1f} MB/s" if up_kb > 1024 else f"{up_kb:.1f} kB/s"
+        self.speed_label.setText(f"↓ {down_text}  ↑ {up_text}")
         
+
+    def mousePressEvent(self, event):
+        self.rutrackerlist.clearSelection()
+        self.uztrackerlist.clearSelection()
+        self.monkruslist.clearSelection()
+        self.downloadList.clearSelection()
+        super().mousePressEvent(event)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
 
     def closeEvent(self, event: QCloseEvent):
         closehelper()
         event.accept()
+        from core.utils.general.shutdown import force_exit
+        force_exit()
+
+    def eventFilter(self, obj, event):
+        try:
+            if obj == state.trackertable.viewport():
+                if event.type() == QEvent.Type.MouseMove:
+                    pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                    idx = state.trackertable.indexAt(pos)
+                    new_row = idx.row() if idx.isValid() else -1
+                    if new_row != self._tracker_hovered_row or state.trackertable is not self._tracker_hovered_table:
+                        self._tracker_hovered_row = new_row
+                        self._tracker_hovered_table = state.trackertable
+                        state.trackertable.viewport().update()
+                elif event.type() == QEvent.Type.Leave:
+                    self._tracker_hovered_row = -1
+                    self._tracker_hovered_table = None
+                    state.trackertable.viewport().update()
+            if obj == self.downloadList.viewport():
+                if event.type() == QEvent.Type.MouseMove:
+                    pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                    idx = self.downloadList.indexAt(pos)
+                    new_row = idx.row() if idx.isValid() else -1
+                    if new_row != self._hovered_row:
+                        old_row = self._hovered_row
+                        self._hovered_row = new_row
+                        self._invalidate_hover_row(old_row)
+                        self._invalidate_hover_row(new_row)
+                elif event.type() == QEvent.Type.Leave:
+                    old_row = self._hovered_row
+                    self._hovered_row = -1
+                    self._invalidate_hover_row(old_row)
+        except RuntimeError:
+            pass
+        return super().eventFilter(obj, event)
+
+    def _invalidate_hover_row(self, row):
+        if row >= 0 and self.download_model:
+            self.downloadList.viewport().update()
 
     def set_tracker(self, _):
         state.currenttracker = self.tracker_list.currentText()
@@ -602,15 +853,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             if download_path and os.path.exists(download_path):
                 try:
                     if os.path.isfile(download_path):
+                        remove_download_log(magnet_link)
                         os.remove(download_path)
                         del state.active_downloads[magnet_link]
-                        remove_download_log(magnet_link)
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                     else:
                         import shutil
-                        shutil.rmtree(download_path)
                         del state.active_downloads[magnet_link]
                         remove_download_log(magnet_link)
+                        shutil.rmtree(download_path)
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                 except Exception as e:
                     consoleLog(f"Error deleting files: {e}", True)

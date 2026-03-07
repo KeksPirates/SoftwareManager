@@ -17,11 +17,7 @@ def check_for_updates():
     latest_version = latest_release["name"]
     assets = latest_release["assets"]
 
-
-    if state.version == "dev":
-        consoleLog("Dev release detected, skipping version check")
-        return None, None
-    elif latest_version != state.version:
+    if latest_version != state.version:
         consoleLog(f"New release available: {latest_version}")
         if assets:
             consoleLog("Assets:")

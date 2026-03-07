@@ -19,7 +19,7 @@ def return_pressed(self):
 
     state.posts = scrapefunc(search_text)
     
-    state.trackertable.clear()
+    state.trackertable.clearContents()
 
     if state.posts == []:
         self.show_empty_results(True)
