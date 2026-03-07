@@ -45,8 +45,81 @@ from core.interface.assets.base64_icons import logo_base64
 from core.utils.general.shutdown import closehelper
 
 
+def _is_dark_mode():
+    return darkdetect.isDark()
+
+
+def _theme_colors():
+    dark = _is_dark_mode()
+    if dark:
+        return {
+            "text": "rgba(255, 255, 255, 0.9)",
+            "border": "rgba(255, 255, 255, 0.06)",
+            "selected": "rgba(255, 255, 255, 0.04)",
+            "header_text": "rgba(255, 255, 255, 0.5)",
+            "header_border": "rgba(255, 255, 255, 0.1)",
+            "hover": QColor(255, 255, 255, 15),
+        }
+    else:
+        return {
+            "text": "rgba(0, 0, 0, 0.87)",
+            "border": "rgba(0, 0, 0, 0.08)",
+            "selected": "rgba(0, 0, 0, 0.06)",
+            "header_text": "rgba(0, 0, 0, 0.6)",
+            "header_border": "rgba(0, 0, 0, 0.12)",
+            "hover": QColor(0, 0, 0, 15),
+        }
+
+
+def _table_stylesheet(view_type="QTableWidget"):
+    c = _theme_colors()
+    dark = _is_dark_mode()
+    color_rule = "" if dark else f"color: {c['text']};"
+    return f"""
+        {view_type} {{
+            border: none;
+            outline: 0;
+            font-size: 13px;
+            {color_rule}
+        }}
+        {view_type}::item {{
+            border-bottom: 1px solid {c["border"]};
+            padding: 6px 14px;
+            {color_rule}
+        }}
+        {view_type}::item:selected {{
+            background: {c["selected"]};
+        }}
+        QHeaderView {{
+            background: transparent;
+        }}
+        QHeaderView::section {{
+            background: transparent;
+            color: {c["header_text"]};
+            font-weight: normal;
+            border: none;
+            border-bottom: 1px solid {c["header_border"]};
+            padding: 6px 14px;
+        }}
+        QHeaderView::section:checked {{
+            background: transparent;
+            color: {c["header_text"]};
+            font-weight: normal;
+        }}
+    """
+
+
 def _svg_icon(svg_str, size=20):
-    renderer = QSvgRenderer(QByteArray(svg_str.encode()))
+    app = QtWidgets.QApplication.instance()
+    if app:
+        if _is_dark_mode():
+            color = "white"
+        else:
+            color = "#555555"
+    else:
+        color = "white"
+    svg = svg_str.replace("{color}", color)
+    renderer = QSvgRenderer(QByteArray(svg.encode()))
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
     from PySide6.QtGui import QPainter
@@ -56,9 +129,9 @@ def _svg_icon(svg_str, size=20):
     return QIcon(pixmap)
 
 
-SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" fill="white"/></svg>'
-SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="white"/><rect x="15" y="3" width="4" height="18" rx="1" fill="white"/></svg>'
-SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="white"/></svg>'
+SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" fill="{color}"/></svg>'
+SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
+SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
 
 def download_update(latest_version):
@@ -173,7 +246,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def paint(self, painter, option, index):
                 if index.row() == MainWindow._instance._tracker_hovered_row:
                     painter.save()
-                    painter.fillRect(option.rect, QColor(255, 255, 255, 15))
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
                     painter.restore()
                 super().paint(painter, option, index)
 
@@ -197,36 +270,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             header.setHighlightSections(False)
 
             table.setShowGrid(False)
-            table.setStyleSheet("""
-                QTableWidget {
-                    border: none;
-                    outline: 0;
-                    font-size: 13px;
-                }
-                QTableWidget::item {
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                    padding: 6px 14px;
-                }
-                QTableWidget::item:selected {
-                    background: rgba(255, 255, 255, 0.04);
-                }
-                QHeaderView {
-                    background: transparent;
-                }
-                QHeaderView::section {
-                    background: transparent;
-                    color: rgba(255, 255, 255, 0.5);
-                    font-weight: normal;
-                    border: none;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    padding: 6px 14px;
-                }
-                QHeaderView::section:checked {
-                    background: transparent;
-                    color: rgba(255, 255, 255, 0.5);
-                    font-weight: normal;
-                }
-            """)
+            table.setStyleSheet(_table_stylesheet("QTableWidget"))
 
             table.setMouseTracking(True)
             table.viewport().setMouseTracking(True)
@@ -382,7 +426,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def paint(self, painter, option, index):
                 if index.row() == MainWindow._instance._hovered_row:
                     painter.save()
-                    painter.fillRect(option.rect, QColor(255, 255, 255, 15))
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
                     painter.restore()
                 super().paint(painter, option, index)
 
@@ -392,7 +436,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             def paint(self, painter, option, index):
                 if index.row() == MainWindow._instance._hovered_row:
                     painter.save()
-                    painter.fillRect(option.rect, QColor(255, 255, 255, 15))
+                    painter.fillRect(option.rect, _theme_colors()["hover"])
                     painter.restore()
                 super().paint(painter, option, index)
 
@@ -467,36 +511,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.horizontalHeader().setHighlightSections(False)
         self.downloadList.setMouseTracking(True)
         self.downloadList.setShowGrid(False)
-        self.downloadList.setStyleSheet("""
-            QTableView {
-                border: none;
-                outline: 0;
-                font-size: 13px;
-            }
-            QTableView::item {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                padding: 6px 14px;
-            }
-            QTableView::item:selected {
-                background: rgba(255, 255, 255, 0.04);
-            }
-            QHeaderView {
-                background: transparent;
-            }
-            QHeaderView::section {
-                background: transparent;
-                color: rgba(255, 255, 255, 0.5);
-                font-weight: normal;
-                border: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 6px 14px;
-            }
-            QHeaderView::section:checked {
-                background: transparent;
-                color: rgba(255, 255, 255, 0.5);
-                font-weight: normal;
-            }
-        """)
+        self.downloadList.setStyleSheet(_table_stylesheet("QTableView"))
         self.downloadList.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.downloadList.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -627,7 +642,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.version = QLabel(f"Version: {state.version}")
         self.statusbar.addPermanentWidget(self.version, Qt.AlignmentFlag.AlignLeft)
 
-        self.speed_label = QLabel("↓ 0.0 kB/s  ↑ 0.0 kB/s")
+        self.speed_label = QLabel("\u2193 0.0 kB/s  \u2191 0.0 kB/s")
         self.speed_label.setStyleSheet("padding-right: 6px;")
         self.statusbar.addPermanentWidget(self.speed_label)
 
@@ -721,6 +736,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.monkruslist.clearSelection()
         self.downloadList.clearSelection()
         super().mousePressEvent(event)
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
 
     def closeEvent(self, event: QCloseEvent):
         closehelper()
