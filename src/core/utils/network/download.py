@@ -14,6 +14,8 @@ def download_selected(items, posts, post_titles):
         return
     seen = set()
     for item in items:
+        if item.column() != 0:
+            continue
         text = item.text()
         if text and text not in seen:
             seen.add(text)
