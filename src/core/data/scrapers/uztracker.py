@@ -2,11 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
 
-Metadata = {
-    "headers" : ["Post Title", "Author"],
-    "name" : "uztracker",
-}
 
 def get_Metadata():
     return Metadata
@@ -41,3 +38,14 @@ def scrape_uztracker(query):
     except requests.RequestException as e:
         consoleLog(f"Failed to fetch {search_url}: {e}")
         return None
+
+Metadata = {
+    "name" : "uztracker",
+    "headers" : ["Post Title", "Author"],
+    "searchkey" : None,
+    "scrapeFunc" : scrape_uztracker,
+    "scrapeSearches" : True,
+}
+
+if __name__ != "__main__":
+    state.trackers.update({Metadata["name"] : Metadata})

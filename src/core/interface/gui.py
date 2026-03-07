@@ -147,29 +147,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         flush_log_buffer()
 
-        # create tracker tables
-        state.trackertable 
-        table = QTableWidget()
-        table.setColumnCount(len(headers))
-        table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.verticalHeader().setVisible(False)
-        table.setHorizontalHeaderLabels(headers)
+        # create initial tracker table
+        state.trackertable = QTableWidget()
+        state.trackertable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        state.trackertable.verticalHeader().setVisible(False)
+        state.trackertable.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        state.trackertable.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        
+        
 
-        header = table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
-        header.resizeSection(1, 500)
-        header.setStretchLastSection(False)
-    
-        table.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        table.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        state.tracker_list.update({key: table})
-            
         container = QWidget()
         containerLayout = QVBoxLayout()
         containerLayout.addWidget(self.searchbar)
-        containerLayout.addWidget(state.tracker_list[state.tracker])
+        containerLayout.addWidget(state.trackertable)
 
         class DownloadModel(QAbstractTableModel):
             def __init__(self):
@@ -350,7 +340,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         delegate.clicked.connect(on_pause_resume_clicked)
 
         # download button triggers
-        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.tracker_list[state.tracker].currentItem(), state.posts, state.post_titles))))
+        #! THIS IS TEMPORARY self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts, state.posts))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
@@ -370,10 +360,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
-        self.tracker_widget = state.tracker_list[state.tracker]
+        self.tracker_widget = state.trackertable
         self.horizontal_layout.addWidget(self.tracker_widget)
+        self.horizontal_layout.addWidget(state.trackertable)
 
-        self.tab1 = create_tab("Search", self.searchbar, state.tracker_list[state.tracker], self.tabs, self.dlbutton, self.horizontal_layout)
+        self.tab1 = create_tab("Search", self.searchbar, state.trackertable, self.tabs, self.dlbutton, self.horizontal_layout)
         # self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
         self.tab3 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
@@ -402,7 +393,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
 
         self.tracker_list = QComboBox()
-        self.tracker_list.addItems(list(state.tracker_list.keys()))
+        self.tracker_list.addItems(list(state.trackers.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)
@@ -504,22 +495,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         event.accept()
 
     def set_tracker(self, _):
-        old_tracker = state.tracker
-        state.tracker = self.tracker_list.currentText()
-
-        old_widget = state.tracker_list[old_tracker]
-        self.horizontal_layout.removeWidget(old_widget)
-        old_widget.setParent(None)
-
-        tracker_widget = state.tracker_list[state.tracker]
-        self.horizontal_layout.addWidget(tracker_widget)
+        state.currenttracker = self.tracker_list.currentText()
 
     def show_empty_results(self, show: bool):
         if show:
-            state.tracker_list[state.tracker].hide()
+            state.trackertable.hide()
             self.emptyResults.show()
         else:
-            state.tracker_list[state.tracker].show()
+            state.trackertable.show()
             self.emptyResults.hide()
 
     def show_empty_downloads(self):
@@ -533,8 +516,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     # thank you claude
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        table_width = state.tracker_list[state.tracker].viewport().width()
-        state.tracker_list[state.tracker].setColumnWidth(1, int(table_width * 0.3))
+        table_width = state.trackertable.viewport().width()
+        state.trackertable.setColumnWidth(1, int(table_width * 0.3))
 
     def contextMenuEvent(self, event: QContextMenuEvent):
         if self.downloadList.underMouse():

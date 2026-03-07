@@ -1,27 +1,29 @@
 import requests
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
+from core.utils.network.jsonhandler import split_data
 
-Metadata = {
-    "headers" : ["Post Title", "Author", "Seeders", "Leechers"],
-    "name" : "rutracker",
-}
-
-def get_Metadata():
-    return Metadata
 
 def scrape_rutracker(query):
     search = requests.get(f"{state.api_url}/search?q={query}")
-    consoleLog("Sent request to server")
+    consoleLog("[core.data.scrapers.rutracker] Sent request to server")
     if search:
-        try:
-            return search.text
-        except Exception:
-            consoleLog(f"No results found / No response from server, exception: {Exception}")
-            return None
+        _, data, _, _, _ = split_data(search.text)
+
+        return data
     else:
-        return None
+        consoleLog("[core.data.scrapers.rutracker] No search Text, returning nothing")
+        return []
         
+Metadata = {
+    "name" : "rutracker",
+    "headers" : ["Post Title", "Author", "Seeders", "Leechers"],
+    "searchkey" : None,
+    "scrapeFunc" : scrape_rutracker,
+    "scrapeSearches" : True,
+}
 
 
-# This function utilizes the SoftwareManager server - source code can be found under the SoftwareManager-Server repository.
+
+if __name__ != "__main__":
+    state.trackers.update({Metadata["name"] : Metadata})

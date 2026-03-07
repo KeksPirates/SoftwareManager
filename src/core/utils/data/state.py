@@ -17,14 +17,13 @@ class AppState(QObject):
 
         self.currenttracker: str = "rutracker"
         self.trackertable: QTableWidget
-        self.trackers: Dict[str,Dict[str,Any]] # each tracker should add itself here, will be listed in order of module initialisation
+        self.trackers: Dict[str,Dict[str,Any]] = {}# each tracker should add itself here
         '''
         an example:
         "rutracker" : {
             "name" : "rutracker", # name of the tracker
-            "posts" : [post1, post2, ...], # all the posts, will be in self.posts,
             "headers" : ["author", "title"], # keys shown in the table
-            "sortkey" : "name" # the key to sort posts by # currently only usefull to steamrip
+            "scrapeFunc" : function,
         }
         '''
         self.api_url: str = "https://api.michijackson.xyz"
@@ -41,25 +40,6 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
-
-    def update_tracker_table(self, newtracker: str):
-
-        if newtracker not in self.trackers.keys():
-            raise ValueError("the selected tracker is not initialised.")
-
-        self.trackertable.setColumnCount(self.trackers[self.currenttracker][])
-
-        for row_index, row_data in enumerate(self.trackers[self.currenttracker].values()):
-            for col_index, key in enumerate(row_data.keys()):
-                if key in self.trackers[self.currenttracker]["ignorekeys"]:
-                    continue
-                value = row_data.get(key, "")
-                self.trackertable.setItem(
-                    row_index,
-                    col_index,
-                    QtWidgets.QTableWidgetItem(value)
-                )
-
 
     @property
     def image_path(self) -> str:

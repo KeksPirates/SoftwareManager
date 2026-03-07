@@ -1,11 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import time
+from core.utils.data.state import state
 
-Metadata = {
-    "headers" : ["Post Title", "Author"],
-    "name" : "m0nkrus",
-}
 
 def get_Metadata():
     return Metadata
@@ -77,5 +74,14 @@ def scrape_m0nkrus(query):
 
     return filtered_posts
 
-if __name__ == "__main__":
-    print(scrape_m0nkrus("adobe"))
+
+Metadata = {
+    "name" : "m0nkrus",
+    "headers" : ["Post Title", "Author"],
+    "searchkey" : None,
+    "scrapeFunc" : scrape_m0nkrus,
+    "scrapeSearches" : True,
+}
+
+if __name__ != "__main__":
+    state.trackers.update({Metadata["name"] : Metadata})

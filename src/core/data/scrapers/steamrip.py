@@ -1,21 +1,33 @@
 
 from bs4 import BeautifulSoup
+from fuzzyfinder.main import fuzzyfinder
 import requests
 import re
+import time
+from typing import Generator
+from core.utils.data.state import state
 
-Metadata = {
-    "headers" : ["Game", "Availible Downloads"],
-    "name" : "steamrip",
+
+cache = {
+    "data": [],
+    "last_fetched": 0
 }
+
+cache_expiry = 300
 
 def get_Metadata():
     return Metadata
 
-def scrape_steamrip_links(text = None):
-    if text is None:
-        url = f"https://steamrip.com/games-list-page/"
-        response = requests.get(url)
-        text = response.text
+def scrape_steamrip_links():
+    
+    current_time = time.time()
+
+    if cache["data"] != [] and (current_time - cache["last_fetched"] < cache_expiry):
+        return cache["data"]
+
+    url = f"https://steamrip.com/games-list-page/"
+    response = requests.get(url)
+    text = response.text
 
     soup = BeautifulSoup(text, "html.parser")
     games = soup.find_all("li", class_="az-list-item")
@@ -50,7 +62,8 @@ def scrape_steamrip_game_downloads(gamelink):
 
     download_link_elements = soup.find_all("a",class_="shortc-button")
 
-    download_links = ["b", "g", "v", "m"]
+
+    download_links = ["buzzheavier", "gofile", "vikingfile", "megadb"]
 
     for download_link in download_link_elements:
         pure = download_link.attrs.get("href")
@@ -69,11 +82,28 @@ def scrape_steamrip_game_downloads(gamelink):
         if len(link) != 1:
             ret.append(link)
 
-
+    cache["data"] = ret
 
     return ret
 
 
+def filter_steamrip(query: str):
+    
+    options: Generator = fuzzyfinder(query, scrape_steamrip_links(), accessor=lambda x: x["name"])
+
+    return list(options)
+
+
+
+
+Metadata = {
+    "name" : "steamrip",
+    "headers" : ["Game", "Available Downloads"],
+    "scrapeFunc" : filter_steamrip,
+}
+
+if __name__ != "__main__":
+    state.trackers.update({Metadata["name"] : Metadata})
+
 if __name__ == "__main__":
-    #print(offline_scrape_steamrip_links())
     print(scrape_steamrip_game_downloads("/r-e-p-o-free-download/"))
