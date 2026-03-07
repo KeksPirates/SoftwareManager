@@ -145,7 +145,7 @@ def download_update(latest_version):
     if not os.path.exists(new_filename):
         raise FileNotFoundError("Executable not found")
     subprocess.run([new_filename, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-"])
-    subprocess.Popen(["SoftwareManager.exe"])
+    # subprocess.Popen(["SoftwareManager.exe"])
     time.sleep(0.5)
 
     msg = QMessageBox()
