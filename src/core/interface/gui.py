@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QComboBox,
     QTabWidget,
-    QProgressBar,
     QHeaderView,
     QMessageBox,
     QTableWidget,
@@ -143,7 +142,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.emptyDownload.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.consoleLog = QTextEdit()
-        self.progressbar = QProgressBar()
 
         flush_log_buffer()
 
