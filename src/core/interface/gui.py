@@ -27,10 +27,10 @@ import requests as r
 import os
 import subprocess
 import libtorrent as lt
-import time
 import sys
 import json
 import base64
+import winreg
 from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
@@ -134,26 +134,80 @@ SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
 
+def _find_install_path():
+    uninstall_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        try:
+            with winreg.OpenKey(hive, uninstall_key) as key:
+                for i in range(winreg.QueryInfoKey(key)[0]):
+                    with winreg.OpenKey(key, winreg.EnumKey(key, i)) as subkey:
+                        try:
+                            name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                            if "SoftwareManager" in name:
+                                return winreg.QueryValueEx(subkey, "InstallLocation")[0]
+                        except OSError:
+                            continue
+        except OSError:
+            continue
+    return None
+
+
 def download_update(latest_version):
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
 
-    print("Downloading update...", True)
-    response = r.get(url, allow_redirects=True)
-    with open(new_filename, "wb") as f:
-        f.write(response.content)
-    if not os.path.exists(new_filename):
-        raise FileNotFoundError("Executable not found")
-    subprocess.run([new_filename, "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-"])
-    # subprocess.Popen(["SoftwareManager.exe"])
-    time.sleep(0.5)
+    progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
+    progress.setWindowTitle("Updating")
+    progress.setWindowModality(Qt.WindowModality.ApplicationModal)
+    progress.setCancelButton(None)
+    progress.setMinimumDuration(0)
+    progress.setAutoClose(False)
+    progress.setAutoReset(False)
+    progress.setRange(0, 100)
+    progress.setValue(0)
+    progress.show()
+    QtWidgets.QApplication.processEvents()
 
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Icon.Information)
-    msg.setWindowTitle("New Version")
-    msg.setText("New version installed.")
-    msg.setInformativeText("Please remove the old exe.")
-    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+    response = r.get(url, allow_redirects=True, stream=True)
+    total = int(response.headers.get("content-length", 0))
+    downloaded = 0
+    chunks = []
+    for chunk in response.iter_content(chunk_size=65536):
+        chunks.append(chunk)
+        downloaded += len(chunk)
+        if total > 0:
+            progress.setValue(int(downloaded * 100 / total))
+        QtWidgets.QApplication.processEvents()
+
+    with open(new_filename, "wb") as f:
+        for chunk in chunks:
+            f.write(chunk)
+
+    if not os.path.exists(new_filename):
+        progress.close()
+        raise FileNotFoundError("Executable not found")
+
+    progress.setLabelText("Installing update...")
+    progress.setValue(100)
+    QtWidgets.QApplication.processEvents()
+
+    proc = subprocess.Popen([new_filename, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS", "/NORESTART"])
+    while proc.poll() is None:
+        QtWidgets.QApplication.processEvents()
+        import time
+        time.sleep(0.1)
+
+    progress.close()
+
+    try:
+        os.remove(new_filename)
+    except OSError:
+        pass
+
+    install_path = _find_install_path()
+    if not install_path:
+        raise FileNotFoundError("Could not find SoftwareManager install location in registry")
+    subprocess.Popen([os.path.join(install_path, "SoftwareManager.exe")])
 
     sys.exit(0)
 
@@ -163,11 +217,13 @@ def windowCloseHelper():
     
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
+    search_finished_signal = Signal()  # Thread-safe signal for search completion
     
     def __init__(self):
         super().__init__()
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
+        self.search_finished_signal.connect(self._on_search_finished)
 
         pixmap = QPixmap()
         image_data = base64.b64decode(logo_base64)
@@ -217,7 +273,16 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.setPlaceholderText("Search for software...")
         self.searchbar.setClearButtonEnabled(True)
         self.searchbar.setMinimumHeight(30)
-        self.searchbar.returnPressed.connect(lambda: run_thread(threading.Thread(target=return_pressed, args=(self,)))) # Triggers data function thread on enter
+        self.searchbar.returnPressed.connect(self._start_search)
+
+        self._spinner_label = QLabel()
+        self._spinner_label.setFixedSize(20, 20)
+        self._spinner_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._spinner_label.hide()
+        self._spinner_angle = 0
+        self._spinner_timer = QTimer()
+        self._spinner_timer.setInterval(80)
+        self._spinner_timer.timeout.connect(self._update_spinner)
 
         self.dlbutton = QtWidgets.QPushButton("Download")
         self.dlbutton.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -300,7 +365,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         container = QWidget()
         containerLayout = QVBoxLayout()
-        containerLayout.addWidget(self.searchbar)
+
+        search_row = QHBoxLayout()
+        search_row.addWidget(self.searchbar)
+        search_row.addWidget(self._spinner_label)
+        containerLayout.addLayout(search_row)
         containerLayout.addWidget(state.tracker_list[state.tracker])
 
         class DownloadModel(QAbstractTableModel):
@@ -662,6 +731,32 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
         self.context_menu.addAction("Cancel Download", self.cancelDownloadAction)
         self.context_menu.addAction("Delete File", self.deleteFileAction)
+
+    def _start_search(self):
+        self._spinner_label.show()
+        self._spinner_angle = 0
+        self._spinner_timer.start()
+        self._update_spinner()
+        self.searchbar.setEnabled(False)
+        def _search_thread():
+            try:
+                return_pressed(self)
+            finally:
+                self.search_finished_signal.emit()
+        run_thread(threading.Thread(target=_search_thread))
+
+    def _on_search_finished(self):
+        self._spinner_timer.stop()
+        self._spinner_label.hide()
+        self.searchbar.setEnabled(True)
+        self.searchbar.setFocus()
+
+    def _update_spinner(self):
+        frames = ["◐", "◓", "◑", "◒"]
+        idx = (self._spinner_angle // 1) % len(frames)
+        self._spinner_label.setText(frames[idx])
+        self._spinner_label.setStyleSheet("font-size: 16px; color: gray;")
+        self._spinner_angle += 1
 
     @staticmethod
     def add_log(text):
