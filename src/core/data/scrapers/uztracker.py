@@ -29,8 +29,8 @@ def scrape_uztracker(query):
 
             posts.append(dict(
                 title=title,
+                author=author,
                 url=url,
-                author=author
             ))
 
         return posts

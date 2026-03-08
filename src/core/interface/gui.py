@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QTableWidget,
+    QTableWidgetItem,
     QTextEdit,
     QStyledItemDelegate,
     QStatusBar
@@ -162,11 +163,13 @@ def windowCloseHelper():
     
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
+    search_results_signal = Signal(list) # and searching
     
     def __init__(self):
         super().__init__()
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
+        self.search_results_signal.connect(self._on_search_results)
 
         pixmap = QPixmap()
         image_data = base64.b64decode(logo_base64)
@@ -248,8 +251,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         state.trackertable.verticalHeader().setVisible(False)
         state.trackertable.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         state.trackertable.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        
-        
+        model = state.trackertable.model()
+        model.dataChanged.disconnect()
+        state.trackertable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+
         class TrackerHoverDelegate(QStyledItemDelegate):
             def paint(self, painter, option, index):
                 if index.row() == MainWindow._instance._tracker_hovered_row:
@@ -491,8 +496,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.setItemDelegateForColumn(0, delegate)
         delegate.clicked.connect(on_pause_resume_clicked)
 
-        # download button triggers
-        #! THIS IS TEMPORARY self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts, state.posts))))
+        #! FIX THIS
+
+        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts, state.trackers[state.currenttracker]["headers"]))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
@@ -636,6 +642,24 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 self.consoleLog.verticalScrollBar().maximum()
             )
 
+    def _on_search_results(self, headers):
+
+        if state.posts is None or state.posts == []:
+            self.show_empty_results(True)
+            return
+        else:
+            self.show_empty_results(False)
+        
+        state.trackertable.clearContents()
+        state.trackertable.setColumnCount(len(headers))
+        state.trackertable.setHorizontalHeaderLabels(headers)
+        state.trackertable.setRowCount(len(state.posts))
+        for x, rowdata in enumerate(state.posts):
+            for y, data in enumerate(rowdata.values()):
+                state.trackertable.setItem(x, y, QTableWidgetItem(str(data)))
+
+        self._resize_tracker_columns()
+        
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)
         self.pixmap = QPixmap.fromImage(self.image)
@@ -693,9 +717,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         
 
     def mousePressEvent(self, event):
-        self.rutrackerlist.clearSelection()
-        self.uztrackerlist.clearSelection()
-        self.monkruslist.clearSelection()
+        state.trackertable.clearSelection()
         self.downloadList.clearSelection()
         super().mousePressEvent(event)
 
@@ -764,11 +786,28 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.emptyDownload.show()
             self.downloadList.hide()
 
-    # thank you claude
+    # thanks claude
+    def _resize_tracker_columns(self):
+        header = state.trackertable.horizontalHeader()
+        col_count = header.count()
+        if col_count == 0:
+            return
+
+        for i in range(col_count):
+            state.trackertable.resizeColumnToContents(i)
+        
+        content_widths = [header.sectionSize(i) for i in range(col_count)]
+        total_content_width = sum(content_widths)
+        remaining = state.trackertable.viewport().width() - total_content_width
+        extra = max(0, remaining) // col_count
+
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        for i in range(col_count):
+            header.resizeSection(i, content_widths[i] + extra)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        table_width = state.trackertable.viewport().width()
-        state.trackertable.setColumnWidth(1, int(table_width * 0.3))
+        self._resize_tracker_columns()
 
     def contextMenuEvent(self, event: QContextMenuEvent):
         if self.downloadList.underMouse():

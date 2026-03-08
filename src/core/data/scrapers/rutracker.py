@@ -9,8 +9,22 @@ def scrape_rutracker(query):
     consoleLog("[core.data.scrapers.rutracker] Sent request to server")
     if search:
         _, data, _, _, _ = split_data(search.text)
+        
+        sorteddata = []
 
-        return data
+        for entry in data:
+            sorteddata.append(
+                {
+                    "title" : entry["title"],
+                    "author" : entry["author"],
+                    "seeders" : entry["seeders"],
+                    "leechers" : entry["leechers"],
+                    "url" : entry["url"],
+                    "id" : entry["id"],
+                }
+            )
+
+        return sorteddata
     else:
         consoleLog("[core.data.scrapers.rutracker] No search Text, returning nothing")
         return []

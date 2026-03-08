@@ -98,7 +98,7 @@ def filter_steamrip(query: str):
 
 Metadata = {
     "name" : "steamrip",
-    "headers" : ["Game", "Available Downloads"],
+    "headers" : ["Game"],
     "scrapeFunc" : filter_steamrip,
 }
 

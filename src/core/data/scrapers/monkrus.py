@@ -47,9 +47,9 @@ def _get_telegram_posts():
                 if post_url not in added:
                     added.add(post_url)
                     posts.append(dict(
+                        title=title,
                         author="m0nkrus",
                         id=len(posts) + 1,
-                        title=title,
                         url=post_url
                     ))
         
