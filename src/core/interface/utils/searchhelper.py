@@ -1,11 +1,15 @@
 from PySide6.QtWidgets import QTableWidgetItem, QHeaderView
 from core.utils.logging.logs import consoleLog
-from core.data.scrapers.rutracker import scrape_rutracker
-from core.data.scrapers.uztracker import scrape_uztracker
-from core.data.scrapers.monkrus import scrape_m0nkrus
-from core.data.scrapers.steamrip import filter_steamrip
+from core.data.scrapers.rutracker import init_rutracker
+from core.data.scrapers.uztracker import init_uztracker
+from core.data.scrapers.monkrus import init_m0nkrus
+from core.data.scrapers.steamrip import init_steamrip
 from core.utils.data.state import state
-from core.interface.gui import MainWindow
+
+init_rutracker()
+init_uztracker()
+init_m0nkrus()
+init_steamrip()
 
 def return_pressed(self):
     self.show_empty_results(False)
@@ -21,4 +25,5 @@ def return_pressed(self):
 
     state.posts = scrapefunc(search_text)
 
+    from core.interface.gui import MainWindow
     MainWindow._instance.search_results_signal.emit(tracker["headers"])

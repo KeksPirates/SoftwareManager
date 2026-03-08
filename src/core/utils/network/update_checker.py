@@ -4,11 +4,11 @@ from core.utils.logging.logs import consoleLog
 
 def check_for_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases"
-    response = requests.get(url)
+    response = requests.get(url, timeout=15)
 
     if response.status_code != 200:
         consoleLog(f"Failed to fetch releases: {response.status_code}")
-        exit(1)
+        return None, None
 
     releases = response.json()
     releases.sort(key=lambda r: r["published_at"], reverse=True)

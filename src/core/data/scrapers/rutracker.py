@@ -38,6 +38,5 @@ Metadata = {
 }
 
 
-
-if __name__ != "__main__":
+def init_rutracker():
     state.trackers.update({Metadata["name"] : Metadata})

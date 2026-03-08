@@ -83,5 +83,5 @@ Metadata = {
     "scrapeSearches" : True,
 }
 
-if __name__ != "__main__":
+def init_m0nkrus():
     state.trackers.update({Metadata["name"] : Metadata})

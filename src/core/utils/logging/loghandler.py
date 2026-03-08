@@ -22,7 +22,10 @@ def check_downloads(downloads):
     for download in downloads:
         if os.path.exists(download.path):
             consoleLog(f"Existing Download: {download.title}")
-            seed_magnet(download.magnet_uri, download.path)
+            try:
+                seed_magnet(download.magnet_uri, download.path)
+            except Exception as e:
+                consoleLog(f"Failed to seed {download.title}: {e}")
         else:
             consoleLog(f"Inexistent Download: {download.title}")
             remove_download_log(download.magnet_uri)

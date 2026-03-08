@@ -28,7 +28,6 @@ import requests as r
 import os
 import subprocess
 import libtorrent as lt
-import time
 import sys
 import json
 import base64
@@ -86,10 +85,16 @@ def _table_stylesheet(view_type="QTableWidget"):
         {view_type}::item {{
             border-bottom: 1px solid {c["border"]};
             padding: 6px 14px;
+            outline: none;
             {color_rule}
         }}
         {view_type}::item:selected {{
             background: {c["selected"]};
+            outline: none;
+        }}
+        {view_type}::item:focus {{
+            outline: none;
+            border: none;
         }}
         QHeaderView {{
             background: transparent;
@@ -136,25 +141,46 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 
 
 def download_update(latest_version):
+    import tempfile
+    import time
+
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
+    installer_path = os.path.join(tempfile.gettempdir(), new_filename)
 
-    print("Downloading update...", True)
-    response = r.get(url, allow_redirects=True)
-    with open(new_filename, "wb") as f:
-        f.write(response.content)
-    if not os.path.exists(new_filename):
+    progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
+    progress.setWindowTitle("Updating")
+    progress.setWindowModality(Qt.WindowModality.ApplicationModal)
+    progress.setCancelButton(None)
+    progress.setMinimumDuration(0)
+    progress.setAutoClose(False)
+    progress.setAutoReset(False)
+    progress.setRange(0, 100)
+    progress.setValue(0)
+    progress.show()
+    QtWidgets.QApplication.processEvents()
+
+    response = r.get(url, allow_redirects=True, stream=True)
+    total = int(response.headers.get("content-length", 0))
+    downloaded = 0
+    with open(installer_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=65536):
+            f.write(chunk)
+            downloaded += len(chunk)
+            if total > 0:
+                progress.setValue(int(downloaded * 100 / total))
+            QtWidgets.QApplication.processEvents()
+
+    if not os.path.exists(installer_path):
+        progress.close()
         raise FileNotFoundError("Executable not found")
-    subprocess.run([new_filename, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-"])
-    time.sleep(0.5)
 
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Icon.Information)
-    msg.setWindowTitle("New Version")
-    msg.setText("New version installed.")
-    msg.setInformativeText("Please remove the old exe.")
-    msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+    progress.setLabelText("Installing update...")
+    progress.setValue(100)
+    QtWidgets.QApplication.processEvents()
 
+    subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
+    time.sleep(1)
     sys.exit(0)
 
 
@@ -219,7 +245,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.setPlaceholderText("Search for software...")
         self.searchbar.setClearButtonEnabled(True)
         self.searchbar.setMinimumHeight(30)
-        self.searchbar.returnPressed.connect(lambda: run_thread(threading.Thread(target=return_pressed, args=(self,)))) # Triggers data function thread on enter
+        self.searchbar.returnPressed.connect(self._start_search)
 
         self.dlbutton = QtWidgets.QPushButton("Download")
         self.dlbutton.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -269,6 +295,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         containerLayout = QVBoxLayout()
         containerLayout.addWidget(self.searchbar)
         containerLayout.addWidget(state.trackertable)
+        search_row = QHBoxLayout()
+        search_row.addWidget(self.searchbar)
 
         class DownloadModel(QAbstractTableModel):
             def __init__(self):
@@ -630,6 +658,12 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.context_menu.addAction("Cancel Download", self.cancelDownloadAction)
         self.context_menu.addAction("Delete File", self.deleteFileAction)
 
+    def _start_search(self):
+        self.searchbar.setEnabled(False)
+        def _search_thread():
+            return_pressed(self)
+        run_thread(threading.Thread(target=_search_thread))
+
     @staticmethod
     def add_log(text):
         if MainWindow._instance:
@@ -659,6 +693,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self._resize_tracker_columns()
         
         self.show_empty_results(False)
+        self.searchbar.setEnabled(True)
+        self.searchbar.setFocus()
         
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)

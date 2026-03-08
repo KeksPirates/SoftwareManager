@@ -102,7 +102,7 @@ Metadata = {
     "scrapeFunc" : filter_steamrip,
 }
 
-if __name__ != "__main__":
+def init_steamrip():
     state.trackers.update({Metadata["name"] : Metadata})
 
 if __name__ == "__main__":

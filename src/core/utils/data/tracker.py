@@ -30,7 +30,7 @@ def get_item_url(item, posts, post_titles): # softwarelist currentitem, post lis
 
 def get_magnet_link(post_url):
     try:
-        response = requests.get(post_url) # eventually impl. cloudscraper
+        response = requests.get(post_url, timeout=15) # eventually impl. cloudscraper
         consoleLog("Sent Request to retrieve Magnet Link...")
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')

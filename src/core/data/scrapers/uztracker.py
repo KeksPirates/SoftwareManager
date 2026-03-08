@@ -21,7 +21,9 @@ def scrape_uztracker(query):
         links = soup.find_all('tr', class_="tCenter hl-tr", id=lambda x: x and x.startswith('tor_'))
         for link in links:
 
-            theme_link = link.find('a', class_="genmed tLink", href=lambda x: x and x.startswith('./viewtopic')) 
+            theme_link = link.find('a', class_="genmed tLink", href=lambda x: x and x.startswith('./viewtopic'))
+            if not theme_link or not theme_link.b:
+                continue
             url = urljoin(base_url, theme_link['href'])
             title = theme_link.b.text
             author_link = link.find('a', class_="med")
@@ -47,5 +49,5 @@ Metadata = {
     "scrapeSearches" : True,
 }
 
-if __name__ != "__main__":
+def init_uztracker():
     state.trackers.update({Metadata["name"] : Metadata})

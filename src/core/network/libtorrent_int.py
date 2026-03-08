@@ -74,10 +74,13 @@ def add_download(magnet_uri, dl_path=state.download_path):
             consoleLog("Skipping Downloading, download already running... ")
             return False
 
-    magnetdl = lt.parse_magnet_uri(magnet_uri)
-    magnetdl.save_path = dl_path
-
-    download = state.dl_session.add_torrent(magnetdl)
+    try:
+        magnetdl = lt.parse_magnet_uri(magnet_uri)
+        magnetdl.save_path = dl_path
+        download = state.dl_session.add_torrent(magnetdl)
+    except Exception as e:
+        consoleLog(f"Failed to add torrent: {e}")
+        return False
     state.active_downloads[magnet_uri] = download
     consoleLog(f"Added {magnet_uri} to downloads")
 
@@ -95,10 +98,13 @@ def add_seed(magnet_uri, file_path):
         consoleLog("Already seeding this torrent")
         return False
 
-    magnetdl = lt.parse_magnet_uri(magnet_uri)
-    magnetdl.save_path = os.path.dirname(file_path)
-
-    handle = state.dl_session.add_torrent(magnetdl)
+    try:
+        magnetdl = lt.parse_magnet_uri(magnet_uri)
+        magnetdl.save_path = os.path.dirname(file_path)
+        handle = state.dl_session.add_torrent(magnetdl)
+    except Exception as e:
+        consoleLog(f"Failed to add seed: {e}")
+        return False
     state.active_downloads[magnet_uri] = handle
     state.seeded_magnets.add(magnet_uri)
     return True
