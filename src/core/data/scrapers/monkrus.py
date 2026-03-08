@@ -2,10 +2,9 @@ from bs4 import BeautifulSoup
 import requests
 import time
 from core.utils.data.state import state
-
-
-def get_Metadata():
-    return Metadata
+from core.utils.network.jsonhandler import format_data
+from core.utils.data.tracker import get_magnet_link
+from typing import Dict
 
 cache = {
     "data": [],
@@ -74,13 +73,15 @@ def scrape_m0nkrus(query):
 
     return filtered_posts
 
+def get_magnet(post: Dict):
+    _, post_links, _, _, _ = format_data([post])
+    return post_links[0]
 
 Metadata = {
     "name" : "m0nkrus",
     "headers" : ["Post Title", "Author"],
-    "searchkey" : None,
     "scrapeFunc" : scrape_m0nkrus,
-    "scrapeSearches" : True,
+    ""
 }
 
 def init_m0nkrus():

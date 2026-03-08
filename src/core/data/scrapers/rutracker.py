@@ -1,8 +1,8 @@
 import requests
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
-from core.utils.network.jsonhandler import split_data
-
+from core.utils.network.jsonhandler import split_data, format_data
+from typing import Dict
 
 def scrape_rutracker(query):
     search = requests.get(f"{state.api_url}/search?q={query}")
@@ -28,13 +28,18 @@ def scrape_rutracker(query):
     else:
         consoleLog("[core.data.scrapers.rutracker] No search Text, returning nothing")
         return []
-        
+
+
+def get_magnet_link(post: Dict):
+    _, post_links, _, _, _ = format_data([post])
+    return post_links[0]
+
 Metadata = {
     "name" : "rutracker",
     "headers" : ["Post Title", "Author", "Seeders", "Leechers"],
-    "searchkey" : None,
     "scrapeFunc" : scrape_rutracker,
-    "scrapeSearches" : True,
+    "linkFunc" : get_magnet_link,
+    "isMagnet" : True,
 }
 
 

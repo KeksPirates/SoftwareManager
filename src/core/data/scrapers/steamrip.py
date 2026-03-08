@@ -1,11 +1,14 @@
 
+import os
 from bs4 import BeautifulSoup
 from fuzzyfinder.main import fuzzyfinder
 import requests
 import re
 import time
+import webbrowser
 from typing import Generator
 from core.utils.data.state import state
+from core.utils.logging.logs import consoleLog
 
 
 cache = {
@@ -86,6 +89,21 @@ def scrape_steamrip_game_downloads(gamelink):
 
     return ret
 
+def get_download_link(post: Dict):
+    url = post["link"]
+    links = scrape_steamrip_game_downloads(url)
+    best = ""
+    for link in links:
+        if link[0] != "h":
+            best = link
+            break
+
+    if links.index(best) < 2:
+        return best
+    else:
+        consoleLog("cant scrape this cuz of captcha... opening in the browser")
+        webbrowser.open(best)
+        return None
 
 def filter_steamrip(query: str):
     

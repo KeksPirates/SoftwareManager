@@ -1,14 +1,15 @@
+from PySide6.QtWidgets import QTableWidgetItem
 from core.utils.logging.logs import consoleLog
-from core.utils.data.tracker import get_item_url
 from core.utils.data.tracker import get_magnet_link
 from core.network.libtorrent_wrapper import add_download
 from core.utils.general.wrappers import run_thread
 from core.utils.logging.logs import add_download_log
 from core.network.libtorrent_int import add_seed
+from core.utils.data.state import state
 import threading
 
 
-def download_selected(items, posts, post_titles):
+def download_selected(items: list[QTableWidgetItem]):
     if not items:
         consoleLog("No item selected for download.")
         return
@@ -17,10 +18,10 @@ def download_selected(items, posts, post_titles):
         if item.column() != 0:
             continue
         text = item.text()
-        if text and text not in seen:
+        if text != "" and text not in seen:
             seen.add(text)
             consoleLog(f"Downloading {text}")
-            run_thread(threading.Thread(target=run_download, args=(text, posts, post_titles)))
+            run_thread(threading.Thread(target=run_download, args=(text, state.posts[item.row()])))
 
 def run_download(item, posts, post_titles):
     post_url = get_item_url(item, posts, post_titles)

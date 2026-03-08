@@ -187,6 +187,15 @@ def download_update(latest_version):
 def windowCloseHelper():
     QGuiApplication.quit()
     
+class TrackerHoverDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        if index.row() == MainWindow._instance._tracker_hovered_row:
+            painter.save()
+            painter.fillRect(option.rect, _theme_colors()["hover"])
+            painter.restore()
+        super().paint(painter, option, index)
+
+
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
     search_results_signal = Signal(list) # and searching
@@ -281,15 +290,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         model.dataChanged.disconnect()
         state.trackertable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
-        class TrackerHoverDelegate(QStyledItemDelegate):
-            def paint(self, painter, option, index):
-                if index.row() == MainWindow._instance._tracker_hovered_row:
-                    painter.save()
-                    painter.fillRect(option.rect, _theme_colors()["hover"])
-                    painter.restore()
-                super().paint(painter, option, index)
+        state.trackertable.setStyleSheet(_table_stylesheet("QTableWidget"))
 
+
+        state.trackertable.setItemDelegate(TrackerHoverDelegate(state.trackertable))
         state.trackertable.viewport().installEventFilter(self)
+        state.trackertable.setMouseTracking(True)
+        state.trackertable.viewport().setMouseTracking(True)
 
         container = QWidget()
         containerLayout = QVBoxLayout()
@@ -526,7 +533,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         #! FIX THIS
 
-        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts, state.trackers[state.currenttracker]["headers"]))))
+        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
@@ -695,6 +702,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.show_empty_results(False)
         self.searchbar.setEnabled(True)
         self.searchbar.setFocus()
+        state.trackertable.setItemDelegate(TrackerHoverDelegate(state.trackertable))
+        state.trackertable.viewport().installEventFilter(self)
         
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)

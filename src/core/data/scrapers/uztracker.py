@@ -3,10 +3,8 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
+from typing import Dict
 
-
-def get_Metadata():
-    return Metadata
 
 def scrape_uztracker(query):
     base_url="https://uztracker.net/"
@@ -48,6 +46,9 @@ Metadata = {
     "scrapeFunc" : scrape_uztracker,
     "scrapeSearches" : True,
 }
+def get_magnet_link(post: Dict):
+    item = "https://uztracker.net/" + post["url"].lstrip("./")
+    return item
 
 def init_uztracker():
     state.trackers.update({Metadata["name"] : Metadata})
