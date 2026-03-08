@@ -244,7 +244,7 @@ def settings_dialog(self):
             download_path.text(), 
             down_speed_limit.value(), 
             up_speed_limit.value(), 
-            # image_path.text(), 
+            None,
             autoresume_checkbox.isChecked(), 
             max_connections.value(), 
             max_downloads.value(), 

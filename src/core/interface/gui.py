@@ -84,10 +84,16 @@ def _table_stylesheet(view_type="QTableWidget"):
         {view_type}::item {{
             border-bottom: 1px solid {c["border"]};
             padding: 6px 14px;
+            outline: none;
             {color_rule}
         }}
         {view_type}::item:selected {{
             background: {c["selected"]};
+            outline: none;
+        }}
+        {view_type}::item:focus {{
+            outline: none;
+            border: none;
         }}
         QHeaderView {{
             background: transparent;
