@@ -5,6 +5,7 @@ from core.data.scrapers.uztracker import scrape_uztracker
 from core.data.scrapers.monkrus import scrape_m0nkrus
 from core.data.scrapers.steamrip import filter_steamrip
 from core.utils.data.state import state
+from core.interface.gui import MainWindow
 
 def return_pressed(self):
     self.show_empty_results(False)
@@ -20,5 +21,4 @@ def return_pressed(self):
 
     state.posts = scrapefunc(search_text)
 
-    from core.interface.gui import MainWindow
     MainWindow._instance.search_results_signal.emit(tracker["headers"])
