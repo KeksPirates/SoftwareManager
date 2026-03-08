@@ -4,6 +4,7 @@ from core.utils.data.tracker import get_magnet_link
 from core.network.libtorrent_wrapper import add_download
 from core.utils.general.wrappers import run_thread
 from core.utils.logging.logs import add_download_log
+from core.network.libtorrent_int import add_seed
 import threading
 
 
@@ -26,3 +27,7 @@ def run_download_direct(magnet_uri):
     consoleLog(f"Direct download: {magnet_uri[:60]}")
     add_download(magnet_uri)
     add_download_log("Direct Download", "", magnet_uri, False)
+
+def seed_magnet(magnet_uri, file_path): 
+    consoleLog(f"Seeding: {magnet_uri[:60]}")
+    add_seed(magnet_uri, file_path)

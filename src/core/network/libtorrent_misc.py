@@ -51,7 +51,7 @@ def update_log(shutdown_event):
                 
                 status = magnetdl.status()
                 
-                if status.state == lt.torrent_status.seeding and magnet_uri not in updated:
+                if status.state == lt.torrent_status.seeding and magnet_uri not in updated and magnet_uri not in state.seeded_magnets:
                     consoleLog(f"Marking {status.name} as completed")
                     info_hash = str(status.info_hash)
                     update_download_completed_by_hash(info_hash, True)
