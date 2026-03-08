@@ -89,7 +89,7 @@ def _remove_download_log_inner(magnet_uri) -> DownloadList:
 
 
     magnet_link = (magnet_uri or "").strip()
-    title = next((getattr(d, 'title', 'Unknown') for d in downloads if (getattr(d, 'magnet_uri', None) or '').strip() == magnet_link or (getattr(d, 'url', None) or '').strip() == magnet_link))
+    title = next((getattr(d, 'title', 'Unknown') for d in downloads if (getattr(d, 'magnet_uri', None) or '').strip() == magnet_link or (getattr(d, 'url', None) or '').strip() == magnet_link), 'Unknown')
     downloads = [d for d in downloads if (getattr(d, 'magnet_uri', None) or "").strip() != magnet_link and (getattr(d, 'url', None) or "").strip() != magnet_link]
 
     consoleLog(f"Removed {title} from Log File")

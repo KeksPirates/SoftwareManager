@@ -50,7 +50,7 @@ def return_pressed(self):
 
     elif state.tracker is not None:
         state.posts = scrapers[state.tracker](search_text)
-        if state.posts == []:
+        if not state.posts:
             consoleLog(f"No Results for {search_text}")
             state.tracker_list[state.tracker].clear()
             self.show_empty_results(True)

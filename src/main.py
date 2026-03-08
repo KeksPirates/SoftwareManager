@@ -56,7 +56,8 @@ def main():
     consoleLog("Started Thread: check_completed")
     run_thread(threading.Thread(target=check_deleted_files, args=(shutdown_event,), daemon=True))
     consoleLog("Started Thread: check_deleted_files")
-    check_downloads(downloads)
+    run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
+    consoleLog("Started Thread: check_downloads")
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     run_gui()

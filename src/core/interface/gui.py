@@ -30,7 +30,6 @@ import libtorrent as lt
 import sys
 import json
 import base64
-import winreg
 from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_buffer
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
@@ -157,17 +156,13 @@ def download_update(latest_version):
     response = r.get(url, allow_redirects=True, stream=True)
     total = int(response.headers.get("content-length", 0))
     downloaded = 0
-    chunks = []
-    for chunk in response.iter_content(chunk_size=65536):
-        chunks.append(chunk)
-        downloaded += len(chunk)
-        if total > 0:
-            progress.setValue(int(downloaded * 100 / total))
-        QtWidgets.QApplication.processEvents()
-
     with open(installer_path, "wb") as f:
-        for chunk in chunks:
+        for chunk in response.iter_content(chunk_size=65536):
             f.write(chunk)
+            downloaded += len(chunk)
+            if total > 0:
+                progress.setValue(int(downloaded * 100 / total))
+            QtWidgets.QApplication.processEvents()
 
     if not os.path.exists(installer_path):
         progress.close()

@@ -226,8 +226,6 @@ def settings_dialog(self):
 
         interface_select.setFixedWidth(180)
         interface_select.setFixedHeight(30)
-        interface_select.setFixedWidth(180)
-        interface_select.setFixedHeight(30)
         interface_layout.addWidget(interface_select)
         interface_container.setLayout(interface_layout)
 
