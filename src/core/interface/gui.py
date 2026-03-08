@@ -134,24 +134,6 @@ SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
 
-def _find_install_path():
-    uninstall_key = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
-    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
-        try:
-            with winreg.OpenKey(hive, uninstall_key) as key:
-                for i in range(winreg.QueryInfoKey(key)[0]):
-                    with winreg.OpenKey(key, winreg.EnumKey(key, i)) as subkey:
-                        try:
-                            name = winreg.QueryValueEx(subkey, "DisplayName")[0]
-                            if "SoftwareManager" in name:
-                                return winreg.QueryValueEx(subkey, "InstallLocation")[0]
-                        except OSError:
-                            continue
-        except OSError:
-            continue
-    return None
-
-
 def download_update(latest_version):
     import tempfile
     import time
@@ -195,8 +177,6 @@ def download_update(latest_version):
     progress.setValue(100)
     QtWidgets.QApplication.processEvents()
 
-    # Launch installer and exit — the installer will close this process,
-    # install the update, and relaunch the app via its [Run] section.
     subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
     time.sleep(1)
     sys.exit(0)
