@@ -647,8 +647,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if state.posts is None or state.posts == []:
             self.show_empty_results(True)
             return
-        else:
-            self.show_empty_results(False)
         
         state.trackertable.clearContents()
         state.trackertable.setColumnCount(len(headers))
@@ -659,6 +657,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 state.trackertable.setItem(x, y, QTableWidgetItem(str(data)))
 
         self._resize_tracker_columns()
+        
+        self.show_empty_results(False)
         
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)
