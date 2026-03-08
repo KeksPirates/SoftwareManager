@@ -245,15 +245,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.setMinimumHeight(30)
         self.searchbar.returnPressed.connect(self._start_search)
 
-        self._spinner_label = QLabel()
-        self._spinner_label.setFixedSize(20, 20)
-        self._spinner_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._spinner_label.hide()
-        self._spinner_angle = 0
-        self._spinner_timer = QTimer()
-        self._spinner_timer.setInterval(80)
-        self._spinner_timer.timeout.connect(self._update_spinner)
-
         self.dlbutton = QtWidgets.QPushButton("Download")
         self.dlbutton.setCursor(Qt.CursorShape.PointingHandCursor)
         self.libraryList = QListWidget()
@@ -338,7 +329,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         search_row = QHBoxLayout()
         search_row.addWidget(self.searchbar)
-        search_row.addWidget(self._spinner_label)
         containerLayout.addLayout(search_row)
         containerLayout.addWidget(state.tracker_list[state.tracker])
 
@@ -703,10 +693,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.context_menu.addAction("Delete File", self.deleteFileAction)
 
     def _start_search(self):
-        self._spinner_label.show()
-        self._spinner_angle = 0
-        self._spinner_timer.start()
-        self._update_spinner()
         self.searchbar.setEnabled(False)
         def _search_thread():
             try:
@@ -716,17 +702,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         run_thread(threading.Thread(target=_search_thread))
 
     def _on_search_finished(self):
-        self._spinner_timer.stop()
-        self._spinner_label.hide()
         self.searchbar.setEnabled(True)
         self.searchbar.setFocus()
-
-    def _update_spinner(self):
-        frames = ["◐", "◓", "◑", "◒"]
-        idx = (self._spinner_angle // 1) % len(frames)
-        self._spinner_label.setText(frames[idx])
-        self._spinner_label.setStyleSheet("font-size: 16px; color: gray;")
-        self._spinner_angle += 1
 
     @staticmethod
     def add_log(text):
