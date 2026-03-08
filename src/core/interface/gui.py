@@ -153,8 +153,12 @@ def _find_install_path():
 
 
 def download_update(latest_version):
+    import tempfile
+    import time
+
     new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
     url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
+    installer_path = os.path.join(tempfile.gettempdir(), new_filename)
 
     progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
     progress.setWindowTitle("Updating")
@@ -179,11 +183,11 @@ def download_update(latest_version):
             progress.setValue(int(downloaded * 100 / total))
         QtWidgets.QApplication.processEvents()
 
-    with open(new_filename, "wb") as f:
+    with open(installer_path, "wb") as f:
         for chunk in chunks:
             f.write(chunk)
 
-    if not os.path.exists(new_filename):
+    if not os.path.exists(installer_path):
         progress.close()
         raise FileNotFoundError("Executable not found")
 
@@ -191,24 +195,10 @@ def download_update(latest_version):
     progress.setValue(100)
     QtWidgets.QApplication.processEvents()
 
-    proc = subprocess.Popen([new_filename, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS", "/NORESTART"])
-    while proc.poll() is None:
-        QtWidgets.QApplication.processEvents()
-        import time
-        time.sleep(0.1)
-
-    progress.close()
-
-    try:
-        os.remove(new_filename)
-    except OSError:
-        pass
-
-    install_path = _find_install_path()
-    if not install_path:
-        raise FileNotFoundError("Could not find SoftwareManager install location in registry")
-    subprocess.Popen([os.path.join(install_path, "SoftwareManager.exe")])
-
+    # Launch installer and exit — the installer will close this process,
+    # install the update, and relaunch the app via its [Run] section.
+    subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
+    time.sleep(1)
     sys.exit(0)
 
 
