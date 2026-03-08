@@ -90,10 +90,13 @@ def _table_stylesheet(view_type="QTableWidget"):
         {view_type}::item:selected {{
             background: {c["selected"]};
             outline: none;
+            border: none;
+            border-bottom: 1px solid {c["border"]};
         }}
         {view_type}::item:focus {{
             outline: none;
             border: none;
+            border-bottom: 1px solid {c["border"]};
         }}
         QHeaderView {{
             background: transparent;
