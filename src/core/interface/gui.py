@@ -458,21 +458,27 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         class HoverRowDelegate(QStyledItemDelegate):
             def paint(self, painter, option, index):
+                opt = QtWidgets.QStyleOptionViewItem(option)
+                opt.state &= ~QtWidgets.QStyle.StateFlag.State_HasFocus
+                opt.state &= ~QtWidgets.QStyle.StateFlag.State_Selected
                 if index.row() == MainWindow._instance._hovered_row:
                     painter.save()
-                    painter.fillRect(option.rect, _theme_colors()["hover"])
+                    painter.fillRect(opt.rect, _theme_colors()["hover"])
                     painter.restore()
-                super().paint(painter, option, index)
+                super().paint(painter, opt, index)
 
         class PauseResumeDelegate(QStyledItemDelegate):
             clicked = Signal(int)
 
             def paint(self, painter, option, index):
+                opt = QtWidgets.QStyleOptionViewItem(option)
+                opt.state &= ~QtWidgets.QStyle.StateFlag.State_HasFocus
+                opt.state &= ~QtWidgets.QStyle.StateFlag.State_Selected
                 if index.row() == MainWindow._instance._hovered_row:
                     painter.save()
-                    painter.fillRect(option.rect, _theme_colors()["hover"])
+                    painter.fillRect(opt.rect, _theme_colors()["hover"])
                     painter.restore()
-                super().paint(painter, option, index)
+                super().paint(painter, opt, index)
 
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
