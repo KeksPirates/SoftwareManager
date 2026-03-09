@@ -121,14 +121,28 @@ SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon
 SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
+def _verify_hash(file_path, expected_hash):
+    import hashlib
+    sha256 = hashlib.sha256()
 
-def _download_update(latest_version):
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+
+    return f"sha256:{sha256.hexdigest()}" == expected_hash
+
+def _download_update(assets):
     import tempfile
     import time
 
-    new_filename = f"SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
-    url = f"https://github.com/KeksPirates/SoftwareManager/releases/latest/download/SoftwareManager-dev-{latest_version.replace('-dev', '')}-windows-setup.exe"
-    installer_path = os.path.join(tempfile.gettempdir(), new_filename)
+
+    for asset in assets:
+        if "-windows-setup.exe" in asset["name"]:
+            filename = asset["name"]
+            setup_hash = asset["hash"]
+            url = asset ["url"]
+
+    installer_path = os.path.join(tempfile.gettempdir(), filename)
 
     progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
     progress.setWindowTitle("Updating")
@@ -156,6 +170,12 @@ def _download_update(latest_version):
     if not os.path.exists(installer_path):
         progress.close()
         raise FileNotFoundError("Executable not found")
+
+    if _verify_hash(installer_path, setup_hash):
+        consoleLog(f"Sucessfully validated installer hash ({setup_hash})")
+    else:
+        consoleLog("Error: Invalid Filehash, file may be corrupted")
+        sys.exit(0)
 
     progress.setLabelText("Installing update...")
     progress.setValue(100)
@@ -200,21 +220,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Check for updates on Windows
         if state.ignore_updates is False and platform.system() == "Windows":
-            result = get_updates()
-            if result != (None, None):
-                assets, latest_version = result
+            assets = get_updates()
+            if assets != None:
 
-                if assets:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Icon.Information)
-                    msg.setWindowTitle("Update Available")
-                    msg.setText("A new version is available.")
-                    msg.setInformativeText("Press Ok to download the update.")
-                    msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Information)
+                msg.setWindowTitle("Update Available")
+                msg.setText("A new version is available.")
+                msg.setInformativeText("Press Ok to download the update.")
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
 
-                    response = msg.exec_()
-                    if response == QMessageBox.StandardButton.Ok:
-                        _download_update(latest_version)
+                response = msg.exec_()
+                if response == QMessageBox.StandardButton.Ok:
+                    _download_update(assets)
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)

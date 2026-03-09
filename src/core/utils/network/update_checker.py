@@ -15,13 +15,20 @@ def get_updates():
     latest_version = release["name"]
     assets = release["assets"]
 
+    release_assets = []
+
     if latest_version != state.version:
         consoleLog(f"New release available: {latest_version}")
         if assets:
             consoleLog("Assets:")
             for asset in assets:
-                consoleLog(f" - {asset['name']}: {asset['browser_download_url']} - {asset['digest']}")
-            return assets, latest_version
+                consoleLog(f"{asset['name']}")
+                release_assets.append(dict(
+                    name=asset['name'],
+                    url=asset['browser_download_url'],
+                    hash=asset['digest']
+                ))
+            return release_assets
         else: 
             return None, None
     else:
