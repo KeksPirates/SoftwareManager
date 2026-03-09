@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QMessageBox,
     QTableWidget,
+    QTableWidgetItem,
     QTextEdit,
     QStyledItemDelegate,
     QStatusBar
@@ -189,15 +190,24 @@ def download_update(latest_version):
 def windowCloseHelper():
     QGuiApplication.quit()
     
+class TrackerHoverDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        if index.row() == MainWindow._instance._tracker_hovered_row:
+            painter.save()
+            painter.fillRect(option.rect, _theme_colors()["hover"])
+            painter.restore()
+        super().paint(painter, option, index)
+
+
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     log_signal = Signal(str)  # Thread-safe signal for logging
-    search_finished_signal = Signal()  # Thread-safe signal for search completion
+    search_results_signal = Signal(list) # and searching
     
     def __init__(self):
         super().__init__()
         MainWindow._instance = self
         self.log_signal.connect(self._on_log_signal)
-        self.search_finished_signal.connect(self._on_search_finished)
+        self.search_results_signal.connect(self._on_search_results)
 
         pixmap = QPixmap()
         image_data = base64.b64decode(logo_base64)
@@ -273,68 +283,30 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         flush_log_buffer()
 
-        class TrackerHoverDelegate(QStyledItemDelegate):
-            def paint(self, painter, option, index):
-                if index.row() == MainWindow._instance._tracker_hovered_row:
-                    painter.save()
-                    painter.fillRect(option.rect, _theme_colors()["hover"])
-                    painter.restore()
-                super().paint(painter, option, index)
+        # create initial tracker table
+        state.trackertable = QTableWidget()
+        state.trackertable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        state.trackertable.verticalHeader().setVisible(False)
+        state.trackertable.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        state.trackertable.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        model = state.trackertable.model()
+        model.dataChanged.disconnect()
+        state.trackertable.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
-        self._tracker_hover_delegate = TrackerHoverDelegate(self)
+        state.trackertable.setStyleSheet(_table_stylesheet("QTableWidget"))
 
-        def create_tracker_table(headers):
-            table = QTableWidget()
-            table.setColumnCount(len(headers))
-            table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-            table.verticalHeader().setVisible(False)
-            table.setHorizontalHeaderLabels(headers)
-            table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-            table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
 
-            header = table.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch) 
-            header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)   
-            header.resizeSection(1, 500)
-            header.setStretchLastSection(False)
-            header.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-            header.setHighlightSections(False)
-
-            table.setShowGrid(False)
-            table.setStyleSheet(_table_stylesheet("QTableWidget"))
-
-            table.setMouseTracking(True)
-            table.viewport().setMouseTracking(True)
-            table.setItemDelegate(self._tracker_hover_delegate)
-
-            return table
-            
-
-        self.rutrackerlist = create_tracker_table(["Post Title", "Author", "Seeders", "Leechers"])
-        self.uztrackerlist = create_tracker_table(["Post Title", "Author"])
-        self.monkruslist = create_tracker_table(["Post Title", "Author"])
-
-        state.tracker_list.update({"rutracker": self.rutrackerlist, "uztracker": self.uztrackerlist, "m0nkrus": self.monkruslist})
-
-        self.rutrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.rutrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        self.uztrackerlist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.uztrackerlist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) 
-
-        self.monkruslist.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.monkruslist.viewport().setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        for tbl in (self.rutrackerlist, self.uztrackerlist, self.monkruslist):
-            tbl.viewport().installEventFilter(self)
+        state.trackertable.setItemDelegate(TrackerHoverDelegate(state.trackertable))
+        state.trackertable.viewport().installEventFilter(self)
+        state.trackertable.setMouseTracking(True)
+        state.trackertable.viewport().setMouseTracking(True)
 
         container = QWidget()
         containerLayout = QVBoxLayout()
-
+        containerLayout.addWidget(self.searchbar)
+        containerLayout.addWidget(state.trackertable)
         search_row = QHBoxLayout()
         search_row.addWidget(self.searchbar)
-        containerLayout.addLayout(search_row)
-        containerLayout.addWidget(state.tracker_list[state.tracker])
 
         class DownloadModel(QAbstractTableModel):
             def __init__(self):
@@ -568,8 +540,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.setItemDelegateForColumn(0, delegate)
         delegate.clicked.connect(on_pause_resume_clicked)
 
-        # download button triggers
-        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.tracker_list[state.tracker].selectedItems(), state.posts, state.post_titles))))
+        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
@@ -589,10 +560,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         self.horizontal_layout = QHBoxLayout()
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
-        self.tracker_widget = state.tracker_list[state.tracker]
-        self.horizontal_layout.addWidget(self.tracker_widget)
+        self.horizontal_layout.addWidget(state.trackertable)
 
-        self.tab1 = create_tab("Search", self.searchbar, state.tracker_list[state.tracker], self.tabs, self.dlbutton, self.horizontal_layout)
+        self.tab1 = create_tab("Search", self.searchbar, state.trackertable, self.tabs, self.dlbutton, self.horizontal_layout)
         # self.tab2 = create_tab("Library", self.emptyLibrary, self.libraryList, self.tabs, None, None)
         self.tab3 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
@@ -621,7 +591,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
 
         self.tracker_list = QComboBox()
-        self.tracker_list.addItems(["rutracker", "uztracker", "m0nkrus"])
+        self.tracker_list.addItems(list(state.trackers.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)
@@ -705,15 +675,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     def _start_search(self):
         self.searchbar.setEnabled(False)
         def _search_thread():
-            try:
-                return_pressed(self)
-            finally:
-                self.search_finished_signal.emit()
+            return_pressed(self)
         run_thread(threading.Thread(target=_search_thread))
-
-    def _on_search_finished(self):
-        self.searchbar.setEnabled(True)
-        self.searchbar.setFocus()
 
     @staticmethod
     def add_log(text):
@@ -727,6 +690,28 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 self.consoleLog.verticalScrollBar().maximum()
             )
 
+    def _on_search_results(self, headers):
+
+        if state.posts is None or state.posts == []:
+            self.show_empty_results(True)
+            return
+        
+        state.trackertable.clearContents()
+        state.trackertable.setColumnCount(len(headers))
+        state.trackertable.setHorizontalHeaderLabels(headers)
+        state.trackertable.setRowCount(len(state.posts))
+        for x, rowdata in enumerate(state.posts):
+            for y, data in enumerate(rowdata.values()):
+                state.trackertable.setItem(x, y, QTableWidgetItem(str(data)))
+
+        self._resize_tracker_columns()
+        
+        self.show_empty_results(False)
+        self.searchbar.setEnabled(True)
+        self.searchbar.setFocus()
+        state.trackertable.setItemDelegate(TrackerHoverDelegate(state.trackertable))
+        state.trackertable.viewport().installEventFilter(self)
+        
     def update_image_overlay(self, new_image_path):
         self.image = QImage(new_image_path)
         self.pixmap = QPixmap.fromImage(self.image)
@@ -784,9 +769,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         
 
     def mousePressEvent(self, event):
-        self.rutrackerlist.clearSelection()
-        self.uztrackerlist.clearSelection()
-        self.monkruslist.clearSelection()
+        state.trackertable.clearSelection()
         self.downloadList.clearSelection()
         super().mousePressEvent(event)
 
@@ -801,21 +784,19 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
     def eventFilter(self, obj, event):
         try:
-            for tbl in (self.rutrackerlist, self.uztrackerlist, self.monkruslist):
-                if obj == tbl.viewport():
-                    if event.type() == QEvent.Type.MouseMove:
-                        pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
-                        idx = tbl.indexAt(pos)
-                        new_row = idx.row() if idx.isValid() else -1
-                        if new_row != self._tracker_hovered_row or tbl is not self._tracker_hovered_table:
-                            self._tracker_hovered_row = new_row
-                            self._tracker_hovered_table = tbl
-                            tbl.viewport().update()
-                    elif event.type() == QEvent.Type.Leave:
-                        self._tracker_hovered_row = -1
-                        self._tracker_hovered_table = None
-                        tbl.viewport().update()
-                    break
+            if obj == state.trackertable.viewport():
+                if event.type() == QEvent.Type.MouseMove:
+                    pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
+                    idx = state.trackertable.indexAt(pos)
+                    new_row = idx.row() if idx.isValid() else -1
+                    if new_row != self._tracker_hovered_row or state.trackertable is not self._tracker_hovered_table:
+                        self._tracker_hovered_row = new_row
+                        self._tracker_hovered_table = state.trackertable
+                        state.trackertable.viewport().update()
+                elif event.type() == QEvent.Type.Leave:
+                    self._tracker_hovered_row = -1
+                    self._tracker_hovered_table = None
+                    state.trackertable.viewport().update()
             if obj == self.downloadList.viewport():
                 if event.type() == QEvent.Type.MouseMove:
                     pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
@@ -839,22 +820,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.downloadList.viewport().update()
 
     def set_tracker(self, _):
-        old_tracker = state.tracker
-        state.tracker = self.tracker_list.currentText()
-
-        old_widget = state.tracker_list[old_tracker]
-        self.horizontal_layout.removeWidget(old_widget)
-        old_widget.setParent(None)
-
-        tracker_widget = state.tracker_list[state.tracker]
-        self.horizontal_layout.addWidget(tracker_widget)
+        state.currenttracker = self.tracker_list.currentText()
 
     def show_empty_results(self, show: bool):
         if show:
-            state.tracker_list[state.tracker].hide()
+            state.trackertable.hide()
             self.emptyResults.show()
         else:
-            state.tracker_list[state.tracker].show()
+            state.trackertable.show()
             self.emptyResults.hide()
 
     def show_empty_downloads(self):
@@ -865,11 +838,28 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.emptyDownload.show()
             self.downloadList.hide()
 
-    # thank you claude
+    # thanks claude
+    def _resize_tracker_columns(self):
+        header = state.trackertable.horizontalHeader()
+        col_count = header.count()
+        if col_count == 0:
+            return
+
+        for i in range(col_count):
+            state.trackertable.resizeColumnToContents(i)
+        
+        content_widths = [header.sectionSize(i) for i in range(col_count)]
+        total_content_width = sum(content_widths)
+        remaining = state.trackertable.viewport().width() - total_content_width
+        extra = max(0, remaining) // col_count
+
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        for i in range(col_count):
+            header.resizeSection(i, content_widths[i] + extra)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        table_width = state.tracker_list[state.tracker].viewport().width()
-        state.tracker_list[state.tracker].setColumnWidth(1, int(table_width * 0.3))
+        self._resize_tracker_columns()
 
     def contextMenuEvent(self, event: QContextMenuEvent):
         if self.downloadList.underMouse():
