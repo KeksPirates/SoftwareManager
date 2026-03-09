@@ -1,5 +1,6 @@
 import requests
 import re
+from core.utils.logging.loghandler import consoleLog
 
 def scrape_gofile(url):
 
@@ -18,13 +19,12 @@ def scrape_gofile(url):
         f"https://api.gofile.io/contents/{filetoken}",
         headers=headers,
     )
+    try:
 
-    temp: dict = r.json()["data"]["children"]
-    child = [key for key in temp.keys()]
+        temp: dict = r.json()["data"]["children"]
+        child = [key for key in temp.keys()]
 
+        return temp[child[0]]["link"]
+    except:
+        consoleLog("gofile didnt auth you, either the api has changed\n or you sent to many requests, please try again later.\n If it still doesnt work please open an issue on Github.")
 
-    return temp[child[0]]["link"]
-
-
-out = scrape_gofile("https://gofile.io/d/tvvzAD")
-print(out)

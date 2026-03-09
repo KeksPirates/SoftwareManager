@@ -35,7 +35,7 @@ def _get_telegram_posts():
         
         for bubble in bubbles:
             post_txt = bubble.find("div", class_="tgme_widget_message_text js-message_text")
-            if not post_txt or not post_txt.b:
+            if not post_txt is None or not post_txt.b is None:
                 continue
             
             title = post_txt.b.text
@@ -75,13 +75,14 @@ def scrape_m0nkrus(query):
 
 def get_magnet(post: Dict):
     _, post_links, _, _, _ = format_data([post])
-    return post_links[0]
+    return get_magnet_link(post_links[0])
 
 Metadata = {
     "name" : "m0nkrus",
     "headers" : ["Post Title", "Author"],
     "scrapeFunc" : scrape_m0nkrus,
-    ""
+    "linkFunc" : get_magnet,
+    "isMagnet" : True,
 }
 
 def init_m0nkrus():

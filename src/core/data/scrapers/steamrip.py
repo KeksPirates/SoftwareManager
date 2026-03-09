@@ -1,12 +1,13 @@
 
-import os
 from bs4 import BeautifulSoup
 from fuzzyfinder.main import fuzzyfinder
 import requests
 import re
 import time
 import webbrowser
-from typing import Generator
+from core.data.scrapers.provider.buzzheavier import scrape_buzzheavier
+from core.data.scrapers.provider.gofile import scrape_gofile
+from typing import Generator, Dict
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
 
@@ -94,12 +95,14 @@ def get_download_link(post: Dict):
     links = scrape_steamrip_game_downloads(url)
     best = ""
     for link in links:
-        if link[0] != "h":
+        if link[0] == "h":
             best = link
             break
 
-    if links.index(best) < 2:
-        return best
+    if links.index(best) == 0:
+        return scrape_buzzheavier(best)
+    elif links.index(best) == 1:
+        return scrape_gofile(best)
     else:
         consoleLog("cant scrape this cuz of captcha... opening in the browser")
         webbrowser.open(best)
@@ -118,6 +121,8 @@ Metadata = {
     "name" : "steamrip",
     "headers" : ["Game"],
     "scrapeFunc" : filter_steamrip,
+    "linkFunc" : get_download_link,
+    "isMagnet" : False,
 }
 
 def init_steamrip():

@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
+from core.utils.data.tracker import get_magnet_link
 from typing import Dict
 
 
@@ -39,16 +40,17 @@ def scrape_uztracker(query):
         consoleLog(f"Failed to fetch {search_url}: {e}")
         return None
 
+def get_magnet(post: Dict):
+    item = "https://uztracker.net/" + post["url"].lstrip("./")
+    return get_magnet_link(item)
+
 Metadata = {
     "name" : "uztracker",
     "headers" : ["Post Title", "Author"],
-    "searchkey" : None,
     "scrapeFunc" : scrape_uztracker,
-    "scrapeSearches" : True,
+    "linkFunc" : get_magnet,
+    "isMagnet" : True,
 }
-def get_magnet_link(post: Dict):
-    item = "https://uztracker.net/" + post["url"].lstrip("./")
-    return item
 
 def init_uztracker():
     state.trackers.update({Metadata["name"] : Metadata})

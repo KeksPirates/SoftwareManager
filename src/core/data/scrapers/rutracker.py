@@ -1,6 +1,7 @@
 import requests
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
+from core.utils.data.tracker import get_magnet_link
 from core.utils.network.jsonhandler import split_data, format_data
 from typing import Dict
 
@@ -30,15 +31,15 @@ def scrape_rutracker(query):
         return []
 
 
-def get_magnet_link(post: Dict):
+def get_magnet(post: Dict):
     _, post_links, _, _, _ = format_data([post])
-    return post_links[0]
+    return get_magnet_link(post_links[0])
 
 Metadata = {
     "name" : "rutracker",
     "headers" : ["Post Title", "Author", "Seeders", "Leechers"],
     "scrapeFunc" : scrape_rutracker,
-    "linkFunc" : get_magnet_link,
+    "linkFunc" : get_magnet,
     "isMagnet" : True,
 }
 

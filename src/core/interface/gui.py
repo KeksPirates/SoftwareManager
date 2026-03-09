@@ -540,9 +540,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList.setItemDelegateForColumn(0, delegate)
         delegate.clicked.connect(on_pause_resume_clicked)
 
-        #! FIX THIS
-
-        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.currentItem(), state.posts))))
+        self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),))))
 
         container.setLayout(containerLayout)
         self.setCentralWidget(container)
