@@ -4,8 +4,9 @@ from core.utils.logging.logs import consoleLog
 from core.interface.utils.tabhelper import general_tab
 from core.interface.utils.tabhelper import paths_tab
 from core.interface.utils.tabhelper import network_tab
+from core.interface.utils.svghelper import svg_icon
 from PySide6 import QtWidgets
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import (
     QLineEdit, 
     QPushButton, 
@@ -21,6 +22,8 @@ from PySide6.QtWidgets import (
     QTabWidget,
 )
 import platform
+
+SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
 
 def settings_dialog(self):
@@ -113,7 +116,19 @@ def settings_dialog(self):
             if dir_path:
                 download_path.setText(dir_path)
 
-        browse_button = QPushButton("📁")
+        browse_button = QPushButton()
+        browse_button.setFixedSize(36, 36)
+        browse_button.setIconSize(QSize(24, 24))
+        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        browse_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background: transparent;
+                padding: 0px;
+            }
+        """)
+
         download_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_download_path)
 
@@ -136,7 +151,18 @@ def settings_dialog(self):
             if file_path:
                 image_path.setText(file_path)
 
-        browse_button = QPushButton("📁")
+        browse_button = QPushButton()
+        browse_button.setFixedSize(36, 36)
+        browse_button.setIconSize(QSize(24, 24))
+        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        browse_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background: transparent;
+                padding: 0px;
+            }
+        """)
         image_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_image_path)
 

@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
 )
 
 from PySide6.QtGui import QIcon, QCloseEvent, QImage, QPixmap, QContextMenuEvent, QGuiApplication, QColor, QBrush
-from PySide6.QtSvg import QSvgRenderer
 import darkdetect
 import threading
 import platform
@@ -34,9 +33,10 @@ from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_b
 from core.utils.general.wrappers import run_thread
 from core.utils.data.state import state
 from core.utils.network.download import download_selected
-from core.utils.network.update_checker import check_for_updates
+from core.utils.network.update_checker import get_updates
 from core.interface.utils.tabhelper import create_tab
 from core.interface.utils.searchhelper import return_pressed
+from core.interface.utils.svghelper import svg_icon
 from core.interface.dialogs.settings import settings_dialog
 from core.interface.assets.base64_icons import settings_black_base64
 from core.interface.assets.base64_icons import settings_white_base64
@@ -117,32 +117,12 @@ def _table_stylesheet(view_type="QTableWidget"):
     """
 
 
-def _svg_icon(svg_str, size=20):
-    app = QtWidgets.QApplication.instance()
-    if app:
-        if _is_dark_mode():
-            color = "white"
-        else:
-            color = "#555555"
-    else:
-        color = "white"
-    svg = svg_str.replace("{color}", color)
-    renderer = QSvgRenderer(QByteArray(svg.encode()))
-    pixmap = QPixmap(size, size)
-    pixmap.fill(Qt.GlobalColor.transparent)
-    from PySide6.QtGui import QPainter
-    painter = QPainter(pixmap)
-    renderer.render(painter)
-    painter.end()
-    return QIcon(pixmap)
-
-
 SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" fill="{color}"/></svg>'
 SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
 
-def download_update(latest_version):
+def _download_update(latest_version):
     import tempfile
     import time
 
@@ -220,7 +200,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Check for updates on Windows
         if state.ignore_updates is False and platform.system() == "Windows":
-            result = check_for_updates()
+            result = get_updates()
             if result != (None, None):
                 assets, latest_version = result
 
@@ -234,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
                     response = msg.exec_()
                     if response == QMessageBox.StandardButton.Ok:
-                        download_update(latest_version)
+                        _download_update(latest_version)
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
@@ -489,11 +469,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
                 if button:
                     if status.state == lt.torrent_status.seeding: 
-                        button.setIcon(_svg_icon(SVG_FOLDER, 18))
+                        button.setIcon(svg_icon(SVG_FOLDER, 18))
                         button.setText("")
                     else:
                         is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
-                        button.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                        button.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
                         button.setText("")
 
             def createEditor(self, parent, option, index):
@@ -507,11 +487,11 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 layout.setContentsMargins(0, 0, 0, 0)
                 if status.state == lt.torrent_status.seeding: 
                     btnPause = QtWidgets.QPushButton()
-                    btnPause.setIcon(_svg_icon(SVG_FOLDER, 18))
+                    btnPause.setIcon(svg_icon(SVG_FOLDER, 18))
                 else:
                     btnPause = QtWidgets.QPushButton()
                     is_user_paused = status.paused and not bool(magnetdl.flags() & lt.torrent_flags.auto_managed)
-                    btnPause.setIcon(_svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                    btnPause.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
                 btnPause.setIconSize(QSize(18, 18))
                 btnPause.setFixedSize(30, 30)
                 btnPause.setCursor(Qt.CursorShape.PointingHandCursor)
