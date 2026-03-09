@@ -140,7 +140,12 @@ def _download_update(assets):
         if "-windows-setup.exe" in asset["name"]:
             filename = asset["name"]
             setup_hash = asset["hash"]
-            url = asset ["url"]
+            url = asset["url"]
+            break
+
+    if not filename:
+        consoleLog("Error: No Windows installer found in release assets")
+        return
 
     installer_path = os.path.join(tempfile.gettempdir(), filename)
 
