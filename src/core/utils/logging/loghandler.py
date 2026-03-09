@@ -15,18 +15,19 @@ def check_completed(downloads, resume):
         if download.completed == False:
             consoleLog(f"Found unfinished download: {download.title}")
             if resume == True:
-                run_download_direct(download.magnet_uri)
+                dl_dir = os.path.dirname(download.path)
+                run_download_direct(download.magnet_uri, dl_dir)
                 consoleLog(f"Resuming {download.title}")
 
 def check_downloads(downloads):
     for download in downloads:
-        if os.path.exists(download.path):
+        if download.completed == True and os.path.exists(download.path):
             consoleLog(f"Existing Download: {download.title}")
             try:
                 seed_magnet(download.magnet_uri, download.path)
             except Exception as e:
                 consoleLog(f"Failed to seed {download.title}: {e}")
-        else:
+        elif download.completed == True and not os.path.exists(download.path):
             consoleLog(f"Inexistent Download: {download.title}")
             remove_download_log(download.magnet_uri)
             

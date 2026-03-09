@@ -54,7 +54,6 @@ def settings_dialog(self):
             update_checkbox.setChecked(state.ignore_updates)
             update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
             update_checkbox_layout.addWidget(update_checkbox)
-            dialog.layout().addWidget(update_checkbox_container)
 
         # auto-resume downloads checkbox
 

@@ -8,12 +8,12 @@ def get_updates():
 
     if response.status_code != 200:
         consoleLog(f"Failed to fetch releases: {response.status_code}")
-        return None, None
+        return None
 
     release = response.json()
 
-    latest_version = release["name"]
-    assets = release["assets"]
+    latest_version = release.get("name") or release.get("tag_name")
+    assets = release.get("assets", [])
 
     release_assets = []
 
@@ -26,11 +26,11 @@ def get_updates():
                 release_assets.append(dict(
                     name=asset['name'],
                     url=asset['browser_download_url'],
-                    hash=asset['digest']
+                    hash=asset.get('digest')
                 ))
             return release_assets
         else: 
-            return None, None
+            return None
     else:
         consoleLog("Already up-to-date.")
-        return None, None
+        return None
