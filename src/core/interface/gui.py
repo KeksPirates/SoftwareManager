@@ -333,7 +333,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 self.headers = ["Action", "Name", "Status", "Progress", "Speed", "Size", "Total Size"]
 
             def rowCount(self, parent=QModelIndex()):
-                return len(state.active_downloads)
+                if parent.isValid():
+                    return 0
+                with state.downloads_lock:
+                    return len(state.active_downloads)
 
             def columnCount(self, parent=QModelIndex()):
                 return len(self.headers)
@@ -344,20 +347,29 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return None
 
             def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-                if role == Qt.ItemDataRole.DisplayRole:
-                    col = index.column()
+                if not index.isValid():
+                    return None
+
+                with state.downloads_lock:
                     if index.row() >= len(state.active_downloads) or index.row() < 0:
                         return None
-                    magnet_link = list(state.active_downloads.keys())[index.row()]
-                    magnetdl = state.active_downloads[magnet_link]
-                    status = magnetdl.status()
+                    
+                    try:
+                        magnet_link = list(state.active_downloads.keys())[index.row()]
+                        magnetdl = state.active_downloads[magnet_link]
+                        status = magnetdl.status()
+                    except (IndexError, KeyError, RuntimeError):
+                        return None
+
+                if role == Qt.ItemDataRole.DisplayRole:
+                    col = index.column()
                     if col == 0:
                         pass
                     elif col == 1:
                         return status.name if status.has_metadata else "Fetching metadata..."
                     elif col == 2:
                         if status.paused:
-                            is_auto = status.auto_managed
+                            is_auto = getattr(status, 'auto_managed', True)
                             return "Queued" if is_auto else "Paused"
                         elif status.state == lt.torrent_status.downloading:
                             return "Downloading"
@@ -402,34 +414,43 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         else:
                             return "∞" if status.paused else "Stalled"
                 if role == Qt.ItemDataRole.UserRole and index.column() == 0:
-                    magnet_link = list(state.active_downloads.keys())[index.row()]
-                    magnetdl = state.active_downloads[magnet_link]
-                    return magnetdl.status().paused
+                    return status.paused
                 return None
 
             def toggle_pause_resume(self, row):
-                if row >= len(state.active_downloads) or row < 0:
-                    return
-                magnet_link = list(state.active_downloads.keys())[row]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
+                with state.downloads_lock:
+                    if row >= len(state.active_downloads) or row < 0:
+                        return
+                    try:
+                        magnet_link = list(state.active_downloads.keys())[row]
+                        magnetdl = state.active_downloads[magnet_link]
+                        status = magnetdl.status()
+                    except (IndexError, KeyError, RuntimeError):
+                        return
+
                 if status.state == lt.torrent_status.seeding:
-                    save_path = magnetdl.save_path()
-                    if save_path and os.path.exists(save_path):
-                        if platform.system() == "Windows":
-                            os.startfile(os.path.normpath(save_path))
-                        elif platform.system() == "Linux":
-                            subprocess.Popen(["xdg-open", save_path])
-                        elif platform.system() == "Darwin":
-                            subprocess.Popen(["open", save_path])
+                    try:
+                        save_path = magnetdl.save_path()
+                        if save_path and os.path.exists(save_path):
+                            if platform.system() == "Windows":
+                                os.startfile(os.path.normpath(save_path))
+                            elif platform.system() == "Linux":
+                                subprocess.Popen(["xdg-open", save_path])
+                            elif platform.system() == "Darwin":
+                                subprocess.Popen(["open", save_path])
+                    except Exception:
+                        pass
                     return
+
                 is_paused = status.paused
                 if is_paused:
-                    magnetdl.set_flags(lt.torrent_flags.auto_managed)
+                    if hasattr(magnetdl, 'set_flags'):
+                        magnetdl.set_flags(lt.torrent_flags.auto_managed)
                     magnetdl.resume()
                     consoleLog(f"Resumed download: {status.name}", True)
                 else:
-                    magnetdl.unset_flags(lt.torrent_flags.auto_managed)
+                    if hasattr(magnetdl, 'unset_flags'):
+                        magnetdl.unset_flags(lt.torrent_flags.auto_managed)
                     magnetdl.pause()
                     consoleLog(f"Paused download: {status.name}", True)
                 idx = self.index(row, 0)
@@ -826,7 +847,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     def _update_speed_label(self):
         total_down = 0
         total_up = 0
-        for handle in state.active_downloads.values():
+        with state.downloads_lock:
+            active_items = list(state.active_downloads.values())
+        
+        for handle in active_items:
             try:
                 s = handle.status()
                 total_down += s.download_rate
@@ -837,7 +861,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         up_kb = total_up / 1024
         down_text = f"{down_kb / 1024:.1f} MB/s" if down_kb > 1024 else f"{down_kb:.1f} kB/s"
         up_text = f"{up_kb / 1024:.1f} MB/s" if up_kb > 1024 else f"{up_kb:.1f} kB/s"
-        self.speed_label.setText(f"↓ {down_text}  ↑ {up_text}")
+        
+            
+        if hasattr(self, 'speed_label'):
+            self.speed_label.setText(f"↓ {down_text}  ↑ {up_text}")
 
     def mousePressEvent(self, event):
         state.trackertable.clearSelection()
@@ -855,6 +882,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
     def eventFilter(self, obj, event):
         try:
+            if hasattr(self, 'speed_label') and obj == self.speed_label:
+                if event.type() == QEvent.Type.MouseButtonRelease:
+                    settings_dialog(self)
+                    return True
             if obj == state.trackertable.viewport():
                 if event.type() == QEvent.Type.MouseMove:
                     pos = event.position().toPoint() if hasattr(event, 'position') else event.pos()
@@ -882,7 +913,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     old_row = self._hovered_row
                     self._hovered_row = -1
                     self._invalidate_hover_row(old_row)
-        except RuntimeError:
+        except (RuntimeError, AttributeError):
             pass
         return super().eventFilter(obj, event)
 
@@ -903,7 +934,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             self.emptyResults.hide()
 
     def show_empty_downloads(self):
-        if len(state.active_downloads) > 0:
+        with state.downloads_lock:
+            has_downloads = len(state.active_downloads) > 0
+        if has_downloads:
             self.emptyDownload.hide()
             self.downloadList.show()
         else:
@@ -958,8 +991,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         magnetdl = state.active_downloads[magnet_link]
         confirm = QMessageBox.question(self, "Cancel Download", f"Are you sure you want to cancel the download of '{magnetdl.status().name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if confirm == QMessageBox.StandardButton.Yes:
-            if state.dl_session:
-                state.dl_session.remove_torrent(magnetdl)
+            if hasattr(magnetdl, 'stop'):
+                magnetdl.stop()
+            elif state.dl_session:
+                try:
+                    state.dl_session.remove_torrent(magnetdl)
+                except Exception:
+                    pass
             del state.active_downloads[magnet_link]
             remove_download_log(magnet_link)
             consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
@@ -978,8 +1016,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         download_path = os.path.join(save_path, torrent_name)
         confirm = QMessageBox.question(self, "Delete Files", f"Are you sure you want to delete the downloaded files of '{magnetdl.status().name}'? This action cannot be undone.", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if confirm == QMessageBox.StandardButton.Yes:
-            if state.dl_session:
-                state.dl_session.remove_torrent(magnetdl)
+            if hasattr(magnetdl, 'stop'):
+                magnetdl.stop()
+            elif state.dl_session:
+                try:
+                    state.dl_session.remove_torrent(magnetdl)
+                except Exception:
+                    pass
             if download_path and os.path.exists(download_path):
                 try:
                     if os.path.isfile(download_path):

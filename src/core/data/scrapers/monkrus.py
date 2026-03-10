@@ -1,5 +1,4 @@
 from core.utils.data.state import state
-from core.utils.network.jsonhandler import format_data
 from core.utils.data.tracker import get_magnet_link
 from bs4 import BeautifulSoup
 from typing import Dict

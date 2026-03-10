@@ -19,8 +19,8 @@ def init_session():
 
 
     settings = {
-        "upload_rate_limit": state.up_speed_limit,
-        "download_rate_limit": state.down_speed_limit,
+        "upload_rate_limit": state.up_speed_limit * 1024,
+        "download_rate_limit": state.down_speed_limit * 1024,
         "enable_dht": True,
         "enable_lsd": True,
         "enable_upnp": True,
@@ -149,8 +149,8 @@ def update_settings():
         return
 
     settings = {
-        "upload_rate_limit": state.up_speed_limit,
-        "download_rate_limit": state.down_speed_limit,
+        "upload_rate_limit": state.up_speed_limit * 1024,
+        "download_rate_limit": state.down_speed_limit * 1024,
         "connections_limit": state.max_connections,
         "active_downloads": state.max_downloads
     }
