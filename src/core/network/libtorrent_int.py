@@ -6,7 +6,6 @@ import threading
 import libtorrent as lt
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
-from core.utils.general.shutdown import shutdown_event
 
 
 global loop_running
@@ -20,8 +19,8 @@ def init_session():
 
 
     settings = {
-        "upload_rate_limit": state.up_speed_limit,
-        "download_rate_limit": state.down_speed_limit,
+        "upload_rate_limit": state.up_speed_limit * 1024,
+        "download_rate_limit": state.down_speed_limit * 1024,
         "enable_dht": True,
         "enable_lsd": True,
         "enable_upnp": True,
@@ -56,23 +55,24 @@ def add_download(magnet_uri, dl_path=state.download_path):
         try:
             handle = state.active_downloads[magnet_uri]
             status = handle.status()
+            
+            if status.has_metadata:
+                filepath = os.path.join(status.save_path, status.name)
+
+                if not os.path.exists(filepath):
+
+                    consoleLog(f"File Deleted, redownloading: {status.name}")
+                    state.dl_session.remove_torrent(handle)
+                    del state.active_downloads[magnet_uri]
+                else:
+                    consoleLog("Skipping Downloading, download already running...")
+                    return False
+            else:
+                consoleLog("Skipping Downloading, download already running... ")
+                return False
         except RuntimeError as e:
             consoleLog(f"Error in LibTorrent Handle: {e}")
-
-        if status.has_metadata:
-            filepath = os.path.join(status.save_path, status.name)
-
-            if not os.path.exists(filepath):
-
-                consoleLog(f"File Deleted, redownloading: {status.name}")
-                state.dl_session.remove_torrent(handle)
-                del state.active_downloads[magnet_uri]
-            else:
-                consoleLog("Skipping Downloading, download already running...")
-                return False
-        else:
-            consoleLog("Skipping Downloading, download already running... ")
-            return False
+            del state.active_downloads[magnet_uri]
 
     try:
         magnetdl = lt.parse_magnet_uri(magnet_uri)
@@ -123,7 +123,7 @@ def dl_status_loop():
         loop_running = False
         return
     
-    while state.active_downloads and not shutdown_event.is_set():
+    while state.active_downloads and not state.shutdown_event.is_set():
         for magnet_uri, magnetdl in list(state.active_downloads.items()):
             try:
                 status = magnetdl.status()
@@ -149,8 +149,8 @@ def update_settings():
         return
 
     settings = {
-        "upload_rate_limit": state.up_speed_limit,
-        "download_rate_limit": state.down_speed_limit,
+        "upload_rate_limit": state.up_speed_limit * 1024,
+        "download_rate_limit": state.down_speed_limit * 1024,
         "connections_limit": state.max_connections,
         "active_downloads": state.max_downloads
     }

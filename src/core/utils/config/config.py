@@ -23,7 +23,7 @@ def create_config():
     }
 
     config["Paths"] = {
-        "bound_interface": f"{state.bound_interface}",
+        "bound_interface": f"{state.bound_interface}" if state.bound_interface is not None else "None",
         "image_path": f"{state.image_path}"
     }
 
@@ -72,6 +72,8 @@ def read_config():
 
     # Paths
     state.bound_interface = config.get("Paths", "bound_interface", fallback=state.bound_interface)
+    if state.bound_interface == "None":
+        state.bound_interface = None
     state.image_path = config.get("Paths", "image_path", fallback=state.image_path)
     
     create_config()

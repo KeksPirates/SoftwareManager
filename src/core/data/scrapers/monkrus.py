@@ -1,4 +1,7 @@
+from core.utils.data.state import state
+from core.utils.data.tracker import get_magnet_link
 from bs4 import BeautifulSoup
+from typing import Dict
 import requests
 import time
 
@@ -31,7 +34,7 @@ def _get_telegram_posts():
         
         for bubble in bubbles:
             post_txt = bubble.find("div", class_="tgme_widget_message_text js-message_text")
-            if not post_txt or not post_txt.b:
+            if post_txt is None or post_txt.b is None:
                 continue
             
             title = post_txt.b.text
@@ -42,9 +45,9 @@ def _get_telegram_posts():
                 if post_url not in added:
                     added.add(post_url)
                     posts.append(dict(
+                        title=title,
                         author="m0nkrus",
                         id=len(posts) + 1,
-                        title=title,
                         url=post_url
                     ))
         
@@ -68,3 +71,17 @@ def scrape_m0nkrus(query):
             filtered_posts.append(filtered_post)
 
     return filtered_posts
+
+def get_magnet(post: Dict):
+    return get_magnet_link(post["url"])
+
+Metadata = {
+    "name" : "m0nkrus",
+    "headers" : ["Post Title", "Author"],
+    "scrapeFunc" : scrape_m0nkrus,
+    "linkFunc" : get_magnet,
+    "isMagnet" : True,
+}
+
+def init_m0nkrus():
+    state.trackers.update({Metadata["name"] : Metadata})

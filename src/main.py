@@ -1,9 +1,9 @@
-from core.interface.gui import MainWindow, windowCloseHelper
+from core.interface.gui import MainWindow
 from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
 from core.network.libtorrent_misc import send_notification, update_log, check_deleted_files
 from core.utils.logging.logs import get_download_logs
-from core.utils.general.shutdown import closehelper, shutdown_event
+from core.utils.general.shutdown import closehelper
 from core.utils.general.wrappers import run_thread
 from core.utils.logging.loghandler import split_data, check_completed, check_downloads
 from core.network.interface import list_interfaces, init_interfaces
@@ -48,13 +48,13 @@ def main():
     consoleLog("Initializing Interface variables...")
     init_interfaces()
     consoleLog(f"Current Bound: {state.bound_interface}")
-    run_thread(threading.Thread(target=send_notification, args=(shutdown_event,), daemon=True))
+    run_thread(threading.Thread(target=send_notification, args=(state.shutdown_event,), daemon=True))
     consoleLog("Started Thread: send_notification")
-    run_thread(threading.Thread(target=update_log, args=(shutdown_event,), daemon=True))
+    run_thread(threading.Thread(target=update_log, args=(state.shutdown_event,), daemon=True))
     consoleLog("Started Thread: update_log")
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     consoleLog("Started Thread: check_completed")
-    run_thread(threading.Thread(target=check_deleted_files, args=(shutdown_event,), daemon=True))
+    run_thread(threading.Thread(target=check_deleted_files, args=(state.shutdown_event,), daemon=True))
     consoleLog("Started Thread: check_deleted_files")
     run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
     consoleLog("Started Thread: check_downloads")

@@ -17,8 +17,8 @@ def get_updates():
 
     release = response.json()
 
-    latest_version = release["name"]
-    assets = release["assets"]
+    latest_version = release.get("name") or release.get("tag_name")
+    assets = release.get("assets", [])
 
     release_assets = []
 
@@ -31,7 +31,7 @@ def get_updates():
                 release_assets.append(dict(
                     name=asset['name'],
                     url=asset['browser_download_url'],
-                    hash=asset['digest']
+                    hash=asset.get('digest')
                 ))
             return release_assets
         else:

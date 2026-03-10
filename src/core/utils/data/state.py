@@ -1,6 +1,7 @@
+import threading
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QTableWidget
-from typing import Optional, Any, List, Dict
+from typing import Any, List, Dict
 from pathlib import Path
 
 class AppState(QObject):
@@ -8,20 +9,26 @@ class AppState(QObject):
 
     def __init__(self):
         super().__init__()
-        self.posts: list[Any] | None = None
-        self.post_titles: Optional[List] = None
-        self.post_urls: Optional[List] = None
-        self.post_author: List[str] = []
-        self.post_seeders: List[str] = []
-        self.post_leechers: List[str] = []
+        self.posts: list[Dict[str,str]] | None = None # titles, urls, author, seederm leecher
         self.version: str = "dev"
         self._image_path: str = ""
         self.ignore_updates: bool = False
         self.debug: bool = False
         self.autoresume: bool = True
-        self.tracker: str = "rutracker"
-        self.tracker_list: dict[str, QTableWidget] = {}
+
+        self.currenttracker: str = "rutracker"
+        self.trackertable: QTableWidget
+        self.trackers: Dict[str,Dict[str,Any]] = {}# each tracker should add itself here
+        '''
+        an example:
+        "rutracker" : {
+            "name" : "rutracker", # name of the tracker
+            "headers" : ["author", "title"], # keys shown in the table
+            "scrapeFunc" : function,
+        }
+        '''
         self.api_url: str = "https://api.michijackson.xyz"
+        self.seeded_magnets: set = set()
         self.download_path: str = str(Path.home() / "Downloads")
         self.up_speed_limit: int = 0
         self.down_speed_limit: int = 0
@@ -30,11 +37,16 @@ class AppState(QObject):
         self.settings_path: str = "" 
         self.dl_session: Any = None
         self.active_downloads: Dict = {}
-        self.seeded_magnets: set = set()
         self.window_transparency: bool = False
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
+        
+        self.log_buffer: List[str] = []
+        self.downloads_lock = threading.RLock()
+        self.main_window: Any = None
+        self.loop_running: bool = False
+        self.shutdown_event = threading.Event()
 
     @property
     def image_path(self) -> str:

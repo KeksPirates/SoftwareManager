@@ -2,19 +2,21 @@ from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
 import psutil
 
-addrs = psutil.net_if_addrs()
-stats = psutil.net_if_stats()
-
 def get_net_interfaces():
+    addrs = psutil.net_if_addrs()
     for interface in addrs.keys():
         consoleLog(f"Found Interface: {interface}")
     return addrs.keys()
 
 
 def get_active_interfaces():
+    addrs = psutil.net_if_addrs()
+    stats = psutil.net_if_stats()
     active = []
 
     for interface, addr_list in addrs.items():
+        if interface not in stats:
+            continue
         up = stats[interface].isup
         for addr in addr_list:
             if addr.family == 2: # ipv4
@@ -27,23 +29,28 @@ def get_active_interfaces():
 
 
 def list_interfaces() -> None:
+    addrs = psutil.net_if_addrs()
+    stats = psutil.net_if_stats()
 
     for interface, addr_list in addrs.items():
+        if interface not in stats:
+            continue
         up = stats[interface].isup
+        status = "INACTIVE"
         for addr in addr_list:
             if addr.family == 2: # ipv4
                 ipv4 = addr.address
                 if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up:
                     status = "ACTIVE"
-                else:
-                    status = "INACTIVE"
         consoleLog(f"Found Interface: {interface} [{status}]")
 
 def init_interfaces():
+    addrs = psutil.net_if_addrs()
     state.interfaces = list(addrs.keys())
     state.active_interfaces = get_active_interfaces()
 
 def get_interface_ip(interface_name):
+    addrs = psutil.net_if_addrs()
     if interface_name in addrs:
         for addr in addrs[interface_name]:
             if addr.family == 2:  # ipv4

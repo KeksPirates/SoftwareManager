@@ -8,10 +8,6 @@ import re
 import time
 import threading
 
-_log_buffer = []
-_downloads_lock = threading.RLock()
-
-
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     # wait for metadata outside the lock to avoid blocking other threads
     magnetdl = state.active_downloads.get(magnet_uri)
@@ -28,7 +24,7 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
         path = os.path.join(save_path, torrent_name)
     else:
         path = os.path.join(state.download_path, title)
-    with _downloads_lock:
+    with state.downloads_lock:
         return _add_download_log_inner(title, url, magnet_uri, completed, path)
 
 def _add_download_log_inner(title, url, magnet_uri, completed, path) -> DownloadList:
@@ -44,14 +40,15 @@ def _add_download_log_inner(title, url, magnet_uri, completed, path) -> Download
     else:
         downloads = []
 
-    if any(d.magnet_uri == magnet_uri or d.url == url for d in downloads):
-        if magnet_uri in state.active_downloads:
+    if any((magnet_uri and d.magnet_uri == magnet_uri) or (url and d.url == url) for d in downloads):
+        if magnet_uri and magnet_uri in state.active_downloads:
             consoleLog("Skipping Logging, download already running...")
-            return
+            return DownloadList(data=downloads, count=len(downloads))
         consoleLog("File already in Log, updating Download State...")
         hash = extract_hash_from_magnet(magnet_uri)
-        update_download_completed_by_hash(hash, False)
-        return DownloadList(data=downloads, count=len(downloads)) # thanks again claude (im stupid)
+        if hash:
+            update_download_completed_by_hash(hash, False)
+        return DownloadList(data=downloads, count=len(downloads))
         
     
     downloads.append(Download(
@@ -71,7 +68,7 @@ def _add_download_log_inner(title, url, magnet_uri, completed, path) -> Download
     return download_list
 
 def remove_download_log(magnet_uri) -> DownloadList:
-    with _downloads_lock:
+    with state.downloads_lock:
         return _remove_download_log_inner(magnet_uri)
 
 def _remove_download_log_inner(magnet_uri) -> DownloadList:
@@ -89,6 +86,9 @@ def _remove_download_log_inner(magnet_uri) -> DownloadList:
 
 
     magnet_link = (magnet_uri or "").strip()
+    if not magnet_link:
+        return DownloadList(data=downloads, count=len(downloads))
+
     title = next((getattr(d, 'title', 'Unknown') for d in downloads if (getattr(d, 'magnet_uri', None) or '').strip() == magnet_link or (getattr(d, 'url', None) or '').strip() == magnet_link), 'Unknown')
     downloads = [d for d in downloads if (getattr(d, 'magnet_uri', None) or "").strip() != magnet_link and (getattr(d, 'url', None) or "").strip() != magnet_link]
 
@@ -101,7 +101,7 @@ def _remove_download_log_inner(magnet_uri) -> DownloadList:
     return download_list
 
 def update_download_completed(magnet_uri, completed) -> DownloadList:
-    with _downloads_lock:
+    with state.downloads_lock:
         return _update_download_completed_inner(magnet_uri, completed)
 
 def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
@@ -157,7 +157,7 @@ def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
     
 
 def get_download_logs() -> DownloadList:
-    with _downloads_lock:
+    with state.downloads_lock:
         return _get_download_logs_inner()
 
 def _get_download_logs_inner() -> DownloadList:
@@ -176,15 +176,24 @@ def _get_download_logs_inner() -> DownloadList:
     return DownloadList(data=downloads, count=len(downloads))
 
 
-def extract_hash_from_magnet(magnet_uri): # full credits to claude for this
-    match = re.search(r'urn:btih:([A-F0-9]+)', magnet_uri, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()
-    return None
+def extract_hash_from_magnet(magnet_uri):
+    if not magnet_uri:
+        return None
+    try:
+        import libtorrent as lt
+        params = lt.parse_magnet_uri(magnet_uri)
+        if hasattr(params, 'info_hashes'): # lt 2.0+
+            return str(params.info_hashes.v1).upper()
+        return str(params.info_hash).upper()
+    except Exception:
+        match = re.search(r'urn:btih:([a-zA-Z0-9]+)', magnet_uri)
+        if match:
+            return match.group(1).upper()
+        return None
 
 
 def update_download_completed_by_hash(info_hash, completed) -> DownloadList:
-    with _downloads_lock:
+    with state.downloads_lock:
         return _update_download_completed_by_hash_inner(info_hash, completed)
 
 def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadList:
@@ -230,20 +239,16 @@ def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadLi
     return download_list
 
 
-_main_window = None
-
 def set_main_window(window):
-    global _main_window
-    _main_window = window
+    state.main_window = window
 
 def flush_log_buffer(): # credits to claude
-    global _log_buffer
-    if _log_buffer:
+    if state.log_buffer:
         try:
             from core.interface.gui import MainWindow
-            for log_entry in _log_buffer:
+            for log_entry in state.log_buffer:
                 MainWindow.add_log(log_entry)
-            _log_buffer = []
+            state.log_buffer = []
         except Exception:
             pass
 
@@ -254,10 +259,10 @@ def consoleLog(text, printAnyways = False):
 
     try:
         from core.interface.gui import MainWindow
-        MainWindow.add_log(formatted_text)
+        if not MainWindow.add_log(formatted_text):
+            state.log_buffer.append(formatted_text)
     except Exception:
-        global _log_buffer
-        _log_buffer.append(formatted_text)
+        state.log_buffer.append(formatted_text)
     
     if state.debug or printAnyways:
         print(formatted_text)
