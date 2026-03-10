@@ -989,7 +989,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 return
             magnet_link = list(state.active_downloads.keys())[row]
             magnetdl = state.active_downloads[magnet_link]
-
         try:
             status = magnetdl.status()
             save_path = status.save_path
@@ -1000,9 +999,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 state.active_downloads.pop(magnet_link, None)
             remove_download_log(magnet_link)
             return
-
         download_path = os.path.join(save_path, torrent_name)
-
         confirm = QMessageBox.question(
             self, "Delete Files",
             f"Are you sure you want to delete the downloaded files of '{torrent_name}'? This action cannot be undone.",
@@ -1012,23 +1009,29 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             with state.downloads_lock:
                 state.active_downloads.pop(magnet_link, None)
             remove_download_log(magnet_link)
-
             if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
+                    time.sleep(0.5)
                 except Exception:
                     pass
-
             if download_path and os.path.exists(download_path):
-                try:
-                    if os.path.isfile(download_path):
-                        os.remove(download_path)
+                import shutil
+                last_error = None
+                for attempt in range(3):
+                    try:
+                        if os.path.isfile(download_path):
+                            os.remove(download_path)
+                        else:
+                            shutil.rmtree(download_path)
                         consoleLog(f"Deleted files for: {torrent_name}", True)
-                    else:
-                        import shutil
-                        shutil.rmtree(download_path)
-                        consoleLog(f"Deleted files for: {torrent_name}", True)
-                except Exception as e:
-                    consoleLog(f"Error deleting files: {e}", True)
+                        last_error = None
+                        break
+                    except Exception as e:
+                        last_error = e
+                        if attempt < 2:
+                            time.sleep(0.5)
+                if last_error:
+                    consoleLog(f"Error deleting files: {last_error}", True)
             else:
                 consoleLog(f"Removed entry (files not found): {torrent_name}", True)
