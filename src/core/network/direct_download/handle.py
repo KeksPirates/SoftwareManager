@@ -213,11 +213,11 @@ class DirectDownloadHandle:
                 self._status.mark_completed()
                 update_download_completed(self.url, True)
                 self._clear_state()
-                consoleLog(f"✓ Finished downloading {self._name}")
+                consoleLog(f"Finished downloading {self._name}")
 
         except Exception as e:
             self._status.mark_error(str(e))
-            consoleLog(f"✗ Download failed for {self._name}: {e}")
+            consoleLog(f"Download failed for {self._name}: {e}")
         finally:
             if self._session:
                 self._session.close()

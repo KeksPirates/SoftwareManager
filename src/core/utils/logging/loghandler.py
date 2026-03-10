@@ -1,6 +1,5 @@
 from core.utils.logging.logs import consoleLog, remove_download_log
 from core.utils.network.download import run_download_direct, seed_magnet
-
 import os
 
 def split_data(data):

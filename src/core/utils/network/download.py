@@ -43,7 +43,7 @@ def run_download(post):
 
 def run_download_direct(magnet_uri, dl_path=None, title="Direct Download"):
     consoleLog(f"Magnet: {title}")
-    add_magnet(magnet_uri, dl_path)
+    add_magnet(magnet_uri)
     add_download_log(title, "", magnet_uri, False)
 
 def seed_magnet(magnet_uri, file_path): 

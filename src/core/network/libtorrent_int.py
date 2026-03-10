@@ -44,7 +44,7 @@ def init_session():
     consoleLog("Initialized Session")
 
 
-def add_download(magnet_uri, dl_path=state.download_path):
+def add_download(magnet_uri):
 
     if state.active_downloads is None:
         state.active_downloads = {}
@@ -76,7 +76,8 @@ def add_download(magnet_uri, dl_path=state.download_path):
 
     try:
         magnetdl = lt.parse_magnet_uri(magnet_uri)
-        magnetdl.save_path = dl_path
+        magnetdl.save_path = state.download_path
+        consoleLog(magnetdl.save_path)
         download = state.dl_session.add_torrent(magnetdl)
     except Exception as e:
         consoleLog(f"Failed to add torrent: {e}")

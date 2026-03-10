@@ -1006,7 +1006,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     pass
             del state.active_downloads[magnet_link]
             remove_download_log(magnet_link)
-            consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
+            try:
+                consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
+            except RuntimeError:
+                consoleLog(f"Cancelled download")
 
     def deleteFileAction(self):
         if not hasattr(self, '_context_menu_row'):
