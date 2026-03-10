@@ -139,7 +139,7 @@ def settings_dialog(self):
         image_path_layout = QHBoxLayout()
 
         image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path (requires restart):"))
+        image_path_layout.addWidget(QLabel("Image Path (requires restart, experimental):"))
         image_path_layout.addWidget(image_path)
         image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         image_path_container.setLayout(image_path_layout)

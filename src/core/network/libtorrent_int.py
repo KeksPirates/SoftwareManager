@@ -1,5 +1,7 @@
 import time
 import os
+import platform
+import ctypes
 from core.utils.general.wrappers import run_thread
 from core.network.interface import get_interface_ip
 import threading
@@ -10,6 +12,15 @@ from core.utils.logging.logs import consoleLog
 
 global loop_running
 loop_running = False
+
+def get_free_space_mb(dirname):
+    if platform.system() == 'Windows':
+        free_bytes = ctypes.c_ulonglong(0)
+        ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(dirname), None, None, ctypes.pointer(free_bytes))
+        return free_bytes.value
+    else:
+        st = os.statvfs(dirname)
+        return st.f_bavail * st.f_frsize
 
 def init_session():
     if state.dl_session is not None:
@@ -51,11 +62,13 @@ def add_download(magnet_uri, dl_path=state.download_path):
 
     init_session()
 
+    free_space = get_free_space_mb(state.download_path)
+
     if magnet_uri in state.active_downloads:
         try:
             handle = state.active_downloads[magnet_uri]
             status = handle.status()
-            
+
             if status.has_metadata:
                 filepath = os.path.join(status.save_path, status.name)
 
@@ -75,13 +88,31 @@ def add_download(magnet_uri, dl_path=state.download_path):
             del state.active_downloads[magnet_uri]
 
     try:
-        magnetdl = lt.parse_magnet_uri(magnet_uri)
-        magnetdl.save_path = dl_path
-        download = state.dl_session.add_torrent(magnetdl)
+        params = lt.parse_magnet_uri(magnet_uri)
+        params.save_path = "."
+
+        handle = state.dl_session.add_torrent(params)
+
+        while not handle.has_metadata():
+            time.sleep(1)
+
+        total_size = handle.get_torrent_info().total_size()
+
+        if free_space > total_size:
+            magnetdl = lt.parse_magnet_uri(magnet_uri)
+            magnetdl.save_path = dl_path
+            download = state.dl_session.add_torrent(magnetdl)
+        else:
+            download = None
+            state.dl_session.remove_torrent(handle)
+            consoleLog("Not enough free space to download this item.")
+            return False
+
     except Exception as e:
-        consoleLog(f"Failed to add torrent: {e}")
+        consoleLog(f"Failed to add torrent or fetch info: {e}")
         return False
-    state.active_downloads[magnet_uri] = download
+    if download:
+        state.active_downloads[magnet_uri] = download
     consoleLog(f"Added {magnet_uri} to downloads")
 
     run_thread(threading.Thread(target=dl_status_loop))
@@ -171,4 +202,3 @@ def update_bound_interface():
     settings = { "outgoing_interfaces": state.bound_interface }
     
     state.dl_session.apply_settings(settings)
-
