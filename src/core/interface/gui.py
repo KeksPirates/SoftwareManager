@@ -693,7 +693,12 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 headers = tracker_mod.HEADERS
 
         if not headers:
-            headers = ["Post Title", "Author", "Seeders", "Leechers"]
+            if state.currenttracker == "rutracker":
+                headers = ["Post Title", "Author", "Seeders", "Leechers"]
+            elif state.currenttracker == "steamrip":
+                headers = ["Game"]
+            else: 
+                headers = ["Post Title", "Author"] # i know this makes it less "modular", but its qol
 
         table.setRowCount(0)
 
