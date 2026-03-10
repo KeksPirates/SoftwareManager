@@ -19,7 +19,7 @@ def check_completed(downloads, resume):
                     consoleLog(f"Resuming Magnet: {download.title}")
                 elif download.url:
                     from core.network.direct_download import add_direct_download
-                    add_direct_download(download.url, download.title, dl_dir)
+                    add_direct_download(download.url, download.title)
                     consoleLog(f"Resuming Direct Download: {download.title}")
 
 def check_downloads(downloads):
