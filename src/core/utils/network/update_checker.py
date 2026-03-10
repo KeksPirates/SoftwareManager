@@ -4,7 +4,6 @@ from core.utils.logging.logs import consoleLog
 
 def get_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases/latest"
-
     try:
         response = requests.get(url, timeout=15)
     except requests.RequestException as e:
@@ -33,9 +32,9 @@ def get_updates():
                     url=asset['browser_download_url'],
                     hash=asset.get('digest')
                 ))
-            return release_assets
+            return release_assets, latest_version
         else:
-            return None
+            return None, None
     else:
         consoleLog("Already up-to-date.")
-        return None
+        return None, None

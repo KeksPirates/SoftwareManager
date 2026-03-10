@@ -205,10 +205,8 @@ def _download_update(assets):
     time.sleep(1)
     sys.exit(0)
 
-
 def windowCloseHelper():
     QGuiApplication.quit()
-
 
 class ElidedItemDelegate(QStyledItemDelegate):
     def __init__(self, get_hovered_row, parent=None):
@@ -274,13 +272,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 state.version = build_info.get("version")
 
         if state.ignore_updates is False and platform.system() == "Windows":
-            assets = get_updates()
+            assets, latest = get_updates()
             if assets != None:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Icon.Information)
                 msg.setWindowTitle("Update Available")
-                msg.setText("A new version is available.")
-                msg.setInformativeText("Press Ok to download the update.")
+                msg.setText(f"A new version is available\n({latest})")
+                msg.setInformativeText("Press Ok to download.")
                 msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
                 response = msg.exec_()
                 if response == QMessageBox.StandardButton.Ok:
