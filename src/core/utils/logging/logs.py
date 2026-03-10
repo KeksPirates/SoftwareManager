@@ -40,13 +40,14 @@ def _add_download_log_inner(title, url, magnet_uri, completed, path) -> Download
     else:
         downloads = []
 
-    if any(d.magnet_uri == magnet_uri or d.url == url for d in downloads):
-        if magnet_uri in state.active_downloads:
+    if any((magnet_uri and d.magnet_uri == magnet_uri) or (url and d.url == url) for d in downloads):
+        if magnet_uri and magnet_uri in state.active_downloads:
             consoleLog("Skipping Logging, download already running...")
             return DownloadList(data=downloads, count=len(downloads))
         consoleLog("File already in Log, updating Download State...")
         hash = extract_hash_from_magnet(magnet_uri)
-        update_download_completed_by_hash(hash, False)
+        if hash:
+            update_download_completed_by_hash(hash, False)
         return DownloadList(data=downloads, count=len(downloads))
         
     
@@ -85,6 +86,9 @@ def _remove_download_log_inner(magnet_uri) -> DownloadList:
 
 
     magnet_link = (magnet_uri or "").strip()
+    if not magnet_link:
+        return DownloadList(data=downloads, count=len(downloads))
+
     title = next((getattr(d, 'title', 'Unknown') for d in downloads if (getattr(d, 'magnet_uri', None) or '').strip() == magnet_link or (getattr(d, 'url', None) or '').strip() == magnet_link), 'Unknown')
     downloads = [d for d in downloads if (getattr(d, 'magnet_uri', None) or "").strip() != magnet_link and (getattr(d, 'url', None) or "").strip() != magnet_link]
 
