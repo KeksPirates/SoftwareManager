@@ -1,16 +1,17 @@
 from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_buffer
-from core.utils.general.wrappers import run_thread
-from core.utils.data.state import state
+from core.interface.assets.base64_icons import settings_white_base64
+from core.interface.assets.base64_icons import settings_black_base64
+from core.interface.utils.searchhelper import return_pressed
+from core.interface.dialogs.settings import settings_dialog
+from core.interface.assets.base64_icons import logo_base64
 from core.utils.network.download import download_selected
 from core.utils.network.update_checker import get_updates
+from core.utils.network.updater import download_update
 from core.interface.utils.tabhelper import create_tab
-from core.interface.utils.searchhelper import return_pressed
 from core.interface.utils.svghelper import svg_icon
-from core.interface.dialogs.settings import settings_dialog
-from core.interface.assets.base64_icons import settings_black_base64
-from core.interface.assets.base64_icons import settings_white_base64
-from core.interface.assets.base64_icons import logo_base64
 from core.utils.general.shutdown import closehelper
+from core.utils.general.wrappers import run_thread
+from core.utils.data.state import state
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import (
@@ -52,16 +53,16 @@ from PySide6.QtGui import (
     QColor, 
 )
 
+import libtorrent as lt
+import subprocess
 import darkdetect
 import threading
 import platform
-import requests as r
-import os
-import subprocess
-import libtorrent as lt
-import sys
-import json
 import base64
+import json
+import time
+import sys
+import os
 
 
 def _is_dark_mode():
@@ -141,70 +142,6 @@ SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon
 SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
-
-def _verify_hash(file_path, expected_hash):
-    import hashlib
-    sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            sha256.update(chunk)
-    return f"sha256:{sha256.hexdigest()}" == expected_hash
-
-
-def _download_update(assets):
-    import tempfile
-    import time
-    for asset in assets:
-        if "-windows-setup.exe" in asset["name"]:
-            filename = asset["name"]
-            setup_hash = asset["hash"]
-            url = asset["url"]
-            break
-
-    if not filename:
-        consoleLog("Error: No Windows installer found in release assets")
-        return
-
-    installer_path = os.path.join(tempfile.gettempdir(), filename)
-    progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
-    progress.setWindowTitle("Updating")
-    progress.setWindowModality(Qt.WindowModality.ApplicationModal)
-    progress.setCancelButton(None)
-    progress.setMinimumDuration(0)
-    progress.setAutoClose(False)
-    progress.setAutoReset(False)
-    progress.setRange(0, 100)
-    progress.setValue(0)
-    progress.show()
-    QtWidgets.QApplication.processEvents()
-    response = r.get(url, allow_redirects=True, stream=True)
-    total = int(response.headers.get("content-length", 0))
-    downloaded = 0
-    with open(installer_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=65536):
-            f.write(chunk)
-            downloaded += len(chunk)
-            if total > 0:
-                progress.setValue(int(downloaded * 100 / total))
-            QtWidgets.QApplication.processEvents()
-    if not os.path.exists(installer_path):
-        progress.close()
-        raise FileNotFoundError("Executable not found")
-    if setup_hash:
-        if _verify_hash(installer_path, setup_hash):
-            consoleLog(f"Sucessfully validated installer hash ({setup_hash})")
-        else:
-            consoleLog("Error: Invalid Filehash, file may be corrupted")
-            sys.exit(0)
-    else:
-        consoleLog("Skipping Hash Verification (no hash found for release)")
-    progress.setLabelText("Installing update...")
-    progress.setValue(100)
-    QtWidgets.QApplication.processEvents()
-    subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
-    time.sleep(1)
-    sys.exit(0)
-
 def windowCloseHelper():
     QGuiApplication.quit()
 
@@ -282,7 +219,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
                 response = msg.exec_()
                 if response == QMessageBox.StandardButton.Ok:
-                    _download_update(assets)
+                    download_update(assets)
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
