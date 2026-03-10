@@ -89,7 +89,7 @@ def add_download(magnet_uri):
 
     try:
         params = lt.parse_magnet_uri(magnet_uri)
-        params.save_path = "."
+        params.save_path = state.download_path
 
         handle = state.dl_session.add_torrent(params)
 
