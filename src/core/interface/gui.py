@@ -680,7 +680,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.context_menu = QtWidgets.QMenu(self)
         self.context_menu.addAction("Open Containing Folder", self.openFolderAction)
         self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
-        self.context_menu.addAction("Cancel Download", self.cancelDownloadAction)
+        self.context_menu.addAction("Remove from list", self.cancelDownloadAction)
         self.context_menu.addAction("Delete File", self.deleteFileAction)
 
     def _create_tracker_table(self):
@@ -1038,9 +1038,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                     else:
                         import shutil
-                        del state.active_downloads[magnet_link]
                         remove_download_log(magnet_link)
                         shutil.rmtree(download_path)
+                        del state.active_downloads[magnet_link]
                         consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
                 except Exception as e:
                     consoleLog(f"Error deleting files: {e}", True)
