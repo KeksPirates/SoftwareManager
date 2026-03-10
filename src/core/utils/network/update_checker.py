@@ -4,7 +4,12 @@ from core.utils.logging.logs import consoleLog
 
 def get_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases/latest"
-    response = requests.get(url, timeout=15)
+
+    try:
+        response = requests.get(url, timeout=15)
+    except requests.RequestException as e:
+        consoleLog(f"Failed to fetch releases: {e}")
+        return None
 
     if response.status_code != 200:
         consoleLog(f"Failed to fetch releases: {response.status_code}")
@@ -29,7 +34,7 @@ def get_updates():
                     hash=asset.get('digest')
                 ))
             return release_assets
-        else: 
+        else:
             return None
     else:
         consoleLog("Already up-to-date.")

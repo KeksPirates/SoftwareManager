@@ -159,6 +159,12 @@ def _download_update(assets):
             filename = asset["name"]
             setup_hash = asset["hash"]
             url = asset["url"]
+            break
+
+    if not filename:
+        consoleLog("Error: No Windows installer found in release assets")
+        return
+
     installer_path = os.path.join(tempfile.gettempdir(), filename)
     progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
     progress.setWindowTitle("Updating")
