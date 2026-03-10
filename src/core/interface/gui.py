@@ -488,22 +488,40 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
-                magnet_link = list(state.active_downloads.keys())[index.row()]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
-                if button:
-                    if status.state == lt.torrent_status.seeding:
-                        button.setIcon(svg_icon(SVG_FOLDER, 18))
-                        button.setText("")
-                    else:
-                        is_user_paused = status.paused and not status.auto_managed
-                        button.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
-                        button.setText("")
+                if not button:
+                    return
+                try:
+                    with state.downloads_lock:
+                        keys = list(state.active_downloads.keys())
+                        if index.row() >= len(keys):
+                            return
+                        magnet_link = keys[index.row()]
+                        magnetdl = state.active_downloads[magnet_link]
+                    status = magnetdl.status()
+                except (RuntimeError, IndexError, KeyError):
+                    return
+
+                if status.state == lt.torrent_status.seeding:
+                    button.setIcon(svg_icon(SVG_FOLDER, 18))
+                    button.setText("")
+                else:
+                    is_user_paused = status.paused and not status.auto_managed
+                    button.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                    button.setText("")
+
 
             def createEditor(self, parent, option, index):
-                magnet_link = list(state.active_downloads.keys())[index.row()]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
+                try:
+                    with state.downloads_lock:
+                        keys = list(state.active_downloads.keys())
+                        if index.row() >= len(keys):
+                            return QWidget(parent)
+                        magnet_link = keys[index.row()]
+                        magnetdl = state.active_downloads[magnet_link]
+                    status = magnetdl.status()
+                except (RuntimeError, IndexError, KeyError):
+                    return QWidget(parent)
+
                 widget = QWidget(parent)
                 widget.setStyleSheet("border: none; background: transparent;")
                 layout = QHBoxLayout(widget)
@@ -525,6 +543,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 layout.addStretch()
                 widget.setLayout(layout)
                 return widget
+
 
             def editorEvent(self, event, model, option, index):
                 return False
@@ -846,9 +865,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     if idx.isValid():
                         editor = self.downloadList.indexWidget(idx)
                         if editor and delegate:
-                            delegate.setEditorData(editor, idx)
+                            try:
+                                delegate.setEditorData(editor, idx)
+                            except RuntimeError:
+                                pass
 
         self._update_speed_label()
+
 
     def _update_speed_label(self):
         total_down = 0
@@ -991,63 +1014,86 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
-            return
-        magnet_link = list(state.active_downloads.keys())[row]
-        magnetdl = state.active_downloads[magnet_link]
-        confirm = QMessageBox.question(self, "Cancel Download", f"Are you sure you want to cancel the download of '{magnetdl.status().name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            magnet_link = list(state.active_downloads.keys())[row]
+            magnetdl = state.active_downloads[magnet_link]
+
+        # Cache the name BEFORE removing from session
+        try:
+            torrent_name = magnetdl.status().name
+        except RuntimeError:
+            torrent_name = "Unknown"
+
+        confirm = QMessageBox.question(
+            self, "Cancel Download",
+            f"Are you sure you want to cancel the download of '{torrent_name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         if confirm == QMessageBox.StandardButton.Yes:
-            if hasattr(magnetdl, 'stop'):
-                magnetdl.stop()
-            elif state.dl_session:
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
+
+            if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                 except Exception:
                     pass
-            del state.active_downloads[magnet_link]
-            remove_download_log(magnet_link)
-            try:
-                consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
-            except RuntimeError:
-                consoleLog(f"Cancelled download")
+
+            consoleLog(f"Cancelled download: {torrent_name}", True)
+
 
     def deleteFileAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            magnet_link = list(state.active_downloads.keys())[row]
+            magnetdl = state.active_downloads[magnet_link]
+
+        try:
+            status = magnetdl.status()
+            save_path = status.save_path
+            torrent_name = status.name
+        except RuntimeError:
+            consoleLog("Error: torrent handle already invalid", True)
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
             return
-        magnet_link = list(state.active_downloads.keys())[row]
-        magnetdl = state.active_downloads[magnet_link]
-        status = magnetdl.status()
-        save_path = status.save_path
-        torrent_name = status.name
+
         download_path = os.path.join(save_path, torrent_name)
-        confirm = QMessageBox.question(self, "Delete Files", f"Are you sure you want to delete the downloaded files of '{magnetdl.status().name}'? This action cannot be undone.", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+        confirm = QMessageBox.question(
+            self, "Delete Files",
+            f"Are you sure you want to delete the downloaded files of '{torrent_name}'? This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         if confirm == QMessageBox.StandardButton.Yes:
-            if hasattr(magnetdl, 'stop'):
-                magnetdl.stop()
-            elif state.dl_session:
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
+
+            if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                 except Exception:
                     pass
+
             if download_path and os.path.exists(download_path):
                 try:
                     if os.path.isfile(download_path):
-                        remove_download_log(magnet_link)
                         os.remove(download_path)
-                        del state.active_downloads[magnet_link]
-                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
+                        consoleLog(f"Deleted files for: {torrent_name}", True)
                     else:
                         import shutil
-                        remove_download_log(magnet_link)
                         shutil.rmtree(download_path)
-                        del state.active_downloads[magnet_link]
-                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
+                        consoleLog(f"Deleted files for: {torrent_name}", True)
                 except Exception as e:
                     consoleLog(f"Error deleting files: {e}", True)
             else:
-                del state.active_downloads[magnet_link]
-                remove_download_log(magnet_link)
-                consoleLog(f"Removed entry (files not found): {magnetdl.status().name}", True)
+                consoleLog(f"Removed entry (files not found): {torrent_name}", True)
