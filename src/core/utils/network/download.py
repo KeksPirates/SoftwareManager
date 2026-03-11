@@ -1,12 +1,12 @@
-from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtCore import Qt
-from core.utils.logging.logs import consoleLog
-from core.network.libtorrent_wrapper import add_magnet
-from core.utils.general.wrappers import run_thread
-from core.utils.logging.logs import add_download_log
-from core.network.libtorrent_int import add_seed
-from core.utils.data.state import state
 from core.network.direct_download import add_direct_download
+from core.network.libtorrent_wrapper import add_magnet
+from core.utils.logging.logs import add_download_log
+from core.utils.general.wrappers import run_thread
+from core.network.libtorrent_int import add_seed
+from PySide6.QtWidgets import QTableWidgetItem
+from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
+from PySide6.QtCore import Qt
 from typing import Optional
 import threading
 
@@ -44,9 +44,9 @@ def run_download(post, headers: Optional[dict] = None):
         final_headers = headers or link_headers
         add_direct_download(link, post.get("title", "Unknown"), headers=final_headers, single_threaded=final_headers is not None)
 
-def run_download_direct(magnet_uri, dl_path=None, title="Direct Download"):
+def run_download_direct(magnet_uri, title="Direct Download"):
     consoleLog(f"Magnet: {title}")
-    add_magnet(magnet_uri, dl_path)
+    add_magnet(magnet_uri)
     add_download_log(title, "", magnet_uri, False)
 
 def seed_magnet(magnet_uri, file_path): 

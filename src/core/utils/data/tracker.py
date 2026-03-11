@@ -1,6 +1,6 @@
-import requests
-from bs4 import BeautifulSoup
 from core.utils.logging.logs import consoleLog
+from bs4 import BeautifulSoup
+import requests
 
 
 def get_magnet_link(post_url):

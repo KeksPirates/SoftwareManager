@@ -6,8 +6,9 @@ from bs4 import BeautifulSoup
 from typing import Dict
 import webbrowser
 import requests
-import re
 import time
+import re
+
 
 cache = {
     "data": [],

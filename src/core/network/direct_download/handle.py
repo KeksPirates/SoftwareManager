@@ -1,17 +1,17 @@
-import os
-import threading
-import requests
-import json
-import hashlib
-import time
+from core.utils.logging.logs import consoleLog, update_download_completed
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from .status import DirectDownloadStatus, ChunkSpec
+from core.utils.data.state import state
+from .utils import format_size
 from typing import Optional
 import libtorrent as lt
+import threading
+import requests
+import hashlib
+import json
+import time
+import os
 
-from core.utils.logging.logs import consoleLog, update_download_completed
-from core.utils.data.state import state
-from .status import DirectDownloadStatus, ChunkSpec
-from .utils import format_size
 
 class SimpleThrottler:
     def __init__(self):
@@ -218,11 +218,11 @@ class DirectDownloadHandle:
                 self._status.mark_completed()
                 update_download_completed(self.url, True)
                 self._clear_state()
-                consoleLog(f"✓ Finished downloading {self._name}")
+                consoleLog(f"Finished downloading {self._name}")
 
         except Exception as e:
             self._status.mark_error(str(e))
-            consoleLog(f"✗ Download failed for {self._name}: {e}")
+            consoleLog(f"Download failed for {self._name}: {e}")
         finally:
             if self._session:
                 self._session.close()

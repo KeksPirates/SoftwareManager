@@ -1,5 +1,5 @@
-from core.utils.data.state import state
 from core.utils.data.tracker import get_magnet_link
+from core.utils.data.state import state
 from bs4 import BeautifulSoup
 from typing import Dict
 import requests

@@ -3,10 +3,10 @@ from core.utils.data.state import state
 from dataclasses import asdict
 from datetime import datetime
 import json
+import time
 import os
 import re
-import time
-import threading
+
 
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     # wait for metadata outside the lock to avoid blocking other threads
@@ -135,9 +135,7 @@ def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
         try:
             stored_magnet = (getattr(download, 'magnet_uri', None) or "").strip()
             stored_url = (getattr(download, 'url', None) or "").strip()
-            consoleLog(f"Comparing with magnet: {stored_magnet[:50] if stored_magnet else 'None'}...")
             if identifier and (stored_magnet == identifier or stored_url == identifier):
-                consoleLog(f"Match found! Setting completed={completed}")
                 download.completed = completed
                 found = True
         except Exception as e:

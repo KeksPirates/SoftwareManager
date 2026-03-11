@@ -1,16 +1,17 @@
 from core.utils.logging.logs import consoleLog, remove_download_log, flush_log_buffer
-from core.utils.general.wrappers import run_thread
-from core.utils.data.state import state
+from core.interface.assets.base64_icons import settings_white_base64
+from core.interface.assets.base64_icons import settings_black_base64
+from core.interface.utils.searchhelper import return_pressed
+from core.interface.dialogs.settings import settings_dialog
+from core.interface.assets.base64_icons import logo_base64
 from core.utils.network.download import download_selected
 from core.utils.network.update_checker import get_updates
+from core.utils.network.updater import download_update
 from core.interface.utils.tabhelper import create_tab
-from core.interface.utils.searchhelper import return_pressed
 from core.interface.utils.svghelper import svg_icon
-from core.interface.dialogs.settings import settings_dialog
-from core.interface.assets.base64_icons import settings_black_base64
-from core.interface.assets.base64_icons import settings_white_base64
-from core.interface.assets.base64_icons import logo_base64
 from core.utils.general.shutdown import closehelper
+from core.utils.general.wrappers import run_thread
+from core.utils.data.state import state
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import (
@@ -52,16 +53,16 @@ from PySide6.QtGui import (
     QColor, 
 )
 
+import libtorrent as lt
+import subprocess
 import darkdetect
 import threading
 import platform
-import requests as r
-import os
-import subprocess
-import libtorrent as lt
-import sys
-import json
 import base64
+import json
+import time
+import sys
+import os
 
 
 def _is_dark_mode():
@@ -141,74 +142,8 @@ SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon
 SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18" rx="1" fill="{color}"/><rect x="15" y="3" width="4" height="18" rx="1" fill="{color}"/></svg>'
 SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
 
-
-def _verify_hash(file_path, expected_hash):
-    import hashlib
-    sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            sha256.update(chunk)
-    return f"sha256:{sha256.hexdigest()}" == expected_hash
-
-
-def _download_update(assets):
-    import tempfile
-    import time
-    for asset in assets:
-        if "-windows-setup.exe" in asset["name"]:
-            filename = asset["name"]
-            setup_hash = asset["hash"]
-            url = asset["url"]
-            break
-
-    if not filename:
-        consoleLog("Error: No Windows installer found in release assets")
-        return
-
-    installer_path = os.path.join(tempfile.gettempdir(), filename)
-    progress = QtWidgets.QProgressDialog("Downloading installer...", None, 0, 0)
-    progress.setWindowTitle("Updating")
-    progress.setWindowModality(Qt.WindowModality.ApplicationModal)
-    progress.setCancelButton(None)
-    progress.setMinimumDuration(0)
-    progress.setAutoClose(False)
-    progress.setAutoReset(False)
-    progress.setRange(0, 100)
-    progress.setValue(0)
-    progress.show()
-    QtWidgets.QApplication.processEvents()
-    response = r.get(url, allow_redirects=True, stream=True)
-    total = int(response.headers.get("content-length", 0))
-    downloaded = 0
-    with open(installer_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=65536):
-            f.write(chunk)
-            downloaded += len(chunk)
-            if total > 0:
-                progress.setValue(int(downloaded * 100 / total))
-            QtWidgets.QApplication.processEvents()
-    if not os.path.exists(installer_path):
-        progress.close()
-        raise FileNotFoundError("Executable not found")
-    if setup_hash:
-        if _verify_hash(installer_path, setup_hash):
-            consoleLog(f"Sucessfully validated installer hash ({setup_hash})")
-        else:
-            consoleLog("Error: Invalid Filehash, file may be corrupted")
-            sys.exit(0)
-    else:
-        consoleLog("Skipping Hash Verification (no hash found for release)")
-    progress.setLabelText("Installing update...")
-    progress.setValue(100)
-    QtWidgets.QApplication.processEvents()
-    subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
-    time.sleep(1)
-    sys.exit(0)
-
-
 def windowCloseHelper():
     QGuiApplication.quit()
-
 
 class ElidedItemDelegate(QStyledItemDelegate):
     def __init__(self, get_hovered_row, parent=None):
@@ -274,17 +209,17 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 state.version = build_info.get("version")
 
         if state.ignore_updates is False and platform.system() == "Windows":
-            assets = get_updates()
+            assets, latest = get_updates()
             if assets != None:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Icon.Information)
                 msg.setWindowTitle("Update Available")
-                msg.setText("A new version is available.")
-                msg.setInformativeText("Press Ok to download the update.")
+                msg.setText(f"A new version is available\n({latest})")
+                msg.setInformativeText("Press Ok to download.")
                 msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Ignore)
                 response = msg.exec_()
                 if response == QMessageBox.StandardButton.Ok:
-                    _download_update(assets)
+                    download_update(assets)
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
@@ -488,22 +423,40 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
             def setEditorData(self, editor, index):
                 button = editor.findChild(QtWidgets.QPushButton)
-                magnet_link = list(state.active_downloads.keys())[index.row()]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
-                if button:
-                    if status.state == lt.torrent_status.seeding:
-                        button.setIcon(svg_icon(SVG_FOLDER, 18))
-                        button.setText("")
-                    else:
-                        is_user_paused = status.paused and not status.auto_managed
-                        button.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
-                        button.setText("")
+                if not button:
+                    return
+                try:
+                    with state.downloads_lock:
+                        keys = list(state.active_downloads.keys())
+                        if index.row() >= len(keys):
+                            return
+                        magnet_link = keys[index.row()]
+                        magnetdl = state.active_downloads[magnet_link]
+                    status = magnetdl.status()
+                except (RuntimeError, IndexError, KeyError):
+                    return
+
+                if status.state == lt.torrent_status.seeding:
+                    button.setIcon(svg_icon(SVG_FOLDER, 18))
+                    button.setText("")
+                else:
+                    is_user_paused = status.paused and not status.auto_managed
+                    button.setIcon(svg_icon(SVG_PLAY if is_user_paused else SVG_PAUSE, 18))
+                    button.setText("")
+
 
             def createEditor(self, parent, option, index):
-                magnet_link = list(state.active_downloads.keys())[index.row()]
-                magnetdl = state.active_downloads[magnet_link]
-                status = magnetdl.status()
+                try:
+                    with state.downloads_lock:
+                        keys = list(state.active_downloads.keys())
+                        if index.row() >= len(keys):
+                            return QWidget(parent)
+                        magnet_link = keys[index.row()]
+                        magnetdl = state.active_downloads[magnet_link]
+                    status = magnetdl.status()
+                except (RuntimeError, IndexError, KeyError):
+                    return QWidget(parent)
+
                 widget = QWidget(parent)
                 widget.setStyleSheet("border: none; background: transparent;")
                 layout = QHBoxLayout(widget)
@@ -525,6 +478,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 layout.addStretch()
                 widget.setLayout(layout)
                 return widget
+
 
             def editorEvent(self, event, model, option, index):
                 return False
@@ -846,9 +800,13 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                     if idx.isValid():
                         editor = self.downloadList.indexWidget(idx)
                         if editor and delegate:
-                            delegate.setEditorData(editor, idx)
+                            try:
+                                delegate.setEditorData(editor, idx)
+                            except RuntimeError:
+                                pass
 
         self._update_speed_label()
+
 
     def _update_speed_label(self):
         total_down = 0
@@ -991,60 +949,89 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
-            return
-        magnet_link = list(state.active_downloads.keys())[row]
-        magnetdl = state.active_downloads[magnet_link]
-        confirm = QMessageBox.question(self, "Cancel Download", f"Are you sure you want to cancel the download of '{magnetdl.status().name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            magnet_link = list(state.active_downloads.keys())[row]
+            magnetdl = state.active_downloads[magnet_link]
+
+        # Cache the name BEFORE removing from session
+        try:
+            torrent_name = magnetdl.status().name
+        except RuntimeError:
+            torrent_name = "Unknown"
+
+        confirm = QMessageBox.question(
+            self, "Cancel Download",
+            f"Are you sure you want to cancel the download of '{torrent_name}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         if confirm == QMessageBox.StandardButton.Yes:
-            if hasattr(magnetdl, 'stop'):
-                magnetdl.stop()
-            elif state.dl_session:
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
+
+            if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                 except Exception:
                     pass
-            del state.active_downloads[magnet_link]
-            remove_download_log(magnet_link)
-            consoleLog(f"Cancelled download: {magnetdl.status().name}", True)
+
+            consoleLog(f"Cancelled download: {torrent_name}", True)
+
 
     def deleteFileAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            magnet_link = list(state.active_downloads.keys())[row]
+            magnetdl = state.active_downloads[magnet_link]
+        try:
+            status = magnetdl.status()
+            save_path = status.save_path
+            torrent_name = status.name
+        except RuntimeError:
+            consoleLog("Error: torrent handle already invalid", True)
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
             return
-        magnet_link = list(state.active_downloads.keys())[row]
-        magnetdl = state.active_downloads[magnet_link]
-        status = magnetdl.status()
-        save_path = status.save_path
-        torrent_name = status.name
         download_path = os.path.join(save_path, torrent_name)
-        confirm = QMessageBox.question(self, "Delete Files", f"Are you sure you want to delete the downloaded files of '{magnetdl.status().name}'? This action cannot be undone.", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        confirm = QMessageBox.question(
+            self, "Delete Files",
+            f"Are you sure you want to delete the downloaded files of '{torrent_name}'? This action cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         if confirm == QMessageBox.StandardButton.Yes:
-            if hasattr(magnetdl, 'stop'):
-                magnetdl.stop()
-            elif state.dl_session:
+            with state.downloads_lock:
+                state.active_downloads.pop(magnet_link, None)
+            remove_download_log(magnet_link)
+            if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
+                    time.sleep(0.5)
                 except Exception:
                     pass
             if download_path and os.path.exists(download_path):
-                try:
-                    if os.path.isfile(download_path):
-                        remove_download_log(magnet_link)
-                        os.remove(download_path)
-                        del state.active_downloads[magnet_link]
-                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
-                    else:
-                        import shutil
-                        remove_download_log(magnet_link)
-                        shutil.rmtree(download_path)
-                        del state.active_downloads[magnet_link]
-                        consoleLog(f"Deleted files for: {magnetdl.status().name}", True)
-                except Exception as e:
-                    consoleLog(f"Error deleting files: {e}", True)
+                import shutil
+                last_error = None
+                for attempt in range(3):
+                    try:
+                        if os.path.isfile(download_path):
+                            os.remove(download_path)
+                        else:
+                            shutil.rmtree(download_path)
+                        consoleLog(f"Deleted files for: {torrent_name}", True)
+                        last_error = None
+                        break
+                    except Exception as e:
+                        last_error = e
+                        if attempt < 2:
+                            time.sleep(0.5)
+                if last_error:
+                    consoleLog(f"Error deleting files: {last_error}", True)
             else:
-                del state.active_downloads[magnet_link]
-                remove_download_log(magnet_link)
-                consoleLog(f"Removed entry (files not found): {magnetdl.status().name}", True)
+                consoleLog(f"Removed entry (files not found): {torrent_name}", True)

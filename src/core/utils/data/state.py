@@ -1,8 +1,8 @@
-import threading
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QTableWidget
 from typing import Any, List, Dict
 from pathlib import Path
+import threading
 
 class AppState(QObject):
     image_changed = Signal(str)
@@ -18,7 +18,7 @@ class AppState(QObject):
 
         self.currenttracker: str = "rutracker"
         self.trackertable: QTableWidget
-        self.trackers: Dict[str,Dict[str,Any]] = {}# each tracker should add itself here
+        self.trackers: Dict[str,Dict[str,Any]] = {} # each tracker should add itself here
         '''
         an example:
         "rutracker" : {
@@ -41,7 +41,6 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
-        
         self.log_buffer: List[str] = []
         self.downloads_lock = threading.RLock()
         self.main_window: Any = None

@@ -1,6 +1,5 @@
-from core.utils.logging.logs import consoleLog, remove_download_log
 from core.utils.network.download import run_download_direct, seed_magnet
-
+from core.utils.logging.logs import consoleLog, remove_download_log
 import os
 
 def split_data(data):
@@ -15,13 +14,12 @@ def check_completed(downloads, resume):
         if download.completed == False:
             consoleLog(f"Found unfinished download: {download.title}")
             if resume == True:
-                dl_dir = os.path.dirname(download.path)
                 if download.magnet_uri:
-                    run_download_direct(download.magnet_uri, dl_dir, download.title)
+                    run_download_direct(download.magnet_uri, download.title)
                     consoleLog(f"Resuming Magnet: {download.title}")
                 elif download.url:
                     from core.network.direct_download import add_direct_download
-                    add_direct_download(download.url, download.title, dl_dir)
+                    add_direct_download(download.url, download.title)
                     consoleLog(f"Resuming Direct Download: {download.title}")
 
 def check_downloads(downloads):

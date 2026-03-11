@@ -1,6 +1,6 @@
 from core.network.libtorrent_int import update_settings
-from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
 from .config import create_config
 
 
@@ -23,7 +23,6 @@ def save_settings(close=lambda: None, apiurl=None, download_path=None, down_spee
         state.max_downloads = max_downloads
     if bound_interface is not None:
         state.bound_interface = None if bound_interface == "None" else bound_interface
-    
 
     update_settings()
     consoleLog("Saved Settings")

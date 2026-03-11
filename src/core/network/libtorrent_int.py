@@ -1,13 +1,13 @@
-import time
-import os
+from core.network.interface import get_interface_ip
+from core.utils.general.wrappers import run_thread
+from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
+import libtorrent as lt
+import threading
 import platform
 import ctypes
-from core.utils.general.wrappers import run_thread
-from core.network.interface import get_interface_ip
-import threading
-import libtorrent as lt
-from core.utils.data.state import state
-from core.utils.logging.logs import consoleLog
+import time
+import os
 
 
 global loop_running
@@ -55,7 +55,7 @@ def init_session():
     consoleLog("Initialized Session")
 
 
-def add_download(magnet_uri, dl_path=state.download_path):
+def add_download(magnet_uri):
 
     if state.active_downloads is None:
         state.active_downloads = {}
@@ -89,7 +89,7 @@ def add_download(magnet_uri, dl_path=state.download_path):
 
     try:
         params = lt.parse_magnet_uri(magnet_uri)
-        params.save_path = "."
+        params.save_path = state.download_path
 
         handle = state.dl_session.add_torrent(params)
 
@@ -100,7 +100,7 @@ def add_download(magnet_uri, dl_path=state.download_path):
 
         if free_space > total_size:
             magnetdl = lt.parse_magnet_uri(magnet_uri)
-            magnetdl.save_path = dl_path
+            magnetdl.save_path = state.download_path
             download = state.dl_session.add_torrent(magnetdl)
         else:
             download = None

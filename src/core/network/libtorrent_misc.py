@@ -1,10 +1,10 @@
-from core.utils.data.state import state
 from core.utils.logging.logs import update_download_completed_by_hash
 from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
 from plyer import notification
 import libtorrent as lt
-import os
 import time
+import os
 
 
 def cleanup_session():

@@ -1,10 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from core.utils.data.tracker import get_magnet_link
 from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
-from core.utils.data.tracker import get_magnet_link
+from urllib.parse import urljoin
+from bs4 import BeautifulSoup
 from typing import Dict
+import requests
 
 
 def scrape_uztracker(query):

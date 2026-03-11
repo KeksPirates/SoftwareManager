@@ -1,7 +1,8 @@
-import os
-import platform
-import configparser
 from core.utils.data.state import state
+import configparser
+import platform
+import os
+
 
 def create_config():
     config = configparser.ConfigParser()
@@ -15,7 +16,7 @@ def create_config():
 
     config["Network"] = {
         "api_url": f"{state.api_url}",
-        "download_path": f"{state.download_path}",
+        "bound_interface": f"{state.bound_interface}" if state.bound_interface is not None else "None",
         "download_speed_limit": f"{state.down_speed_limit}",
         "upload_speed_limit": f"{state.up_speed_limit}",
         "max_connections": f"{state.max_connections}",
@@ -23,7 +24,7 @@ def create_config():
     }
 
     config["Paths"] = {
-        "bound_interface": f"{state.bound_interface}" if state.bound_interface is not None else "None",
+        "download_path": f"{state.download_path}",
         "image_path": f"{state.image_path}"
     }
 
@@ -64,16 +65,16 @@ def read_config():
 
     # Network
     state.api_url = config.get("Network", "api_url", fallback=state.api_url)
-    state.download_path = config.get("Network", "download_path", fallback=state.download_path)
+    state.bound_interface = config.get("Network", "bound_interface", fallback=state.bound_interface)
+    if state.bound_interface == "None":
+        state.bound_interface = None
     state.down_speed_limit = config.getint("Network", "download_speed_limit", fallback=state.down_speed_limit)
     state.up_speed_limit = config.getint("Network", "upload_speed_limit", fallback=state.up_speed_limit)
     state.max_connections = config.getint("Network", "max_connections", fallback=state.max_connections)
     state.max_downloads = config.getint("Network", "max_downloads", fallback=state.max_downloads)
 
     # Paths
-    state.bound_interface = config.get("Paths", "bound_interface", fallback=state.bound_interface)
-    if state.bound_interface == "None":
-        state.bound_interface = None
+    state.download_path = config.get("Paths", "download_path", fallback=state.download_path)
     state.image_path = config.get("Paths", "image_path", fallback=state.image_path)
-    
+
     create_config()

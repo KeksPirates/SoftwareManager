@@ -1,9 +1,9 @@
-import requests
-from core.utils.data.state import state
-from core.utils.logging.logs import consoleLog
-from core.utils.data.tracker import get_magnet_link
 from core.utils.network.jsonhandler import split_data, format_data
+from core.utils.data.tracker import get_magnet_link
+from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
 from typing import Dict
+import requests
 
 def scrape_rutracker(query):
     search = requests.get(f"{state.api_url}/search?q={query}", timeout=15)
