@@ -58,7 +58,7 @@ class DirectDownloadHandle:
         "Chrome/125.0.0.0 Safari/537.36"
     )
 
-    def __init__(self, url: str, name: str, save_path: str):
+    def __init__(self, url: str, name: str, save_path: str, headers: Optional[dict] = None, single_threaded: bool = False):
         self.url = url
         self._name = name
         self._save_path = save_path
@@ -69,6 +69,8 @@ class DirectDownloadHandle:
         self._thread: Optional[threading.Thread] = None
         self._session: Optional[requests.Session] = None
         self._supports_range = False
+        self._custom_headers = headers
+        self._single_threaded = single_threaded
         
         state_dir = os.path.join(state.settings_path, "direct_downloads")
         os.makedirs(state_dir, exist_ok=True)
@@ -151,6 +153,8 @@ class DirectDownloadHandle:
     def _build_session(self) -> requests.Session:
         session = requests.Session()
         session.headers.update({"User-Agent": self.USER_AGENT})
+        if self._custom_headers is not None:
+            session.headers.update(self._custom_headers)
         adapter = requests.adapters.HTTPAdapter(
             max_retries=0,
             pool_connections=self.NUM_THREADS,
@@ -194,6 +198,7 @@ class DirectDownloadHandle:
             use_multithreaded = (
                 self._supports_range
                 and total_size > self.MIN_CHUNK_SIZE * 2
+                and not self._single_threaded
             )
 
             if use_multithreaded:
@@ -204,7 +209,7 @@ class DirectDownloadHandle:
                 self._preallocate_file(total_size)
                 self._multithreaded_download(total_size)
             else:
-                reason = "no range support" if not self._supports_range else "file too small"
+                reason = "no range support" if not self._supports_range else "file too small or single-threaded mode"
                 consoleLog(f"Single-threaded download ({reason}): {self._name}")
                 self._single_threaded_download()
 

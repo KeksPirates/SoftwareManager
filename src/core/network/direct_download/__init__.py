@@ -9,7 +9,7 @@ from .utils import (
     detect_filename_from_headers,
 )
 
-def add_direct_download(url: str, title: str, dl_path: Optional[str] = None):
+def add_direct_download(url: str, title: str, dl_path: Optional[str] = None, headers: Optional[dict] = None, single_threaded: bool = False):
 
     if dl_path is None:
         dl_path = state.download_path
@@ -24,7 +24,7 @@ def add_direct_download(url: str, title: str, dl_path: Optional[str] = None):
         or sanitize_filename(title) + ".zip"
     )
 
-    handle = DirectDownloadHandle(url, filename, dl_path)
+    handle = DirectDownloadHandle(url, filename, dl_path, headers, single_threaded)
     state.active_downloads[url] = handle
     add_download_log(title, url, "", False)
     handle.start()
