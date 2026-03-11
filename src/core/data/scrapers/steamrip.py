@@ -68,10 +68,6 @@ def scrape_steamrip_game_downloads(gamelink):
             download_links[0] = "https:" + pure
         if pure[2] == "g":
             download_links[1] = "https:" + pure
-        if pure[2] == "v":
-            download_links[2] = "https:" + pure
-        if pure[2] == "m":
-            download_links[3] = "https:" + pure
 
     ret = []
 
@@ -93,13 +89,15 @@ def get_download_link(post: Dict):
             break
 
     if links.index(best) == 0:
-        return scrape_buzzheavier(best)
+        link = scrape_buzzheavier(best)
+        return link
     elif links.index(best) == 1:
-        return scrape_gofile(best)
+        link, headers = scrape_gofile(best)
+        return link, headers
     else:
         consoleLog("Unable to retrieve download link due to captcha, launching browser...")
         webbrowser.open(best)
-        return None
+        return None, None
 
 def filter_steamrip(query: str):
     games = scrape_steamrip_links()

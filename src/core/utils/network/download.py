@@ -7,8 +7,8 @@ from core.utils.logging.logs import add_download_log
 from core.network.libtorrent_int import add_seed
 from core.utils.data.state import state
 from core.network.direct_download import add_direct_download
+from typing import Optional
 import threading
-
 
 
 
@@ -30,16 +30,19 @@ def download_selected(items: list[QTableWidgetItem]):
             consoleLog(f"Downloading {post.get('title', 'Unknown')}")
             run_thread(threading.Thread(target=run_download, args=(post,)))
 
-def run_download(post):
+def run_download(post, headers: Optional[dict] = None):
     linkfunc = state.trackers[state.currenttracker]["linkFunc"]
     ismagnet = state.trackers[state.currenttracker]["isMagnet"]
-    link = linkfunc(post)
+    result = linkfunc(post)
 
     if ismagnet:
+        link = result
         add_magnet(link)
         add_download_log(post.get("title", "Unknown"), "", link, False)
     else:
-        add_direct_download(link, post.get("title", "Unknown"))
+        link, link_headers = result if isinstance(result, tuple) else (result, None)
+        final_headers = headers or link_headers
+        add_direct_download(link, post.get("title", "Unknown"), headers=final_headers, single_threaded=final_headers is not None)
 
 def run_download_direct(magnet_uri, dl_path=None, title="Direct Download"):
     consoleLog(f"Magnet: {title}")
