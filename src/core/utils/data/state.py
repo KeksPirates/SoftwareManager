@@ -1,8 +1,8 @@
-import threading
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QTableWidget
 from typing import Any, List, Dict
 from pathlib import Path
+import threading
 
 class AppState(QObject):
     image_changed = Signal(str)

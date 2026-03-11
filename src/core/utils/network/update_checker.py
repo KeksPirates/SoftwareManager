@@ -1,6 +1,8 @@
-import requests
-from core.utils.data.state import state
 from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
+import requests
+
+
 
 def get_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases/latest"

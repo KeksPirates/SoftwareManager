@@ -27,5 +27,5 @@ def scrape_gofile(url):
 
         return temp[child[0]]["link"]
     except:
-        consoleLog("gofile didnt auth you, either the api has changed\n or you sent to many requests, please try again later.\n If it still doesnt work please open an issue on Github.")
+        consoleLog("GoFile Authorisation failed, if the Issue persists, please open an Issue on GitHub")
 

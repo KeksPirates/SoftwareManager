@@ -1,8 +1,8 @@
-import threading
-import time
 from dataclasses import dataclass
 from typing import Optional
 import libtorrent as lt
+import threading
+import time
 
 
 @dataclass

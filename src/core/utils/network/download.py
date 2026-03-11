@@ -1,12 +1,12 @@
-from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtCore import Qt
-from core.utils.logging.logs import consoleLog
-from core.network.libtorrent_wrapper import add_magnet
-from core.utils.general.wrappers import run_thread
-from core.utils.logging.logs import add_download_log
-from core.network.libtorrent_int import add_seed
-from core.utils.data.state import state
 from core.network.direct_download import add_direct_download
+from core.network.libtorrent_wrapper import add_magnet
+from core.utils.logging.logs import add_download_log
+from core.utils.general.wrappers import run_thread
+from core.network.libtorrent_int import add_seed
+from PySide6.QtWidgets import QTableWidgetItem
+from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
+from PySide6.QtCore import Qt
 import threading
 
 

@@ -3,10 +3,10 @@ from core.utils.data.state import state
 from dataclasses import asdict
 from datetime import datetime
 import json
+import time
 import os
 import re
-import time
-import threading
+
 
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     # wait for metadata outside the lock to avoid blocking other threads

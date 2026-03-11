@@ -1,13 +1,13 @@
-import time
-import os
+from core.network.interface import get_interface_ip
+from core.utils.general.wrappers import run_thread
+from core.utils.logging.logs import consoleLog
+from core.utils.data.state import state
+import libtorrent as lt
+import threading
 import platform
 import ctypes
-from core.utils.general.wrappers import run_thread
-from core.network.interface import get_interface_ip
-import threading
-import libtorrent as lt
-from core.utils.data.state import state
-from core.utils.logging.logs import consoleLog
+import time
+import os
 
 
 global loop_running

@@ -1,5 +1,6 @@
-from core.utils.logging.logs import consoleLog
 from core.network.libtorrent_int import add_download
+from core.utils.logging.logs import consoleLog
+
 
 def add_magnet(uri):
     if uri is not None and uri.startswith("magnet:?"):  

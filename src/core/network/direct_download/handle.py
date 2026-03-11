@@ -1,17 +1,17 @@
-import os
-import threading
-import requests
-import json
-import hashlib
-import time
+from core.utils.logging.logs import consoleLog, update_download_completed
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from .status import DirectDownloadStatus, ChunkSpec
+from core.utils.data.state import state
+from .utils import format_size
 from typing import Optional
 import libtorrent as lt
+import threading
+import requests
+import hashlib
+import json
+import time
+import os
 
-from core.utils.logging.logs import consoleLog, update_download_completed
-from core.utils.data.state import state
-from .status import DirectDownloadStatus, ChunkSpec
-from .utils import format_size
 
 class SimpleThrottler:
     def __init__(self):
