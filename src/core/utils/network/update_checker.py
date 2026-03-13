@@ -10,11 +10,11 @@ def get_updates():
         response = requests.get(url, timeout=15)
     except requests.RequestException as e:
         consoleLog(f"Failed to fetch releases: {e}")
-        return None
+        return None, None
 
     if response.status_code != 200:
         consoleLog(f"Failed to fetch releases: {response.status_code}")
-        return None
+        return None, None
 
     release = response.json()
 
