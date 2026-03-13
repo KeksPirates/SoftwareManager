@@ -34,9 +34,8 @@ def settings_dialog(self):
         dialog.setWindowTitle("Settings")
         dialog.setFixedSize(700, 450)
 
-        main_layout = QVBoxLayout()
-        dialog.setLayout(QVBoxLayout())
-        dialog.setLayout(main_layout)
+        dialog_layout = QVBoxLayout()
+        dialog.setLayout(dialog_layout)
 
         if state.window_transparency and platform.system() != "Windows" and dialog:
             dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -287,7 +286,7 @@ def settings_dialog(self):
         self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
         self.tab3 = network_tab("Network", interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
 
-        main_layout.addWidget(self.tabs)
-        main_layout.addLayout(layout)
+        dialog_layout.addWidget(self.tabs)
+        dialog_layout.addLayout(layout)
 
         dialog.exec()
