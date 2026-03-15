@@ -86,8 +86,8 @@ class ContextMenu:
             if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
-                except Exception:
-                    pass
+                except Exception as e:
+                    consoleLog(f"Exception while removing download from LibTorrent: {e}")
 
             consoleLog(f"Cancelled download: {torrent_name}", True)
 
@@ -125,8 +125,8 @@ class ContextMenu:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                     time.sleep(0.5)
-                except Exception:
-                    pass
+                except Exception as e:
+                    consoleLog(f"Exception while removing download from LibTorrent: {e}")
             if download_path and os.path.exists(download_path):
                 import shutil
                 last_error = None

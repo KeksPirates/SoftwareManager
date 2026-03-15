@@ -3,6 +3,7 @@ from core.interface.dialogs.hoverrowdelegate import HoverRowDelegate
 from core.interface.dialogs.downloadmodel import DownloadModel
 from core.interface.dialogs.theme import _table_stylesheet
 from PySide6.QtWidgets import QTableView, QHeaderView
+from core.utils.logging.logs import consoleLog
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 
@@ -84,5 +85,5 @@ def download_list_update(self):
                     if editor and delegate:
                         try:
                             delegate.setEditorData(editor, idx)
-                        except RuntimeError:
-                            pass
+                        except RuntimeError as e:
+                            consoleLog(f"Exception while updating download list: {e}")

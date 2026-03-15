@@ -1,4 +1,4 @@
-from core.utils.logging.loghandler import consoleLog
+from core.utils.logging.logs import consoleLog
 import requests
 import re
 

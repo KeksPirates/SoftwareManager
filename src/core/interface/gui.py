@@ -86,7 +86,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             except Exception as e:
                 consoleLog(f"Could not set app ID: {e}")
 
-        core.interface.dialogs.update
+        # core.interface.dialogs.update
 
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
@@ -131,7 +131,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         containerLayout.addWidget(self.searchbar)
         containerLayout.addWidget(state.trackertable)
 
-        core.interface.dialogs.hoverrowdelegate
+        # core.interface.dialogs.hoverrowdelegate
         self.download_model = DownloadModel()
         self.downloadList = _create_download_list(self)
         self.downloadList.viewport().installEventFilter(self)

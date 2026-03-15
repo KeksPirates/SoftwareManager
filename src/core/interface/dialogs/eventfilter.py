@@ -1,3 +1,4 @@
+from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
 from PySide6.QtCore import QEvent
 
@@ -30,6 +31,6 @@ def eventFilter(self, obj, event):
                 old_row = self._hovered_row
                 self._hovered_row = -1
                 self._invalidate_hover_row(old_row)
-    except (RuntimeError, AttributeError):
-        pass
+    except (RuntimeError, AttributeError) as e:
+        consoleLog(f"Exception in EventFilter: {e}")
     return super(type(self), self).eventFilter(obj, event)
