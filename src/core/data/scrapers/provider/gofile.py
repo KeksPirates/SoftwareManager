@@ -35,6 +35,7 @@ def scrape_gofile(url):
 
         link = temp[child[0]]["link"]
         return link, headers
-    except:
-        consoleLog("GoFile Authorisation failed, if the Issue persists, please open an Issue on GitHub")
+    except Exception:
+        consoleLog("GoFile Authorization failed, if the Issue persists, please open an Issue on GitHub")
+        return None
 

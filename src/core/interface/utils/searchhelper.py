@@ -1,9 +1,8 @@
-from PySide6.QtWidgets import QTableWidgetItem, QHeaderView
-from core.utils.logging.logs import consoleLog
 from core.data.scrapers.rutracker import init_rutracker
 from core.data.scrapers.uztracker import init_uztracker
-from core.data.scrapers.monkrus import init_m0nkrus
 from core.data.scrapers.steamrip import init_steamrip
+from core.data.scrapers.monkrus import init_m0nkrus
+from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
 
 init_rutracker()

@@ -1,3 +1,4 @@
+from core.utils.logging.logs import consoleLog
 from urllib.parse import urlparse, unquote
 from typing import Optional
 import requests
@@ -36,8 +37,8 @@ def detect_filename_from_headers(url: str, user_agent: str) -> Optional[str]:
                 fname = parts[-1].strip().strip('"').strip("'")
                 if fname:
                     return fname
-    except Exception:
-        pass
+    except Exception as e:
+        consoleLog(f"Exception while retrieving filename from headers: {e}")
     return None
 
 def format_size(size_bytes: int) -> str:

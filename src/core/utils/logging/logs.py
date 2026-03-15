@@ -247,8 +247,8 @@ def flush_log_buffer(): # credits to claude
             for log_entry in state.log_buffer:
                 MainWindow.add_log(log_entry)
             state.log_buffer = []
-        except Exception:
-            pass
+        except Exception as e:
+            consoleLog(f"Exception while flushing log buffer: {e}")
 
 def consoleLog(text, printAnyways = False):
     now = datetime.now()

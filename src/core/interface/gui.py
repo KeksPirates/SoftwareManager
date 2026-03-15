@@ -1,23 +1,23 @@
-from core.utils.logging.logs import consoleLog, flush_log_buffer
-from core.interface.assets.base64_icons import settings_white_base64
-from core.interface.assets.base64_icons import settings_black_base64
-from core.interface.utils.searchhelper import return_pressed
-from core.interface.dialogs.settings import settings_dialog
-from core.interface.assets.base64_icons import logo_base64
-from core.utils.network.download import download_selected
-from core.interface.utils.tabhelper import create_tab
-from core.utils.general.shutdown import closehelper
-from core.utils.general.wrappers import run_thread
-from core.utils.data.state import state
-
 from core.interface.dialogs.trackerhoverdelegate import TrackerHoverDelegate
 from core.interface.dialogs.elideditemdelegate import ElidedItemDelegate
 from core.interface.dialogs.trackertable import _create_tracker_table
 from core.interface.dialogs.downloadlist import _create_download_list
+from core.interface.assets.base64_icons import settings_white_base64
+from core.interface.assets.base64_icons import settings_black_base64
 from core.interface.dialogs.downloadlist import download_list_update
+from core.utils.logging.logs import consoleLog, flush_log_buffer
 from core.interface.dialogs.downloadmodel import DownloadModel
+from core.interface.utils.searchhelper import return_pressed
+from core.interface.dialogs.settings import settings_dialog
+from core.interface.assets.base64_icons import logo_base64
 from core.interface.dialogs.eventfilter import eventFilter
+from core.utils.network.download import download_selected
+from core.interface.utils.tabhelper import create_tab
+from core.utils.general.shutdown import closehelper
+from core.utils.general.wrappers import run_thread
 from core.interface.dialogs.image import Image
+from core.utils.data.state import state
+
 import core.interface.dialogs.hoverrowdelegate
 import core.interface.dialogs.contextmenu
 import core.interface.dialogs.update
@@ -351,8 +351,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 s = handle.status()
                 total_down += s.download_rate
                 total_up += s.upload_rate
-            except Exception:
-                pass
+            except Exception as e:
+                consoleLog(f"Exception while updating speed label: {e}")
         down_kb = total_down / 1024
         up_kb = total_up / 1024
         down_text = f"{down_kb / 1024:.1f} MB/s" if down_kb > 1024 else f"{down_kb:.1f} kB/s"

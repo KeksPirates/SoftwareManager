@@ -37,8 +37,8 @@ def send_notification(shutdown_event):
                         timeout=4
                     )
                     notified.add(magnet_uri)
-        except Exception:
-            pass
+        except Exception as e:
+            consoleLog(f"Exception while sending notification: {e}")
         time.sleep(5)
 
 def update_log(shutdown_event):
@@ -59,8 +59,8 @@ def update_log(shutdown_event):
                         info_hash = str(status.info_hash)
                     update_download_completed_by_hash(info_hash, True)
                     updated.add(magnet_uri)
-        except Exception:
-            pass
+        except Exception as e:
+            consoleLog(f"Exception while updating log file: {e}")
         time.sleep(5)
 
 def check_deleted_files(shutdown_event):
@@ -79,6 +79,6 @@ def check_deleted_files(shutdown_event):
                         consoleLog(f"Registered File Deletion: {status.name}")
                         state.dl_session.remove_torrent(magnetdl)
                         del state.active_downloads[magnet_uri]
-        except Exception:
-            pass
+        except Exception as e:
+            consoleLog(f"Exception while checking for file deletions: {e}")
         time.sleep(5)

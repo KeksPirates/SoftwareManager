@@ -10,7 +10,6 @@ import time
 import os
 
 
-global loop_running
 loop_running = False
 
 def get_free_space_mb(dirname):
@@ -103,7 +102,6 @@ def add_download(magnet_uri):
             magnetdl.save_path = state.download_path
             download = state.dl_session.add_torrent(magnetdl)
         else:
-            download = None
             state.dl_session.remove_torrent(handle)
             consoleLog("Not enough free space to download this item.")
             return False
