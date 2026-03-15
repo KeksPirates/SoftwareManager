@@ -15,6 +15,7 @@ def get_magnet_link(post_url):
             return magnet_link['href']
         else:
             consoleLog("Magnet Link not Found!")
+            return None
     except requests.RequestException as e:
         consoleLog(f"Failed to fetch {post_url}: {e}")
         return None

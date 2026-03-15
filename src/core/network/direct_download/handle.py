@@ -134,14 +134,14 @@ class DirectDownloadHandle:
                     "chunks": chunks_done
                 }, f)
         except Exception as e:
-            pass
+            consoleLog(f"Exception while saving download state: {e}")
 
     def _clear_state(self):
         if os.path.exists(self._state_file):
             try:
                 os.remove(self._state_file)
-            except Exception:
-                pass
+            except Exception as e:
+                consoleLog(f"Exception while removing download state file: {e}")
 
 
     def start(self):
@@ -445,4 +445,3 @@ class DirectDownloadHandle:
                 f"Size mismatch: expected {format_size(expected_size)}, "
                 f"got {format_size(actual_size)}"
             )
-
