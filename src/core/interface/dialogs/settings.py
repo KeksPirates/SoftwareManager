@@ -34,7 +34,8 @@ def settings_dialog(self):
         dialog.setWindowTitle("Settings")
         dialog.setFixedSize(700, 450)
 
-        dialog.setLayout(QVBoxLayout())
+        dialog_layout = QVBoxLayout()
+        dialog.setLayout(dialog_layout)
 
         if state.window_transparency and platform.system() != "Windows" and dialog:
             dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -93,7 +94,7 @@ def settings_dialog(self):
         api_url = QLineEdit()
         api_url_layout.addWidget(QLabel("API Server URL:"))
         api_url_layout.addWidget(api_url)
-        api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         api_url_container.setLayout(api_url_layout)
         api_url.setText(state.api_url)
 
@@ -107,7 +108,7 @@ def settings_dialog(self):
         download_path = QLineEdit()
         download_path_layout.addWidget(QLabel("Download Path:"))
         download_path_layout.addWidget(download_path)
-        download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         download_path_container.setLayout(download_path_layout)
         download_path.setText(state.download_path)
 
@@ -142,7 +143,7 @@ def settings_dialog(self):
         image_path = QLineEdit()
         image_path_layout.addWidget(QLabel("Image Path (requires restart, experimental):"))
         image_path_layout.addWidget(image_path)
-        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         image_path_container.setLayout(image_path_layout)
         image_path.setText(state.image_path)
 
@@ -285,7 +286,7 @@ def settings_dialog(self):
         self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
         self.tab3 = network_tab("Network", interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
 
-        dialog.layout().addWidget(self.tabs)
-        dialog.layout().addLayout(layout)
+        dialog_layout.addWidget(self.tabs)
+        dialog_layout.addLayout(layout)
 
         dialog.exec()
