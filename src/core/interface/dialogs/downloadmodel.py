@@ -117,8 +117,8 @@ class DownloadModel(QAbstractTableModel):
                         subprocess.Popen(["xdg-open", save_path])
                     elif platform.system() == "Darwin":
                         subprocess.Popen(["open", save_path])
-            except Exception:
-                pass
+            except Exception as e:
+                consoleLog(f"Exception while opening file: {e}")
             return
 
         is_paused = status.paused
