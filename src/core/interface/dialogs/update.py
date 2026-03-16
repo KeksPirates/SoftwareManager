@@ -1,18 +1,35 @@
 from core.utils.network.update_checker import get_updates
 from core.utils.network.updater import download_update
 from PySide6.QtWidgets import QDialog, QMessageBox
+from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
+from pathlib import Path
 import platform
 import json
 import os
 
-def check_version():
-    build_info_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "build_info.json")
+def _get_build_info_path() -> (Path | None):
+    current_dir = Path(__file__).resolve().parent
+
+    for _ in range(6): # Climb max 6 directories
+        file = current_dir / "build_info.json"
+        if file.exists():
+            return file
+        # Go up one directory if file isn't found
+        current_dir = current_dir.parent
+
+    return None
+
+
+def get_version() -> None:
+    # Get build info filepath
+    build_info_path = _get_build_info_path()
     if os.path.exists(build_info_path):
         with open(build_info_path, "r") as f:
             build_info = json.load(f)
             state.version = build_info.get("version")
-
+    else:
+        consoleLog(f"Could not find build info file (Path: {build_info_path})")
 
 class UpdateDialog(QDialog):
     def __init__(self, parent=None):

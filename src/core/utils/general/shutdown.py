@@ -1,3 +1,4 @@
+from core.network.libtorrent_misc import cleanup_session
 from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
 import os
@@ -5,7 +6,6 @@ import os
 def closehelper():
     state.shutdown_event.set()
     try:
-        from core.network.libtorrent_misc import cleanup_session
         cleanup_session()
     except Exception as e:
         consoleLog(f"Exception while cleaning up LibTorrent Session: {e}")

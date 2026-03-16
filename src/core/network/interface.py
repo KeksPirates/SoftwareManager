@@ -29,6 +29,7 @@ def get_active_interfaces():
 
 
 def list_interfaces() -> None:
+    consoleLog("Fetching Network Interfaces...")
     addrs = psutil.net_if_addrs()
     stats = psutil.net_if_stats()
 
@@ -45,6 +46,7 @@ def list_interfaces() -> None:
         consoleLog(f"Found Interface: {interface} [{status}]")
 
 def init_interfaces():
+    consoleLog("Initializing Interface variables...")
     addrs = psutil.net_if_addrs()
     state.interfaces = list(addrs.keys())
     state.active_interfaces = get_active_interfaces()

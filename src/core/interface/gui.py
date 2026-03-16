@@ -13,14 +13,13 @@ from core.interface.assets.base64_icons import logo_base64
 from core.interface.dialogs.eventfilter import eventFilter
 from core.utils.network.download import download_selected
 from core.interface.utils.tabhelper import create_tab
+from core.interface.dialogs.update import get_version
 from core.utils.general.shutdown import closehelper
 from core.utils.general.wrappers import run_thread
 from core.interface.dialogs.image import Image
 from core.utils.data.state import state
 
-import core.interface.dialogs.hoverrowdelegate
 import core.interface.dialogs.contextmenu
-import core.interface.dialogs.update
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import (
@@ -77,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         pixmap.loadFromData(image_data)
         self.setWindowIcon(QIcon(pixmap))
 
-        # set appid on windows
+        # Set AppID on Windows
         if platform.system() == "Windows":
             try:
                 import ctypes
@@ -86,23 +85,29 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             except Exception as e:
                 consoleLog(f"Could not set app ID: {e}")
 
+        # Get current version
         # core.interface.dialogs.update
+        get_version()
 
+        # Initialize Window
         self.setWindowTitle("Software Manager")
         self.setGeometry(100, 100, 800, 600)
 
         self.controls = QWidget()
         self.controlsLayout = QVBoxLayout()
 
+        # Searchbar
         self.searchbar = QLineEdit()
         self.searchbar.setPlaceholderText("Search for software...")
         self.searchbar.setClearButtonEnabled(True)
         self.searchbar.setMinimumHeight(30)
         self.searchbar.returnPressed.connect(self._start_search)
 
+        # Download Button
         self.dlbutton = QtWidgets.QPushButton("Download")
         self.dlbutton.setCursor(Qt.CursorShape.PointingHandCursor)
 
+        # Dialog for empty results
         self.emptyResults = QLabel("No Results")
         self.emptyResults.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.emptyResults.hide()
@@ -157,23 +162,32 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.horizontal_layout.addWidget(self.emptyResults, stretch=3)
         self.horizontal_layout.addWidget(state.trackertable)
 
+        # Tabs
         self.tab1 = create_tab("Search", self.searchbar, state.trackertable, self.tabs, self.dlbutton, self.horizontal_layout)
         self.tab2 = create_tab("Downloads", self.emptyDownload, self.downloadList, self.tabs, None, None)
 
+        # Corner Widget (Settings Button, Tracker list, Tab button container)
         self.corner_widget = QWidget()
         self.corner_layout = QHBoxLayout(self.corner_widget)
         self.corner_layout.setContentsMargins(0, 0, 0, 0)
 
+        # Tracker list
         self.tracker_list = QComboBox()
         self.tracker_list.addItems(list(state.trackers.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
         self.corner_layout.addWidget(self.tracker_list)
 
+        # Settings button
         self.settings_btn = QtWidgets.QToolButton()
         self.settings_btn.setIconSize(QSize(21, 21))
         self.settings_btn.setStyleSheet("background: transparent;")
+        self.settings_btn.setToolTip("Settings")
+        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.settings_btn.clicked.connect(lambda: settings_dialog(self))
+        self.corner_layout.addWidget(self.settings_btn)
 
+        # Adjust theme based on system preferences
         if darkdetect.isDark():
             settings_white_pixmap = QPixmap()
             settings_white = base64.b64decode(settings_white_base64)
@@ -184,11 +198,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             settings_black = base64.b64decode(settings_black_base64)
             settings_black_pixmap.loadFromData(settings_black)
             self.settings_btn.setIcon(QIcon(settings_black_pixmap))
-
-        self.settings_btn.setToolTip("Settings")
-        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.settings_btn.clicked.connect(lambda: settings_dialog(self))
-        self.corner_layout.addWidget(self.settings_btn)
 
         self.tab_wrapper = QWidget()
         self.tab_layout = QVBoxLayout()
@@ -221,6 +230,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.version = QLabel(f"Version: {state.version}")
         self.statusbar.addPermanentWidget(self.version, Qt.AlignmentFlag.AlignLeft)
 
+        # (\u2193) Arrow down, (\u2191) Arrow up
         self.speed_label = QLabel("\u2193 0.0 kB/s  \u2191 0.0 kB/s")
         self.speed_label.setStyleSheet("padding-right: 6px;")
         self.statusbar.addPermanentWidget(self.speed_label)

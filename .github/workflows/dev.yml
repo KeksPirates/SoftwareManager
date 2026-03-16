@@ -125,8 +125,6 @@ jobs:
             --upx-binary="${{ env.UPX_BINARY }}" \
             --noinclude-qt-translations \
             --include-data-files=build_info.json=build_info.json \
-            --include-data-files=build_info.json=src/build_info.json \
-            --include-data-files=build_info.json=src/core/interface/build_info.json \
             --output-filename=${{ env.APP_NAME }}.exe \
             --output-dir=nuitka-build \
             src/main.py
@@ -137,8 +135,6 @@ jobs:
         run: |
           pyinstaller --onefile --windowed \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:src/core" \
-            --add-data "build_info.json:src/core/interface" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
@@ -155,8 +151,6 @@ jobs:
         run: |
           pyinstaller --onefile \
             --add-data "build_info.json:." \
-            --add-data "build_info.json:src/core" \
-            --add-data "build_info.json:src/core/interface" \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
             --hidden-import=backports.tarfile \
