@@ -12,8 +12,8 @@ from core.interface.dialogs.settings import settings_dialog
 from core.interface.assets.base64_icons import logo_base64
 from core.interface.dialogs.eventfilter import eventFilter
 from core.utils.network.download import download_selected
-from core.interface.dialogs.update import check_version
 from core.interface.utils.tabhelper import create_tab
+from core.interface.dialogs.update import get_version
 from core.utils.general.shutdown import closehelper
 from core.utils.general.wrappers import run_thread
 from core.interface.dialogs.image import Image
@@ -87,7 +87,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Get current version
         # core.interface.dialogs.update
-        check_version()
+        get_version()
 
         # Initialize Window
         self.setWindowTitle("Software Manager")

@@ -8,9 +8,9 @@ import platform
 import json
 import os
 
-def check_version():
+def get_version():
     # Get build info filepath
-    build_info_path = Path(__file__).resolve().parents[3] / "build_info.json" # parents[3] = climb up 4 directories from the file ran
+    build_info_path = Path(__file__).resolve().parents[4] / "build_info.json" # parents[4] = climb up 5 directories from the file ran
     if os.path.exists(build_info_path):
         with open(build_info_path, "r") as f:
             build_info = json.load(f)
