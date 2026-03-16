@@ -8,9 +8,22 @@ import platform
 import json
 import os
 
-def get_version():
+def _get_build_info_path() -> (Path | None):
+    current_dir = Path(__file__).resolve().parent
+
+    for _ in range(6): # Climb max 6 directories
+        file = current_dir / "build_info.json"
+        if file.exists():
+            return file
+        # Go up one directory if file isn't found
+        current_dir = current_dir.parent
+
+    return None
+
+
+def get_version() -> None:
     # Get build info filepath
-    build_info_path = Path(__file__).resolve().parents[4] / "build_info.json" # parents[4] = climb up 5 directories from the file ran
+    build_info_path = _get_build_info_path()
     if os.path.exists(build_info_path):
         with open(build_info_path, "r") as f:
             build_info = json.load(f)
