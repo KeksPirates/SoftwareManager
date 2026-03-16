@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
-
+# Tab creation helper function
 def create_tab(title, searchbar, software_list, tabs, dlbutton, layout2): 
     tab = QWidget() 
     layout = QVBoxLayout() 
@@ -16,9 +16,7 @@ def create_tab(title, searchbar, software_list, tabs, dlbutton, layout2):
     tabs.addTab(tab, title) 
     return tab
 
-#################
-# SETTINGS TABS #
-#################
+# Settings Tabs
 def general_tab(title, autoresume, update_checkbox, transparent_window, tabs):
     tab = QWidget()
     layout = QVBoxLayout()

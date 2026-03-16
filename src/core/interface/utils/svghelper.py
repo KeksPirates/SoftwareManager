@@ -6,10 +6,9 @@ from PySide6.QtGui import QIcon, QPixmap, QPainter
 from PySide6.QtSvg import QSvgRenderer
 import darkdetect
 
-
+# Check if darkmode is enabled
 def _is_dark_mode():
     return darkdetect.isDark()
-
 
 def svg_icon(svg_str, size=20):
     app = QtWidgets.QApplication.instance()

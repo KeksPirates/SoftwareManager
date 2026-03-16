@@ -8,11 +8,11 @@ from core.interface.dialogs.downloadlist import download_list_update
 from core.interface.dialogs.update import get_version, UpdateDialog
 from core.utils.logging.logs import consoleLog, flush_log_buffer
 from core.interface.dialogs.downloadmodel import DownloadModel
-from core.interface.utils.searchhelper import return_pressed
 from core.interface.dialogs.settings import settings_dialog
 from core.interface.assets.base64_icons import logo_base64
 from core.interface.dialogs.eventfilter import eventFilter
 from core.utils.network.download import download_selected
+from core.interface.utils.searchhelper import run_search
 from core.interface.utils.tabhelper import create_tab
 from core.utils.general.shutdown import closehelper
 from core.utils.general.wrappers import run_thread
@@ -295,7 +295,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.searchbar.setEnabled(False)
         def _search_thread():
             try:
-                return_pressed(self)
+                run_search(self)
             except Exception as e:
                 consoleLog(f"Search error: {e}", True)
                 self.search_results_signal.emit([])
