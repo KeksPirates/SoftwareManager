@@ -1,0 +1,185 @@
+name: Build Executables (Test)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  APP_NAME: "SoftwareManager"
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    strategy:
+      fail-fast: false   # keep other platforms building even if one fails
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact_name: SoftwareManager-test-${{ github.sha }}-linux
+          - os: windows-latest
+            artifact_name: SoftwareManager-test-${{ github.sha }}-windows
+          - os: macos-latest
+            artifact_name: SoftwareManager-test-${{ github.sha }}-macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.7"
+          enable-cache: true
+
+      - name: Install Python dependencies
+        run: |
+          uv pip install -r requirements.txt
+          uv pip install Pillow
+        env:
+          UV_SYSTEM_PYTHON: 1
+
+      - name: Install Nuitka (Windows only)
+        if: runner.os == 'Windows'
+        run: uv pip install nuitka
+        env:
+          UV_SYSTEM_PYTHON: 1
+
+      - name: Generate version
+        id: version
+        shell: bash
+        run: |
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          BRANCH_SLUG="${BRANCH//\//-}"   # replace slashes with dashes
+          VERSION="${BRANCH_SLUG}-${SHORT_SHA}-test"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Inject build info
+        shell: bash
+        run: |
+          cat > build_info.json << EOF
+          {
+            "version": "${{ env.VERSION }}"
+          }
+          EOF
+
+      - name: Install UPX (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          curl -sL https://github.com/upx/upx/releases/download/v5.1.0/upx-5.1.0-win64.zip -o upx.zip
+          7z x upx.zip -oupx-dir
+          UPX_DIR="$(pwd)/upx-dir/upx-5.1.0-win64"
+          echo "$UPX_DIR" >> $GITHUB_PATH
+          export PATH="$UPX_DIR:$PATH"
+          echo "UPX_BINARY=$UPX_DIR/upx.exe" >> $GITHUB_ENV
+          upx --version | head -1
+
+      - name: Convert icon for Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -c "
+          from PIL import Image
+          img = Image.open('src/core/interface/assets/logo.png')
+          img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
+          print('Icon converted successfully')
+          "
+
+      - name: Build with Nuitka (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -m nuitka \
+            --standalone \
+            --assume-yes-for-downloads \
+            --windows-console-mode=disable \
+            --windows-icon-from-ico=app_icon.ico \
+            --enable-plugin=pyside6 \
+            --enable-plugin=upx \
+            --upx-binary="${{ env.UPX_BINARY }}" \
+            --noinclude-qt-translations \
+            --include-data-files=build_info.json=build_info.json \
+            --output-filename=${{ env.APP_NAME }}.exe \
+            --output-dir=nuitka-build \
+            src/main.py
+
+      - name: Build with PyInstaller (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          pyinstaller --onefile --windowed \
+            --add-data "build_info.json:." \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
+            --name ${{ env.APP_NAME }} \
+            src/main.py
+
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          pyinstaller --onefile \
+            --add-data "build_info.json:." \
+            --exclude-module PyQt6 \
+            --exclude-module PyQt5 \
+            --hidden-import=backports.tarfile \
+            --hidden-import=backports \
+            --hidden-import=jaraco.context \
+            --hidden-import=jaraco.text \
+            --hidden-import=jaraco.functools \
+            --name ${{ env.APP_NAME }} \
+            src/main.py
+
+      - name: Stage artifact
+        shell: bash
+        run: |
+          mkdir -p dist-final
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            mv nuitka-build/main.dist dist-final/${{ env.APP_NAME }}
+          else
+            chmod +x dist/${{ env.APP_NAME }}
+            mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
+          fi
+          ls -la dist-final/
+
+      - name: Create ZIP (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist-final/${{ env.APP_NAME }}/*" -DestinationPath "dist-final/${{ matrix.artifact_name }}.zip"
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: dist-final/${{ matrix.artifact_name }}.zip
+          retention-days: 7
+
+      - name: Upload artifact (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: dist-final/${{ matrix.artifact_name }}
+          retention-days: 7
