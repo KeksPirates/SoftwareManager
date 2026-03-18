@@ -9,43 +9,50 @@ class AppState(QObject):
 
     def __init__(self):
         super().__init__()
-        self.posts: list[Dict[str,str]] | None = None # titles, urls, author, seederm leecher
-        self.version: str = "dev"
-        self._image_path: str = ""
-        self.ignore_updates: bool = False
-        self.debug: bool = False
-        self.autoresume: bool = True
 
-        self.currenttracker: str = "rutracker"
-        self.trackertable: QTableWidget
-        self.trackers: Dict[str,Dict[str,Any]] = {} # each tracker should add itself here
-        '''
-        an example:
-        "rutracker" : {
-            "name" : "rutracker", # name of the tracker
-            "headers" : ["author", "title"], # keys shown in the table
-            "scrapeFunc" : function,
-        }
-        '''
-        self.api_url: str = "https://api.michijackson.xyz"
-        self.seeded_magnets: set = set()
+        # General
+        self.version: str = "Unknown"
+        self.debug: bool = False
+        self.main_window: Any = None
+        self.loop_running: bool = False
+        self.shutdown_event = threading.Event()
+        self.log_buffer: List[str] = []
+
+        # Paths
+        self.settings_path: str = ""
+        self._image_path: str = ""
         self.download_path: str = str(Path.home() / "Downloads")
+
+        # GUI
+        self.window_transparency: bool = False
+        self.trackertable: QTableWidget
+        self.interfaces: List = []
+        self.active_interfaces: List = []
+        self.bound_interface: Any = None
+
+        # Trackers / Scraping
+        self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers
+        self.currenttracker: str = "rutracker"
+        self.api_url: str = "https://api.michijackson.xyz"
+        self.trackers: Dict[str,Dict[str,Any]] = {}  # each tracker should add itself here
+        # an example:
+        # "rutracker" : {
+        #     "name" : "rutracker",
+        #     "headers" : ["author", "title"],
+        #     "scrapeFunc" : function,
+        # }
+
+        # LibTorrent / Download related stuff
+        self.dl_session: Any = None
+        self.active_downloads: Dict = {}
+        self.seeded_magnets: set = set()
+        self.ignore_updates: bool = False
+        self.autoresume: bool = True
         self.up_speed_limit: int = 0
         self.down_speed_limit: int = 0
         self.max_connections: int = 200
         self.max_downloads: int = 10
-        self.settings_path: str = "" 
-        self.dl_session: Any = None
-        self.active_downloads: Dict = {}
-        self.window_transparency: bool = False
-        self.interfaces: List = []
-        self.active_interfaces: List = []
-        self.bound_interface: Any = None
-        self.log_buffer: List[str] = []
         self.downloads_lock = threading.RLock()
-        self.main_window: Any = None
-        self.loop_running: bool = False
-        self.shutdown_event = threading.Event()
 
     @property
     def image_path(self) -> str:

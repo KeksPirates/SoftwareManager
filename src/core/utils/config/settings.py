@@ -1,7 +1,7 @@
 from core.network.libtorrent_int import update_settings
 from core.utils.logging.logs import consoleLog
 from core.utils.data.state import state
-from .config import create_config
+from core.utils.config.config import create_config
 
 
 def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None, bound_interface=None):

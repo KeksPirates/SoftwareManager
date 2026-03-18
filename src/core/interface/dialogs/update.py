@@ -24,7 +24,7 @@ def _get_build_info_path() -> (Path | None):
 def get_version() -> None:
     # Get build info filepath
     build_info_path = _get_build_info_path()
-    if os.path.exists(build_info_path):
+    if build_info_path and os.path.exists(build_info_path):
         with open(build_info_path, "r") as f:
             build_info = json.load(f)
             state.version = build_info.get("version")
@@ -46,3 +46,4 @@ class UpdateDialog(QDialog):
                 response = msg.exec_()
                 if response == QMessageBox.StandardButton.Ok:
                     download_update(assets)
+
