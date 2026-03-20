@@ -95,7 +95,7 @@ jobs:
         run: |
           python -c "
           from PIL import Image
-          img = Image.open('src/core/interface/assets/logo.png')
+          img = Image.open('src/interface/assets/logo.png')
           img.save('app_icon.ico', format='ICO', sizes=[(256,256),(128,128),(64,64),(48,48),(32,32),(16,16)])
           print('Icon converted successfully')
           "
