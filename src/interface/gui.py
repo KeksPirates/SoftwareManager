@@ -292,7 +292,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
             table.setItemDelegateForColumn(i, self._tracker_hover_delegate)
 
     def _start_search(self):
-        self.searchbar.setEnabled(False)
         def _search_thread():
             try:
                 run_search(self)

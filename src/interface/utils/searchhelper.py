@@ -13,6 +13,8 @@ def run_search(self) -> None:
     if search_text == "":
         consoleLog("Error: Can't search for nothing")
         return
+
+    self.searchbar.setEnabled(False)
     consoleLog(f"User searched for: {search_text}")
     
     # Get current tracker and call its search function
