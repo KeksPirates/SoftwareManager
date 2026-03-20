@@ -1,16 +1,9 @@
-from data.scrapers.rutracker import init_rutracker
-from data.scrapers.uztracker import init_uztracker
-from data.scrapers.steamrip import init_steamrip
-from data.scrapers.monkrus import init_m0nkrus
 from utils.logging.logs import consoleLog
 from utils.data.state import state
+from data.sources import SCRAPERS
 
-# Call initialization function for each tracker / site
-init_rutracker()
-init_uztracker()
-init_m0nkrus()
-init_steamrip()
-
+for scraper in SCRAPERS:
+    state.trackers[scraper.name] = scraper
 
 def run_search(self) -> None:
     self.show_empty_results(False)
@@ -23,12 +16,8 @@ def run_search(self) -> None:
     consoleLog(f"User searched for: {search_text}")
     
     # Get current tracker and call its search function
-    tracker = state.trackers[state.currenttracker]
-    scrapefunc = tracker["scrapeFunc"]
-    state.posts = scrapefunc(search_text)
+    scraper = state.trackers[state.currenttracker]
+    state.posts = scraper.search(search_text)
     
-    # Late to prevent circular import
-    from interface.gui import MainWindow
-
-    # Update GUI Headers
-    MainWindow._instance.search_results_signal.emit(tracker["headers"])
+    # Update GUI headers to match the current scraper
+    self.search_results_signal.emit(scraper.headers)

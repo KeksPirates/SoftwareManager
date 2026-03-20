@@ -34,13 +34,7 @@ class AppState(QObject):
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers
         self.currenttracker: str = "rutracker"
         self.api_url: str = "https://api.michijackson.xyz"
-        self.trackers: Dict[str,Dict[str,Any]] = {}  # each tracker should add itself here
-        # an example:
-        # "rutracker" : {
-        #     "name" : "rutracker",
-        #     "headers" : ["author", "title"],
-        #     "scrapeFunc" : function,
-        # }
+        self.trackers: Dict[str,Dict[str,Any]] = {}
 
         # LibTorrent / Download related stuff
         self.dl_session: Any = None
