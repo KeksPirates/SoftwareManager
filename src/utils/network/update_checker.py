@@ -3,7 +3,6 @@ from utils.data.state import state
 import requests
 
 
-
 def get_updates():
     url = f"https://api.github.com/repos/KeksPirates/SoftwareManager/releases/latest"
     try:

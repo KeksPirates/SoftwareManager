@@ -46,7 +46,7 @@ def settings_dialog(self):
         update_checkbox_container = QWidget()
         update_checkbox_layout = QHBoxLayout()
 
-        # ignore updates checkbox
+        # Ignore updates checkbox
 
         if platform.system() == "Windows":
             update_checkbox = QCheckBox()
@@ -57,7 +57,7 @@ def settings_dialog(self):
             update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
             update_checkbox_layout.addWidget(update_checkbox)
 
-        # auto-resume downloads checkbox
+        # Auto-resume downloads checkbox
 
         autoresume_container = QWidget()
         autoresume_layout = QHBoxLayout()
@@ -71,7 +71,7 @@ def settings_dialog(self):
         autoresume_layout.addWidget(autoresume_checkbox)
 
 
-        # transparent window checkbox
+        # Transparent window checkbox
         transparent_window_container = QWidget()
         transparent_window_layout = QHBoxLayout()
 
@@ -84,10 +84,8 @@ def settings_dialog(self):
         transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
         transparent_window_layout.addWidget(transparent_window_checkbox)
 
-        ##################
-        # SERVER SETTING #
-        ##################
 
+        # API Server Setting
         api_url_container = QWidget()
         api_url_layout = QHBoxLayout()
 
@@ -98,10 +96,8 @@ def settings_dialog(self):
         api_url_container.setLayout(api_url_layout)
         api_url.setText(state.api_url)
 
-        #################
-        # DOWNLOAD PATH #
-        #################
 
+        # Download Path
         download_path_container = QWidget()
         download_path_layout = QHBoxLayout()
 
@@ -133,10 +129,8 @@ def settings_dialog(self):
         download_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_download_path)
 
-        ###############
-        # IMAGE PATH #
-        ###############
 
+        # Image Path
         image_path_container = QWidget()
         image_path_layout = QHBoxLayout()
 
@@ -167,10 +161,8 @@ def settings_dialog(self):
         image_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_image_path)
 
-        ##################
-        # SPEED LIMITING #
-        ##################
 
+        # Speed Limiting
         down_speed_limit_container = QWidget()
         down_speed_limit_layout = QHBoxLayout()
 
@@ -197,10 +189,8 @@ def settings_dialog(self):
         up_speed_limit.setFixedWidth(180)
         up_speed_limit.setFixedHeight(30)
 
-        ######################
-        # CONNECTION CONFIGS #
-        ######################
-
+        
+        # Connection Configs
         max_connections_container = QWidget()
         max_connections_layout = QHBoxLayout()
 
@@ -214,10 +204,8 @@ def settings_dialog(self):
         max_connections.setFixedWidth(180)
         max_connections.setFixedHeight(30)
 
-        ####################
-        # DOWNLOAD CONFIGS #
-        ####################
 
+        # Download Configs
         max_downloads_container = QWidget()
         max_downloads_layout = QHBoxLayout()
 
@@ -231,10 +219,8 @@ def settings_dialog(self):
         max_downloads.setFixedWidth(180)
         max_downloads.setFixedHeight(30)
 
-        #####################
-        # INTERFACE BINDING #
-        #####################
 
+        # Interface Binding
         interface_container = QWidget()
         interface_layout = QHBoxLayout()
 
@@ -257,10 +243,7 @@ def settings_dialog(self):
         interface_container.setLayout(interface_layout)
 
 
-        ###############
-        # SAVE/CANCEL #
-        ###############
-
+        # Save / Cancel buttons
         layout = QHBoxLayout()
 
         save_btn = QPushButton("Save")

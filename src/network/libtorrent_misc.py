@@ -17,9 +17,6 @@ def cleanup_session():
         state.dl_session = None
         state.active_downloads.clear()
 
-
-
-
 def send_notification(shutdown_event):
     notified = set()
     while not shutdown_event.is_set():

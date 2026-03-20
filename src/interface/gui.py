@@ -232,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.statusbar.addPermanentWidget(self.version, Qt.AlignmentFlag.AlignLeft)
 
         # (\u2193) Arrow down, (\u2191) Arrow up
-        self.speed_label = QLabel("\u2193 0.0 kB/s  \u2191 0.0 kB/s")
+        self.speed_label = QLabel("↓ 0.0 kB/s  ↑ 0.0 kB/s")
         self.speed_label.setStyleSheet("padding-right: 6px;")
         self.statusbar.addPermanentWidget(self.speed_label)
 

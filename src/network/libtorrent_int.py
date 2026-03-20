@@ -60,7 +60,6 @@ def add_download(magnet_uri):
         state.active_downloads = {}
 
     init_session()
-
     free_space = get_free_space_mb(state.download_path)
 
     if magnet_uri in state.active_downloads:
@@ -91,7 +90,6 @@ def add_download(magnet_uri):
         params.save_path = state.download_path
 
         handle = state.dl_session.add_torrent(params)
-
         while not handle.has_metadata():
             time.sleep(1)
 

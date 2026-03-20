@@ -1,8 +1,10 @@
+from PySide6.QtWidgets import QDialog, QMessageBox, QProgressDialog
 from utils.network.update_checker import get_updates
-from PySide6.QtWidgets import QDialog, QMessageBox
 from utils.network.updater import download_update
 from utils.logging.logs import consoleLog
 from utils.data.state import state
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 from pathlib import Path
 import platform
 import json
@@ -47,3 +49,15 @@ class UpdateDialog(QDialog):
                 if response == QMessageBox.StandardButton.Ok:
                     download_update(assets)
 
+class UpdateProgressDialog(QProgressDialog):
+    def __init__(self, parent=None):
+        self.progress = QtWidgets.QProgressDialog("Downloading update... (0.0 MB/s)", None, 0, 100)
+        self.progress.setWindowTitle("Updating")
+        self.progress.setWindowModality(Qt.WindowModality.ApplicationModal)
+        self.progress.setCancelButton(None)
+        self.progress.setMinimumDuration(0)
+        self.progress.setAutoClose(False)
+        self.progress.setAutoReset(False)
+        self.progress.setValue(0)
+        self.progress.show()
+        QtWidgets.QApplication.processEvents()
