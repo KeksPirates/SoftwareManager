@@ -45,6 +45,6 @@ class UztrackerScraper:
             consoleLog(f"Failed to fetch {search_url}: {e}")
             return None
 
-    def get_magnet(post: Dict):
+    def get_magnet(self, post: Dict):
         return get_magnet_link(post["url"])
 
