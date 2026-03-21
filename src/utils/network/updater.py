@@ -1,6 +1,7 @@
 from network.direct_download.handle import DirectDownloadHandle
 from utils.logging.logs import consoleLog
 from utils.data.state import state
+from PySide6.QtCore import Qt
 from PySide6 import QtWidgets
 import libtorrent as lt
 import subprocess
@@ -37,8 +38,16 @@ def download_update(assets: list):
 
     installer_path = os.path.join(tempfile.gettempdir(), filename)
 
-    from interface.dialogs.update import UpdateProgressDialog
-    progress = UpdateProgressDialog()
+    progress = QtWidgets.QProgressDialog("Downloading update... (0.0 MB/s)", None, 0, 100)
+    progress.setWindowTitle("Updating")
+    progress.setWindowModality(Qt.WindowModality.ApplicationModal)
+    progress.setCancelButton(None)
+    progress.setMinimumDuration(0)
+    progress.setAutoClose(False)
+    progress.setAutoReset(False)
+    progress.setValue(0)
+    progress.show()
+    QtWidgets.QApplication.processEvents()
 
     original_limit = state.down_speed_limit
     state.down_speed_limit = 0
