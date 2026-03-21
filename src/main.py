@@ -3,6 +3,7 @@ from core.utils.logging.loghandler import split_data, check_completed, check_dow
 from core.network.interface import list_interfaces, init_interfaces
 from core.utils.logging.logs import get_download_logs
 from core.utils.logging.logs import set_main_window
+from core.network.libtorrent_int import check_space
 from core.utils.general.shutdown import closehelper
 from core.utils.general.wrappers import run_thread
 from core.utils.general.shutdown import force_exit
@@ -59,6 +60,7 @@ def main():
     # Start background non-daemon threads
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
+    run_thread(threading.Thread(target=check_space, args=()))
     # Finish counting startup time
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
