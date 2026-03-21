@@ -6,6 +6,7 @@ for scraper in SCRAPERS:
     state.trackers[scraper.name] = scraper
 
 def run_search(self) -> None:
+    state.trackertable.setRowCount(0)
     self.show_empty_results(False)
 
     search_text = self.searchbar.text()
@@ -14,6 +15,7 @@ def run_search(self) -> None:
         consoleLog("Error: Can't search for nothing")
         return
 
+    state.posts = []
     self.searchbar.setEnabled(False)
     consoleLog(f"User searched for: {search_text}")
     

@@ -3,6 +3,7 @@ from utils.logging.loghandler import split_data, check_completed, check_download
 from network.interface import list_interfaces, init_interfaces
 from utils.logging.logs import get_download_logs
 from utils.logging.logs import set_main_window
+from network.libtorrent_int import check_space
 from utils.general.shutdown import closehelper
 from utils.general.wrappers import run_thread
 from utils.general.shutdown import force_exit

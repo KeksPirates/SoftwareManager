@@ -10,9 +10,7 @@ def create_tab(title, items, tabs, stretch):
             continue
 
         if isinstance(item, QLayout):
-            wrapper = QWidget()
-            wrapper.setLayout(item)
-            layout.addWidget(wrapper)
+            layout.addLayout(item)
         else:
             layout.addWidget(item)
 

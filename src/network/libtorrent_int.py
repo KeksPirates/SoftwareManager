@@ -23,7 +23,7 @@ def get_free_space_mb(dirname):
 
 def check_space():
     while not state.shutdown_event.is_set():
-        for magnet_uri, magnetdl in list(state.active_downloads.items()):
+        for _, magnetdl in list(state.active_downloads.items()):
             try:
                 status = magnetdl.status()
             except RuntimeError:
