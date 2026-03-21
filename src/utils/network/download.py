@@ -31,9 +31,9 @@ def download_selected(items: list[QTableWidgetItem]):
             run_thread(threading.Thread(target=run_download, args=(post,)))
 
 def run_download(post, headers: Optional[dict] = None):
-    linkfunc = state.trackers[state.currenttracker]["linkFunc"]
-    ismagnet = state.trackers[state.currenttracker]["isMagnet"]
-    result = linkfunc(post)
+    link_method = state.trackers[state.currenttracker].get_download_link
+    ismagnet = state.trackers[state.currenttracker].is_magnet
+    result = link_method(post)
 
     if ismagnet:
         link = result

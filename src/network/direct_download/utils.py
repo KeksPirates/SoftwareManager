@@ -1,5 +1,5 @@
-from utils.logging.logs import consoleLog
 from urllib.parse import urlparse, unquote
+from utils.logging.logs import consoleLog
 from typing import Optional
 import requests
 import os

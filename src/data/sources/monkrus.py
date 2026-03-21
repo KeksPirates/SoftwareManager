@@ -74,5 +74,5 @@ class MonkrusScraper:
 
         return filtered_posts
 
-    def get_magnet(self, post: Dict):
+    def get_download_link(self, post: Dict):
         return get_magnet_link(post["url"])

@@ -40,7 +40,7 @@ class RutrackerScraper:
             consoleLog("No response from server, returning nothing")
             return []
 
-    def get_magnet(self, post: Dict):
+    def get_download_link(self, post: Dict):
         _, post_links, _, _, _ = format_data([post])
         return get_magnet_link(post_links[0])
 

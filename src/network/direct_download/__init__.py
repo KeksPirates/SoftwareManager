@@ -3,8 +3,8 @@ from utils.data.state import state
 from typing import Optional
 
 
-from .handle import DirectDownloadHandle
-from .utils import (
+from network.direct_download.handle import DirectDownloadHandle
+from network.direct_download.utils import (
     sanitize_filename,
     extract_filename_from_url,
     detect_filename_from_headers,
