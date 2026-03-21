@@ -59,6 +59,7 @@ def main():
     # Start background non-daemon threads
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
+    run_thread(threading.Thread(target=check_space, args=()))
     # Finish counting startup time
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")

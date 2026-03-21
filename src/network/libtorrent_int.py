@@ -21,6 +21,25 @@ def get_free_space_mb(dirname):
         st = os.statvfs(dirname)
         return st.f_bavail * st.f_frsize
 
+def check_space():
+    while not state.shutdown_event.is_set():
+        for magnet_uri, magnetdl in list(state.active_downloads.items()):
+            try:
+                status = magnetdl.status()
+            except RuntimeError:
+                continue
+            
+            if status.state == lt.torrent_status.downloading:
+                free_space = get_free_space_mb(state.download_path)
+                total_size = status.total_wanted
+
+                if free_space < total_size:
+                    consoleLog(f"Not enough free space to continue downloading: {status.name}")
+                    magnetdl.pause()
+                    break
+        
+        time.sleep(5)
+
 def init_session():
     if state.dl_session is not None:
         return

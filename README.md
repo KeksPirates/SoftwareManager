@@ -62,7 +62,6 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=KeksPirates/SoftwareManager&type=date&legend=top-left" />
  </picture>
 </a>
----
 
 **Disclaimer:** SoftwareManager is intended for legal and ethical use only. Ensure compliance with applicable laws and regulations when using this tool.
 
