@@ -1,0 +1,61 @@
+from utils.logging.logs import consoleLog
+from utils.data.state import state
+import psutil
+
+def get_net_interfaces():
+    addrs = psutil.net_if_addrs()
+    for interface in addrs.keys():
+        consoleLog(f"Found Interface: {interface}")
+    return addrs.keys()
+
+
+def get_active_interfaces():
+    addrs = psutil.net_if_addrs()
+    stats = psutil.net_if_stats()
+    active = []
+
+    for interface, addr_list in addrs.items():
+        if interface not in stats:
+            continue
+        up = stats[interface].isup
+        for addr in addr_list:
+            if addr.family == 2: # ipv4
+                ipv4 = addr.address
+                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up:
+                    active.append(interface)
+                    consoleLog(f"Found Active: {interface}")
+
+    return active
+
+
+def list_interfaces() -> None:
+    consoleLog("Fetching Network Interfaces...")
+    addrs = psutil.net_if_addrs()
+    stats = psutil.net_if_stats()
+
+    for interface, addr_list in addrs.items():
+        if interface not in stats:
+            continue
+        up = stats[interface].isup
+        status = "INACTIVE"
+        for addr in addr_list:
+            if addr.family == 2: # ipv4
+                ipv4 = addr.address
+                if not ipv4.startswith("127.") and not ipv4.startswith("169.254") and up:
+                    status = "ACTIVE"
+        consoleLog(f"Found Interface: {interface} [{status}]")
+
+def init_interfaces():
+    consoleLog("Initializing Interface variables...")
+    addrs = psutil.net_if_addrs()
+    state.interfaces = list(addrs.keys())
+    state.active_interfaces = get_active_interfaces()
+
+def get_interface_ip(interface_name):
+    addrs = psutil.net_if_addrs()
+    if interface_name in addrs:
+        for addr in addrs[interface_name]:
+            if addr.family == 2:  # ipv4
+                if not addr.address.startswith("127.") and not addr.address.startswith("169.254"):
+                    return addr.address
+    return None

@@ -1,0 +1,272 @@
+from interface.utils.tabhelper import create_tab
+from utils.config.settings import save_settings
+from interface.utils.svghelper import svg_icon
+from utils.logging.logs import consoleLog
+from PySide6.QtCore import Qt, QSize
+from utils.data.state import state
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import (
+    QLineEdit, 
+    QPushButton, 
+    QWidget, 
+    QVBoxLayout, 
+    QDialog, 
+    QLabel, 
+    QHBoxLayout,
+    QSpinBox,
+    QCheckBox,
+    QFileDialog,
+    QComboBox,
+)
+
+import platform
+
+SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 6c0-1.1.9-2 2-2h5l2 2h7c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6z" fill="{color}"/></svg>'
+
+
+def settings_dialog(self):
+
+        consoleLog("Settings dialog opened")
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Settings")
+        dialog.setFixedSize(700, 450)
+
+        dialog_layout = QVBoxLayout()
+        dialog.setLayout(dialog_layout)
+
+        if state.window_transparency and platform.system() != "Windows" and dialog:
+            dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        def close_settings():
+            dialog.reject()
+
+        update_checkbox_container = QWidget()
+        update_checkbox_layout = QHBoxLayout()
+
+        # Ignore updates checkbox
+
+        if platform.system() == "Windows":
+            update_checkbox = QCheckBox()
+            update_checkbox_container.setLayout(update_checkbox_layout)
+            update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
+            update_checkbox_layout.addStretch()
+            update_checkbox.setChecked(state.ignore_updates)
+            update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
+            update_checkbox_layout.addWidget(update_checkbox)
+
+        # Auto-resume downloads checkbox
+
+        autoresume_container = QWidget()
+        autoresume_layout = QHBoxLayout()
+
+        autoresume_checkbox = QCheckBox()
+        autoresume_container.setLayout(autoresume_layout)
+        autoresume_layout.addWidget(QLabel("Auto-Resume Downloads: "))
+
+        autoresume_layout.addStretch()
+        autoresume_checkbox.setChecked(state.autoresume)
+        autoresume_layout.addWidget(autoresume_checkbox)
+
+
+        # Transparent window checkbox
+        transparent_window_container = QWidget()
+        transparent_window_layout = QHBoxLayout()
+
+        transparent_window_checkbox = QCheckBox()
+        transparent_window_container.setLayout(transparent_window_layout)
+        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart) (Linux/MacOS only): "))
+
+        transparent_window_layout.addStretch()
+        transparent_window_checkbox.setChecked(state.window_transparency)
+        transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
+        transparent_window_layout.addWidget(transparent_window_checkbox)
+
+
+        # API Server Setting
+        api_url_container = QWidget()
+        api_url_layout = QHBoxLayout()
+
+        api_url = QLineEdit()
+        api_url_layout.addWidget(QLabel("API Server URL:"))
+        api_url_layout.addWidget(api_url)
+        api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        api_url_container.setLayout(api_url_layout)
+        api_url.setText(state.api_url)
+
+
+        # Download Path
+        download_path_container = QWidget()
+        download_path_layout = QHBoxLayout()
+
+        download_path = QLineEdit()
+        download_path_layout.addWidget(QLabel("Download Path:"))
+        download_path_layout.addWidget(download_path)
+        download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        download_path_container.setLayout(download_path_layout)
+        download_path.setText(state.download_path)
+
+        def browse_download_path():
+            dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
+            if dir_path:
+                download_path.setText(dir_path)
+
+        browse_button = QPushButton()
+        browse_button.setFixedSize(36, 36)
+        browse_button.setIconSize(QSize(24, 24))
+        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        browse_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background: transparent;
+                padding: 0px;
+            }
+        """)
+
+        download_path_layout.addWidget(browse_button)
+        browse_button.clicked.connect(browse_download_path)
+
+
+        # Image Path
+        image_path_container = QWidget()
+        image_path_layout = QHBoxLayout()
+
+        image_path = QLineEdit()
+        image_path_layout.addWidget(QLabel("Image Path (requires restart, experimental):"))
+        image_path_layout.addWidget(image_path)
+        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        image_path_container.setLayout(image_path_layout)
+        image_path.setText(state.image_path)
+
+        def browse_image_path():
+            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
+            if file_path:
+                image_path.setText(file_path)
+
+        browse_button = QPushButton()
+        browse_button.setFixedSize(36, 36)
+        browse_button.setIconSize(QSize(24, 24))
+        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        browse_button.setStyleSheet("""
+            QPushButton {
+                border: none;
+                background: transparent;
+                padding: 0px;
+            }
+        """)
+        image_path_layout.addWidget(browse_button)
+        browse_button.clicked.connect(browse_image_path)
+
+
+        # Speed Limiting
+        down_speed_limit_container = QWidget()
+        down_speed_limit_layout = QHBoxLayout()
+
+        down_speed_limit_layout.addWidget(QLabel("Max Download Speed (KiB, 0 for unlimited): "))
+        down_speed_limit = QSpinBox()
+        down_speed_limit.setMinimum(0)
+        down_speed_limit.setMaximum(10000000)
+        down_speed_limit.setValue(state.down_speed_limit)
+        down_speed_limit_container.setLayout(down_speed_limit_layout)
+        down_speed_limit_layout.addWidget(down_speed_limit)
+        down_speed_limit.setFixedWidth(180)
+        down_speed_limit.setFixedHeight(30)
+
+        up_speed_limit_container = QWidget()
+        up_speed_limit_layout = QHBoxLayout()
+
+        up_speed_limit_layout.addWidget(QLabel("Max Upload Speed (KiB, 0 for unlimited): "))
+        up_speed_limit = QSpinBox()
+        up_speed_limit.setMinimum(0)
+        up_speed_limit.setMaximum(10000000)
+        up_speed_limit.setValue(state.up_speed_limit)
+        up_speed_limit_container.setLayout(up_speed_limit_layout)
+        up_speed_limit_layout.addWidget(up_speed_limit)
+        up_speed_limit.setFixedWidth(180)
+        up_speed_limit.setFixedHeight(30)
+
+        
+        # Connection Configs
+        max_connections_container = QWidget()
+        max_connections_layout = QHBoxLayout()
+
+        max_connections_layout.addWidget(QLabel("Max Connections: "))
+        max_connections = QSpinBox()
+        max_connections.setMinimum(0)
+        max_connections.setMaximum(10000000)
+        max_connections.setValue(state.max_connections)
+        max_connections_container.setLayout(max_connections_layout)
+        max_connections_layout.addWidget(max_connections)
+        max_connections.setFixedWidth(180)
+        max_connections.setFixedHeight(30)
+
+
+        # Download Configs
+        max_downloads_container = QWidget()
+        max_downloads_layout = QHBoxLayout()
+
+        max_downloads_layout.addWidget(QLabel("Max Downloads: "))
+        max_downloads = QSpinBox()
+        max_downloads.setMinimum(0)
+        max_downloads.setMaximum(10000000)
+        max_downloads.setValue(state.max_downloads)
+        max_downloads_container.setLayout(max_downloads_layout)
+        max_downloads_layout.addWidget(max_downloads)
+        max_downloads.setFixedWidth(180)
+        max_downloads.setFixedHeight(30)
+
+
+        # Interface Binding
+        interface_container = QWidget()
+        interface_layout = QHBoxLayout()
+
+        interface_label = QLabel("Network Interface:")
+        interface_layout.addWidget(interface_label)
+        interface_select = QComboBox()
+        interface_select.addItems(["None"] + state.interfaces)
+
+        target = state.bound_interface if state.bound_interface else "None"
+
+        index = interface_select.findText(target)
+        if index >= 0:
+            interface_select.setCurrentIndex(index)
+        else:
+            interface_select.setCurrentIndex(0)
+
+        interface_select.setFixedWidth(180)
+        interface_select.setFixedHeight(30)
+        interface_layout.addWidget(interface_select)
+        interface_container.setLayout(interface_layout)
+
+
+        # Save / Cancel buttons
+        layout = QHBoxLayout()
+
+        save_btn = QPushButton("Save")
+        cancel_btn = QPushButton("Cancel")
+        save_btn.clicked.connect(lambda: save_settings(
+            close_settings, 
+            api_url.text(), 
+            download_path.text(), 
+            down_speed_limit.value(), 
+            up_speed_limit.value(), 
+            image_path.text(), 
+            autoresume_checkbox.isChecked(), 
+            max_connections.value(), 
+            max_downloads.value(), 
+            interface_select.currentText()))
+
+        cancel_btn.clicked.connect(dialog.reject)
+        layout.addWidget(cancel_btn)
+        layout.addWidget(save_btn)
+
+        tabs = QtWidgets.QTabWidget()
+        create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
+        create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
+        create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
+
+        dialog_layout.addWidget(tabs)
+        dialog_layout.addLayout(layout)
+
+        dialog.exec()
