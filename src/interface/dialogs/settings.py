@@ -261,12 +261,12 @@ def settings_dialog(self):
         layout.addWidget(cancel_btn)
         layout.addWidget(save_btn)
 
-        self.tabs = QtWidgets.QTabWidget()
-        create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=self.tabs)
-        create_tab("Paths", [download_path_container, image_path_container], tabs=self.tabs)
-        create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=self.tabs)
+        tabs = QtWidgets.QTabWidget()
+        create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
+        create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
+        create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
 
-        dialog_layout.addWidget(self.tabs)
+        dialog_layout.addWidget(tabs)
         dialog_layout.addLayout(layout)
 
         dialog.exec()

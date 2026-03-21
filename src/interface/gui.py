@@ -164,8 +164,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.horizontal_layout.addWidget(state.trackertable)
 
         # Tabs
-        create_tab("Search", [self.searchbar, state.trackertable, self.tabs, self.dlbutton, self.horizontal_layout], tabs=self.tabs)
-        create_tab("Downloads", [self.emptyDownload, self.downloadList], tabs=self.tabs)
+        create_tab("Search", [self.searchbar, state.trackertable, self.dlbutton, self.horizontal_layout], tabs=self.tabs, stretch=False)
+        create_tab("Downloads", [self.emptyDownload, self.downloadList], tabs=self.tabs, stretch=False)
 
         # Corner Widget (Settings Button, Tracker list, Tab button container)
         self.corner_widget = QWidget()
