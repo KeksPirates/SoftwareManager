@@ -1,54 +1,18 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLayout
 
 # Tab creation helper function
-def create_tab(title, searchbar, software_list, tabs, dlbutton, layout2): 
-    tab = QWidget() 
-    layout = QVBoxLayout() 
-    if searchbar:
-        layout.addWidget(searchbar)
-    if layout2:
-        layout.addLayout(layout2)
-    else:
-        layout.addWidget(software_list)
-    if dlbutton:
-        layout.addWidget(dlbutton)
-    tab.setLayout(layout)
-    tabs.addTab(tab, title) 
-    return tab
-
-# Settings Tabs
-def general_tab(title, autoresume, update_checkbox, transparent_window, tabs):
+def create_tab(title, items, *, tabs, stretch=False):
     tab = QWidget()
     layout = QVBoxLayout()
-    layout.addWidget(autoresume)
-    layout.addWidget(update_checkbox)
-    layout.addWidget(transparent_window)
-    layout.addStretch()
-    tab.setLayout(layout)
-    tabs.addTab(tab, title)
-    return tab
-
-def paths_tab(title, download_path, image_path, tabs):
-    tab = QWidget()
-    layout = QVBoxLayout()
-    layout.addWidget(download_path)
-    layout.addWidget(image_path)
-    layout.addStretch()
-    tab.setLayout(layout)
-    tabs.addTab(tab, title)
-    return tab
-    
-
-def network_tab(title, network_interface, max_connections, max_downloads, up_speed_limit, down_speed_limit, api_url, tabs):
-    tab = QWidget()
-    layout = QVBoxLayout()
-    layout.addWidget(network_interface)
-    layout.addWidget(max_connections)
-    layout.addWidget(max_downloads)
-    layout.addWidget(up_speed_limit)
-    layout.addWidget(down_speed_limit)
-    layout.addWidget(api_url)
-    layout.addStretch()
+    for item in items:
+        if item is None:
+            continue
+        if isinstance(item, QLayout):
+            layout.addLayout(item)
+        else:
+            layout.addWidget(item)
+    if stretch:
+        layout.addStretch()
     tab.setLayout(layout)
     tabs.addTab(tab, title)
     return tab

@@ -1,7 +1,5 @@
-from interface.utils.tabhelper import general_tab
-from interface.utils.tabhelper import network_tab
+from interface.utils.tabhelper import create_tab
 from utils.config.settings import save_settings
-from interface.utils.tabhelper import paths_tab
 from interface.utils.svghelper import svg_icon
 from utils.logging.logs import consoleLog
 from PySide6.QtCore import Qt, QSize
@@ -19,7 +17,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QFileDialog,
     QComboBox,
-    QTabWidget,
 )
 
 import platform
@@ -264,10 +261,10 @@ def settings_dialog(self):
         layout.addWidget(cancel_btn)
         layout.addWidget(save_btn)
 
-        self.tabs = QTabWidget()
-        self.tab1 = general_tab("General", autoresume_container, update_checkbox_container, transparent_window_container, self.tabs)
-        self.tab2 = paths_tab("Paths", download_path_container, image_path_container, self.tabs)
-        self.tab3 = network_tab("Network", interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container, self.tabs)
+        self.tabs = QtWidgets.QTabWidget()
+        create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=self.tabs)
+        create_tab("Paths", [download_path_container, image_path_container], tabs=self.tabs)
+        create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=self.tabs)
 
         dialog_layout.addWidget(self.tabs)
         dialog_layout.addLayout(layout)
