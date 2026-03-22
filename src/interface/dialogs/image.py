@@ -1,29 +1,60 @@
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QLabel
 from utils.data.state import state
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize, QEvent, QObject
 import os
 
-class Image():
+class Image(QObject):
+    TARGET_WIDTH = 300
+
     def __init__(self, parent):
+        super().__init__(parent)
+        self.application = parent
         self.overlay_label = QLabel(parent)
         self.overlay_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self._current_image_path = None
 
-        if state.image_path is not None and os.path.exists(state.image_path):
-            self.image = QImage(state.image_path)
-            self.image = self.image.scaledToWidth(300, Qt.TransformationMode.SmoothTransformation)
+        parent.installEventFilter(self)
 
-            self.pixmap = QPixmap.fromImage(self.image)
-            self.overlay_label.setPixmap(self.pixmap)
-            self.overlay_label.adjustSize()
-            self.overlay_label.raise_()
+        if state.image_path and os.path.exists(state.image_path):
+            self._load_and_display(state.image_path)
 
-            x = parent.width() - self.overlay_label.width()
-            y = parent.height() - self.overlay_label.height()
-            self.overlay_label.move(x, y)
+    def eventFilter(self, obj, event):
+        if obj == self.application and event.type() == QEvent.Type.Resize:
+            if self._current_image_path:
+                self._load_and_display(self._current_image_path)
+        return False
+
+    def _load_and_display(self, image_path):
+        self._current_image_path = image_path
+        parent = self.application
+        image = QImage(image_path)
+        if image.isNull():
+            self.overlay_label.hide()
+            return
+
+        scaled_image = image.scaledToWidth(
+            self.TARGET_WIDTH, Qt.TransformationMode.SmoothTransformation
+        )
+
+        max_width = parent.width()
+        max_height = parent.height()
+        if scaled_image.width() > max_width or scaled_image.height() > max_height:
+            scaled_image = scaled_image.scaled(
+                QSize(max_width, max_height),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+
+        pixmap = QPixmap.fromImage(scaled_image)
+        self.overlay_label.setPixmap(pixmap)
+        self.overlay_label.adjustSize()
+        self.overlay_label.raise_()
+
+        x = parent.width() - self.overlay_label.width() - 100
+        y = parent.height() - self.overlay_label.height() - 100
+        self.overlay_label.move(x, y)
+        self.overlay_label.show()
 
     def update_image_overlay(self, new_image_path):
-        self.image = QImage(new_image_path)
-        self.pixmap = QPixmap.fromImage(self.image)
-        self.overlay_label.setPixmap(self.pixmap)
-        self.overlay_label.adjustSize()
+        self._load_and_display(new_image_path)
