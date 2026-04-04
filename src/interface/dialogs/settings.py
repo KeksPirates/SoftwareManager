@@ -26,6 +26,37 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 
 def settings_dialog(self):
 
+        def create_widget(widget_type, label_text, **kwargs):
+            container = QWidget()
+            layout = QHBoxLayout()
+            container.setLayout(layout)
+            layout.addWidget(QLabel(label_text))
+
+            widget = widget_type()
+
+            if widget_type in (QSpinBox,):
+                layout.addWidget(widget)
+                widget.setMinimum(kwargs.get("minimum", 0))
+                widget.setMaximum(kwargs.get("maximum", 10000000))
+                widget.setFixedWidth(kwargs.get("width", 180))
+                widget.setFixedHeight(kwargs.get("height", 30))
+            elif widget_type in (QCheckBox,):
+                layout.addStretch()
+                layout.addWidget(widget)
+            elif widget_type in (QLineEdit,):
+                layout.addWidget(widget)
+                container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+                if "width" in kwargs:
+                    widget.setFixedWidth(kwargs["width"])
+                if "height" in kwargs:
+                    widget.setFixedHeight(kwargs["height"])
+            elif widget_type in (QComboBox,):
+                layout.addWidget(widget)
+                widget.setFixedWidth(kwargs.get("width", 180))
+                widget.setFixedHeight(kwargs.get("height", 30))
+
+            return container, widget
+
         consoleLog("Settings dialog opened")
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
@@ -40,80 +71,37 @@ def settings_dialog(self):
         def close_settings():
             dialog.reject()
 
-        update_checkbox_container = QWidget()
-        update_checkbox_layout = QHBoxLayout()
-
-        # Ignore updates checkbox
-
+        # Ignore Updates checkbox
+        update_checkbox_container, update_checkbox = create_widget(QCheckBox, "Ignore Updates: ")
         if platform.system() == "Windows":
-            update_checkbox = QCheckBox()
-            update_checkbox_container.setLayout(update_checkbox_layout)
-            update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
-            update_checkbox_layout.addStretch()
             update_checkbox.setChecked(state.ignore_updates)
             update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
-            update_checkbox_layout.addWidget(update_checkbox)
 
-        # Auto-resume downloads checkbox
-
-        autoresume_container = QWidget()
-        autoresume_layout = QHBoxLayout()
-
-        autoresume_checkbox = QCheckBox()
-        autoresume_container.setLayout(autoresume_layout)
-        autoresume_layout.addWidget(QLabel("Auto-Resume Downloads: "))
-
-        autoresume_layout.addStretch()
+        # Autoresume Container Checkbox
+        autoresume_container, autoresume_checkbox = create_widget(QCheckBox, "Auto-Resume Downloads: ")
         autoresume_checkbox.setChecked(state.autoresume)
-        autoresume_layout.addWidget(autoresume_checkbox)
+        autoresume_checkbox.toggled.connect(lambda checked: setattr(state, 'autoresume', checked))
 
-
-        # Transparent window checkbox
-        transparent_window_container = QWidget()
-        transparent_window_layout = QHBoxLayout()
-
-        transparent_window_checkbox = QCheckBox()
-        transparent_window_container.setLayout(transparent_window_layout)
-        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart) (Linux/MacOS only): "))
-
-        transparent_window_layout.addStretch()
+        # Transparent Window Checkbox
+        transparent_window_container, transparent_window_checkbox = create_widget(QCheckBox, "Window Transparency (requires restart) (Linux/MacOS only): ")
         transparent_window_checkbox.setChecked(state.window_transparency)
         transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
-        transparent_window_layout.addWidget(transparent_window_checkbox)
-
-
-        # API Server Setting
-        api_url_container = QWidget()
-        api_url_layout = QHBoxLayout()
-
-        api_url = QLineEdit()
-        api_url_layout.addWidget(QLabel("API Server URL:"))
-        api_url_layout.addWidget(api_url)
-        api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        api_url_container.setLayout(api_url_layout)
+        
+        # API URL Widget
+        api_url_container, api_url = create_widget(QLineEdit, "API Server URL: ", width=180, height=30)
         api_url.setText(state.api_url)
-        api_url.setFixedWidth(180)
-        api_url.setFixedHeight(30)
 
-
-        # Download Path
-        download_path_container = QWidget()
-        download_path_layout = QHBoxLayout()
-
-        download_path = QLineEdit()
-        download_path_layout.addWidget(QLabel("Download Path:"))
-        download_path_layout.addWidget(download_path)
-        download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        download_path_container.setLayout(download_path_layout)
+        # Download Path Widget
+        download_path_container, download_path = create_widget(QLineEdit, "Download Path: ")
         download_path.setText(state.download_path)
+        download_path_layout = download_path_container.layout()
 
         def browse_download_path():
             dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
             if dir_path:
                 download_path.setText(dir_path)
 
-        browse_button = QPushButton()
-        browse_button.setFixedSize(36, 36)
+        browse_button = create_widget(QPushButton, "", width=36, height=36)[1]
         browse_button.setIconSize(QSize(24, 24))
         browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
         browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -130,23 +118,16 @@ def settings_dialog(self):
 
 
         # Image Path
-        image_path_container = QWidget()
-        image_path_layout = QHBoxLayout()
-
-        image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path:"))
-        image_path_layout.addWidget(image_path)
-        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        image_path_container.setLayout(image_path_layout)
+        image_path_container, image_path = create_widget(QLineEdit, "Image Path: ")
         image_path.setText(state.image_path)
+        image_path_layout = image_path_container.layout()
 
         def browse_image_path():
             file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
             if file_path:
                 image_path.setText(file_path)
 
-        browse_button = QPushButton()
-        browse_button.setFixedSize(36, 36)
+        browse_button = create_widget(QPushButton, "", width=36, height=36)[1]
         browse_button.setIconSize(QSize(24, 24))
         browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
         browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -160,104 +141,40 @@ def settings_dialog(self):
         image_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_image_path)
 
-        # Image Settings
-
-        enable_image_container = QWidget()
-        enable_image_layout = QHBoxLayout()
-
-        enable_image_checkbox = QCheckBox()
-        enable_image_container.setLayout(enable_image_layout)
-        enable_image_layout.addWidget(QLabel("Enable Image (needs image_path): "))
-
-        enable_image_layout.addStretch()
+        # Enable Image Checkbox
+        enable_image_container, enable_image_checkbox = create_widget(QCheckBox, "Enable Image (needs Image Path): ", width=180, height=30)
         enable_image_checkbox.setChecked(state.image_enabled)
         enable_image_checkbox.toggled.connect(lambda checked: setattr(state, 'image_enabled', checked))
-        enable_image_layout.addWidget(enable_image_checkbox)
 
-        image_width_container = QWidget()
-        image_width_layout = QHBoxLayout()
-
-        image_width_layout.addWidget(QLabel("Image Width: "))
-        image_width = QSpinBox()
+        # Image Width SpinBox
+        image_width_container, image_width = create_widget(QSpinBox, "Image Width: ", width=180, height=30)
         image_width.setMinimum(0)
-        image_width.setMaximum(10000000)
         image_width.setValue(state.image_width)
-        image_width_container.setLayout(image_width_layout)
-        image_width_layout.addWidget(image_width)
-        image_width.setFixedWidth(180)
-        image_width.setFixedHeight(30)
 
-        
-        image_offset_container = QWidget()
-        image_offset_layout = QHBoxLayout()
-
-        image_offset_layout.addWidget(QLabel("Corner image_offset: "))
-        image_offset = QSpinBox()
+        # Image Offset SpinBox
+        image_offset_container, image_offset = create_widget(QSpinBox, "Corner Image Offset: ", width=180, height=30)
         image_offset.setMinimum(0)
-        image_offset.setMaximum(10000000)
         image_offset.setValue(state.image_offset)
-        image_offset_container.setLayout(image_offset_layout)
-        image_offset_layout.addWidget(image_offset)
-        image_offset.setFixedWidth(180)
-        image_offset.setFixedHeight(30)
 
         # Speed Limiting
-        down_speed_limit_container = QWidget()
-        down_speed_limit_layout = QHBoxLayout()
-
-        down_speed_limit_layout.addWidget(QLabel("Max Download Speed (KiB, 0 for unlimited): "))
-        down_speed_limit = QSpinBox()
+        down_speed_limit_container, down_speed_limit = create_widget(QSpinBox, "Max Download Speed (KiB, 0 for unlimited): ", width=180, height=30)
         down_speed_limit.setMinimum(0)
-        down_speed_limit.setMaximum(10000000)
         down_speed_limit.setValue(state.down_speed_limit)
-        down_speed_limit_container.setLayout(down_speed_limit_layout)
-        down_speed_limit_layout.addWidget(down_speed_limit)
-        down_speed_limit.setFixedWidth(180)
-        down_speed_limit.setFixedHeight(30)
 
-        up_speed_limit_container = QWidget()
-        up_speed_limit_layout = QHBoxLayout()
-
-        up_speed_limit_layout.addWidget(QLabel("Max Upload Speed (KiB, 0 for unlimited): "))
-        up_speed_limit = QSpinBox()
+        up_speed_limit_container, up_speed_limit = create_widget(QSpinBox, "Max Upload Speed (KiB, 0 for unlimited): ", width=180, height=30)
         up_speed_limit.setMinimum(0)
-        up_speed_limit.setMaximum(10000000)
         up_speed_limit.setValue(state.up_speed_limit)
-        up_speed_limit_container.setLayout(up_speed_limit_layout)
-        up_speed_limit_layout.addWidget(up_speed_limit)
-        up_speed_limit.setFixedWidth(180)
-        up_speed_limit.setFixedHeight(30)
 
-        
         # Connection Configs
-        max_connections_container = QWidget()
-        max_connections_layout = QHBoxLayout()
-
-        max_connections_layout.addWidget(QLabel("Max Connections: "))
-        max_connections = QSpinBox()
+        max_connections_container, max_connections = create_widget(QSpinBox, "Max Connections: ", width=180, height=30)
         max_connections.setMinimum(0)
-        max_connections.setMaximum(10000000)
         max_connections.setValue(state.max_connections)
-        max_connections_container.setLayout(max_connections_layout)
-        max_connections_layout.addWidget(max_connections)
-        max_connections.setFixedWidth(180)
-        max_connections.setFixedHeight(30)
 
 
         # Download Configs
-        max_downloads_container = QWidget()
-        max_downloads_layout = QHBoxLayout()
-
-        max_downloads_layout.addWidget(QLabel("Max Downloads: "))
-        max_downloads = QSpinBox()
+        max_downloads_container, max_downloads = create_widget(QSpinBox, "Max Downloads: ", width=180, height=30)
         max_downloads.setMinimum(0)
-        max_downloads.setMaximum(10000000)
         max_downloads.setValue(state.max_downloads)
-        max_downloads_container.setLayout(max_downloads_layout)
-        max_downloads_layout.addWidget(max_downloads)
-        max_downloads.setFixedWidth(180)
-        max_downloads.setFixedHeight(30)
-
 
         # Interface Binding
         interface_container = QWidget()
