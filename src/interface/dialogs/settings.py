@@ -27,6 +27,8 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 def settings_dialog(self):
     temp_image_width = state.image_width
     temp_image_offset = state.image_offset
+    temp_image_opacity = state.image_opacity
+    temp_image_enabled = state.image_enabled
 
     def create_widget(widget_type, label_text, **kwargs):
         container = QWidget()
@@ -69,9 +71,6 @@ def settings_dialog(self):
 
     if state.window_transparency and platform.system() != "Windows" and dialog:
         dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-    def close_settings():
-        dialog.reject()
 
     # Ignore Updates checkbox
     update_checkbox_container, update_checkbox = create_widget(QCheckBox, "Ignore Updates: ")
@@ -144,7 +143,7 @@ def settings_dialog(self):
     browse_button.clicked.connect(browse_image_path)
 
     # Enable Image Checkbox
-    enable_image_container, enable_image_checkbox = create_widget(QCheckBox, "Enable Image (needs Image Path): ", width=180, height=30)
+    enable_image_container, enable_image_checkbox = create_widget(QCheckBox, "Enable Image (requires image path): ", width=180, height=30)
     enable_image_checkbox.setChecked(state.image_enabled)
     enable_image_checkbox.toggled.connect(lambda checked: setattr(state, 'image_enabled', checked))
 
@@ -156,10 +155,17 @@ def settings_dialog(self):
     image_width.valueChanged.connect(lambda val: setattr(state, 'image_width', val))
 
     # Image Offset SpinBox
-    image_offset_container, image_offset = create_widget(QSpinBox, "Corner Image Offset: ", width=180, height=30)
+    image_offset_container, image_offset = create_widget(QSpinBox, "Corner Offset: ", width=180, height=30)
     image_offset.setMinimum(0)
     image_offset.setValue(state.image_offset)
     image_offset.valueChanged.connect(lambda val: setattr(state, 'image_offset', val))
+
+    # Image Opacity SpinBox
+    image_opacity_container, image_opacity = create_widget(QSpinBox, "Image Opacity: ", width=180, height=30)
+    image_opacity.setMinimum(0)
+    image_opacity.setMaximum(100)
+    image_opacity.setValue(state.image_opacity)
+    image_opacity.valueChanged.connect(lambda val: setattr(state, 'image_opacity', val))
 
     # Speed Limiting
     down_speed_limit_container, down_speed_limit = create_widget(QSpinBox, "Max Download Speed (KiB, 0 for unlimited): ", width=180, height=30)
@@ -224,7 +230,8 @@ def settings_dialog(self):
             max_downloads.value(), 
             interface_select.currentText(),
             image_width.value(),
-            image_offset.value()
+            image_offset.value(),
+            image_opacity.value()
             )
 
     cancel_btn.clicked.connect(dialog.reject)
@@ -233,7 +240,7 @@ def settings_dialog(self):
 
     tabs = QtWidgets.QTabWidget()
     create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
-    create_tab("Image", [enable_image_container, image_width_container, image_offset_container], tabs=tabs, stretch=True)
+    create_tab("Image", [enable_image_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
     create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
     create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
 
@@ -241,10 +248,12 @@ def settings_dialog(self):
     dialog_layout.addWidget(tabs)
     dialog_layout.addLayout(layout)
 
-    def on_dialog_finished(result):
+    def on_dialog_finished(result): # Undo Image changes if "Save" button is not pressed
         if result == QtWidgets.QDialog.DialogCode.Rejected:
             state.image_width = temp_image_width
             state.image_offset = temp_image_offset
+            state.image_opacity = temp_image_opacity
+            state.image_enabled = temp_image_enabled
 
     dialog.finished.connect(on_dialog_finished)
     dialog.exec()

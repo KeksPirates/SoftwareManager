@@ -20,8 +20,7 @@ import signal
 import time
 import sys
 
-def run_gui():
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+def run_gui(app):
     qdarktheme.setup_theme("auto")
     widget = MainWindow()
     
@@ -42,7 +41,11 @@ def keyboardinterrupthandler(signum, frame):
 def main():
     # Begin counting startup time
     start_time = time.perf_counter()
-    # Parse saved files
+    
+    # Initialize UI Engine
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+
+    # Parse saved files 
     read_config()
     logs = get_download_logs()
     _, downloads = split_data(logs)
@@ -65,7 +68,7 @@ def main():
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     # Launch GUI
-    run_gui()
+    run_gui(app)
 
 if __name__ == "__main__":
     main()

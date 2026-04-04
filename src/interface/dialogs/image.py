@@ -1,6 +1,6 @@
+from PySide6.QtWidgets import QLabel, QGraphicsOpacityEffect
 from PySide6.QtCore import Qt, QSize, QEvent, QObject
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QLabel
 from utils.data.state import state
 import os
 
@@ -11,10 +11,12 @@ class Image(QObject):
         self.application = parent
         self.overlay_label = QLabel(parent)
         self.overlay_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        
+        self.opacity_effect = QGraphicsOpacityEffect()
+        self.overlay_label.setGraphicsEffect(self.opacity_effect)
+
         self._current_image_path = None
-
         parent.installEventFilter(self)
-
         state.image_changed.connect(self.update_image_overlay)
 
         if state.image_path and os.path.exists(state.image_path):
@@ -28,6 +30,7 @@ class Image(QObject):
 
     def _load_and_display(self, image_path):
         if state.image_enabled is not True:
+            self.overlay_label.hide()
             return
         self._current_image_path = image_path
         parent = self.application
@@ -56,8 +59,12 @@ class Image(QObject):
 
         x = parent.width() - self.overlay_label.width() - int(state.image_offset)
         y = parent.height() - self.overlay_label.height() - int(state.image_offset)
+
+        self.opacity_effect.setOpacity(state.image_opacity / 100)
+
         self.overlay_label.move(x, y)
         self.overlay_label.show()
 
     def update_image_overlay(self, new_image_path):
         self._load_and_display(new_image_path)
+

@@ -29,9 +29,12 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
+
+        # Image
+        self._image_enabled: bool = False
         self._image_width: int = 300 # Default to 300px
         self._image_offset: int = 50
-        self.image_enabled: bool = False
+        self._image_opacity: int = 100
 
         # Trackers / Scraping
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers
@@ -76,9 +79,29 @@ class AppState(QObject):
         return self._image_width
 
     @image_width.setter
-    def image_width(self, new_offset: int):
-        if new_offset != self._image_width:
-            self._image_width = new_offset
+    def image_width(self, new_width: int):
+        if new_width != self._image_width:
+            self._image_width = new_width
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_opacity(self) -> int:
+        return self._image_opacity
+
+    @image_opacity.setter
+    def image_opacity(self, new_opacity: int):
+        if new_opacity != self._image_opacity:
+            self._image_opacity = new_opacity
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_enabled(self) -> bool:
+        return self._image_enabled
+
+    @image_enabled.setter
+    def image_enabled(self, new_state: bool):
+        if new_state != self._image_enabled:
+            self._image_enabled = new_state
             self.image_changed.emit(self._image_path)
 
 state = AppState()
