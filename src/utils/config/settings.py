@@ -5,7 +5,7 @@ from utils.data.state import state
 
 
 
-def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None, bound_interface=None):
+def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None, bound_interface=None, image_width=None, image_offset=None):
     if apiurl is not None:
         state.api_url = apiurl
     if download_path is not None:
@@ -24,8 +24,12 @@ def save_settings(close=lambda: None, apiurl=None, download_path=None, down_spee
         state.max_downloads = max_downloads
     if bound_interface is not None:
         state.bound_interface = None if bound_interface == "None" else bound_interface
+    if image_width is not None:
+        state.image_width = image_width
+    if image_offset is not None:
+        state.image_offset = image_offset
 
-    update_settings()
+    update_settings() # Update LibTorrent Session Settings
     consoleLog("Saved Settings")
     create_config()
     close()

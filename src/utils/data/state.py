@@ -29,6 +29,9 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
+        self.image_width: int = 300 # Default to 300px
+        self.image_offset: int = 50
+        self.image_enabled: bool = False
 
         # Trackers / Scraping
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers

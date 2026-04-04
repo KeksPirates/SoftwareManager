@@ -1,12 +1,11 @@
+from PySide6.QtCore import Qt, QSize, QEvent, QObject
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QLabel
 from utils.data.state import state
-from PySide6.QtCore import Qt, QSize, QEvent, QObject
 import os
 
-class Image(QObject):
-    TARGET_WIDTH = 300
 
+class Image(QObject):
     def __init__(self, parent):
         super().__init__(parent)
         self.application = parent
@@ -26,6 +25,8 @@ class Image(QObject):
         return False
 
     def _load_and_display(self, image_path):
+        if state.image_enabled is not True:
+            return
         self._current_image_path = image_path
         parent = self.application
         image = QImage(image_path)
@@ -34,7 +35,7 @@ class Image(QObject):
             return
 
         scaled_image = image.scaledToWidth(
-            self.TARGET_WIDTH, Qt.TransformationMode.SmoothTransformation
+            int(state.image_width), Qt.TransformationMode.SmoothTransformation
         )
 
         max_width = parent.width()
@@ -51,8 +52,8 @@ class Image(QObject):
         self.overlay_label.adjustSize()
         self.overlay_label.raise_()
 
-        x = parent.width() - self.overlay_label.width() - 100
-        y = parent.height() - self.overlay_label.height() - 100
+        x = parent.width() - self.overlay_label.width() - int(state.image_offset)
+        y = parent.height() - self.overlay_label.height() - int(state.image_offset)
         self.overlay_label.move(x, y)
         self.overlay_label.show()
 

@@ -29,7 +29,7 @@ def settings_dialog(self):
         consoleLog("Settings dialog opened")
         dialog = QDialog(self)
         dialog.setWindowTitle("Settings")
-        dialog.setFixedSize(700, 450)
+        dialog.setFixedSize(580, 400)
 
         dialog_layout = QVBoxLayout()
         dialog.setLayout(dialog_layout)
@@ -92,6 +92,8 @@ def settings_dialog(self):
         api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         api_url_container.setLayout(api_url_layout)
         api_url.setText(state.api_url)
+        api_url.setFixedWidth(180)
+        api_url.setFixedHeight(30)
 
 
         # Download Path
@@ -158,6 +160,46 @@ def settings_dialog(self):
         image_path_layout.addWidget(browse_button)
         browse_button.clicked.connect(browse_image_path)
 
+        # Image Settings
+
+        enable_image_container = QWidget()
+        enable_image_layout = QHBoxLayout()
+
+        enable_image_checkbox = QCheckBox()
+        enable_image_container.setLayout(enable_image_layout)
+        enable_image_layout.addWidget(QLabel("Enable Image: "))
+
+        enable_image_layout.addStretch()
+        enable_image_checkbox.setChecked(state.image_enabled)
+        enable_image_checkbox.toggled.connect(lambda checked: setattr(state, 'image_enabled', checked))
+        enable_image_layout.addWidget(enable_image_checkbox)
+
+        image_width_container = QWidget()
+        image_width_layout = QHBoxLayout()
+
+        image_width_layout.addWidget(QLabel("Image Width: "))
+        image_width = QSpinBox()
+        image_width.setMinimum(0)
+        image_width.setMaximum(10000000)
+        image_width.setValue(state.image_width)
+        image_width_container.setLayout(image_width_layout)
+        image_width_layout.addWidget(image_width)
+        image_width.setFixedWidth(180)
+        image_width.setFixedHeight(30)
+
+        
+        image_offset_container = QWidget()
+        image_offset_layout = QHBoxLayout()
+
+        image_offset_layout.addWidget(QLabel("Corner image_offset: "))
+        image_offset = QSpinBox()
+        image_offset.setMinimum(0)
+        image_offset.setMaximum(10000000)
+        image_offset.setValue(state.image_offset)
+        image_offset_container.setLayout(image_offset_layout)
+        image_offset_layout.addWidget(image_offset)
+        image_offset.setFixedWidth(180)
+        image_offset.setFixedHeight(30)
 
         # Speed Limiting
         down_speed_limit_container = QWidget()
@@ -255,7 +297,10 @@ def settings_dialog(self):
             autoresume_checkbox.isChecked(), 
             max_connections.value(), 
             max_downloads.value(), 
-            interface_select.currentText()))
+            interface_select.currentText(),
+            image_width.value(),
+            image_offset.value()
+            ))
 
         cancel_btn.clicked.connect(dialog.reject)
         layout.addWidget(cancel_btn)
@@ -263,8 +308,10 @@ def settings_dialog(self):
 
         tabs = QtWidgets.QTabWidget()
         create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
+        create_tab("Image", [enable_image_container, image_width_container, image_offset_container], tabs=tabs, stretch=True)
         create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
         create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
+
 
         dialog_layout.addWidget(tabs)
         dialog_layout.addLayout(layout)

@@ -28,6 +28,12 @@ def create_config():
         "image_path": f"{state.image_path}"
     }
 
+    config["Image"] = {
+        "enable_image": f"{state.image_enabled}",
+        "image_width": f"{state.image_width}",
+        "image_offset": f"{state.image_offset}"
+    }
+
     if platform.system() == "Windows":
         config_dir = os.environ.get("APPDATA", os.path.expanduser("~\\AppData\\Roaming"))
     else:
@@ -76,5 +82,11 @@ def read_config():
     # Paths
     state.download_path = config.get("Paths", "download_path", fallback=state.download_path)
     state.image_path = config.get("Paths", "image_path", fallback=state.image_path)
+
+    # Image
+    state.image_enabled = config.getboolean("Image", "enable_image", fallback=state.image_enabled)
+    state.image_width = config.getint("Image", "image_width", fallback=state.image_width)
+    state.image_offset = config.getint("Image", "image_offset", fallback=state.image_offset)
+
 
     create_config()
