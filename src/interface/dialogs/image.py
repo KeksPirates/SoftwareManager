@@ -15,6 +15,8 @@ class Image(QObject):
 
         parent.installEventFilter(self)
 
+        state.image_changed.connect(self.update_image_overlay)
+
         if state.image_path and os.path.exists(state.image_path):
             self._load_and_display(state.image_path)
 
@@ -35,7 +37,7 @@ class Image(QObject):
             return
 
         scaled_image = image.scaledToWidth(
-            int(state.image_width), Qt.TransformationMode.SmoothTransformation
+            state.image_width, Qt.TransformationMode.SmoothTransformation
         )
 
         max_width = parent.width()

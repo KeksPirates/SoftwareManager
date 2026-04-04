@@ -29,8 +29,8 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
-        self.image_width: int = 300 # Default to 300px
-        self.image_offset: int = 50
+        self._image_width: int = 300 # Default to 300px
+        self._image_offset: int = 50
         self.image_enabled: bool = False
 
         # Trackers / Scraping
@@ -60,5 +60,25 @@ class AppState(QObject):
         if new_path != self._image_path:
             self._image_path = new_path
             self.image_changed.emit(new_path)
+
+    @property
+    def image_offset(self) -> int:
+        return self._image_offset
+
+    @image_offset.setter
+    def image_offset(self, new_offset: int):
+        if new_offset != self._image_offset:
+            self._image_offset = new_offset
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_width(self) -> int:
+        return self._image_width
+
+    @image_width.setter
+    def image_width(self, new_offset: int):
+        if new_offset != self._image_width:
+            self._image_width = new_offset
+            self.image_changed.emit(self._image_path)
 
 state = AppState()

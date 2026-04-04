@@ -134,7 +134,7 @@ def settings_dialog(self):
         image_path_layout = QHBoxLayout()
 
         image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path (requires restart, experimental):"))
+        image_path_layout.addWidget(QLabel("Image Path:"))
         image_path_layout.addWidget(image_path)
         image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         image_path_container.setLayout(image_path_layout)
@@ -167,7 +167,7 @@ def settings_dialog(self):
 
         enable_image_checkbox = QCheckBox()
         enable_image_container.setLayout(enable_image_layout)
-        enable_image_layout.addWidget(QLabel("Enable Image: "))
+        enable_image_layout.addWidget(QLabel("Enable Image (needs image_path): "))
 
         enable_image_layout.addStretch()
         enable_image_checkbox.setChecked(state.image_enabled)
