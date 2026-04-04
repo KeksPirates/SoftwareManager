@@ -13,29 +13,111 @@
 
 <body>
     <header>
-        <div class="logo">logo<img src=""></div>
-        <nav>
-            <a href="/" class="btn active">Home</a>
-            <a href="/api" class="btn">API</a>
-            <a href="/about" class="btn">About</a>
+        <div class="logo-text">
+            <h1>KeksPirates</h1>
+        </div>
+        <nav class="tab">
+            <a class="tablinks" onclick="openTab(event, 'start')" id="defaultOpen">Home</a>
+            <a class="tablinks" onclick="openTab(event, 'api')">API</a>
+            <a class="tablinks" onclick="openTab(event, 'docs')">Docs</a>
+            <!-- <a class="tablinks" onclick="openTab(event, 'notfound')">404</a> -->
         </nav>
     </header>
 
+
+
+
     <main>
-        <div class="introduction-frame">
-            <div class="introduction-text inline-block">
-                <h1 class="hometitle"><br><span style="color: #db65d5">SoftwareManager</span></h1>
-                <p class="title_subtext">Simply search and download software from various sources</p>
 
-                <a href="https://github.com/KeksPirates/SoftwareManager" class="btn_big github"><img class="github-button" src="assets/icons/GitHub_Invertocat_White.png">GitHub</a>
-                <a href="https://github.com/KeksPirates/SoftwareManager/releases/latest" class="btn_big download"><img class="download-button" src="assets/icons/download_icon_black.png">Download</a>
-            </div>
-            <div class="introduction-image inline-block">
-                <div class="softwaremanager-scene">
-                    <img class="softwaremanager-image" src="assets/softwaremanager/search_tab_rounded.png">
+        <div id="start" class="tabcontent">
+            <div class="introduction-frame">
+                <div class="introduction-text inline-block">
+                    <h1 class="hometitle"><br><span style="color: #db65d5">SoftwareManager</span></h1>
+                    <p class="title_subtext">Simply search and download software from various sources</p>
+
+                    <a href="https://github.com/KeksPirates/SoftwareManager" class="btn_big github"><img class="github-button" src="assets/icons/GitHub_Invertocat_White.png">GitHub</a>
+                    <a href="https://github.com/KeksPirates/SoftwareManager/releases/latest" class="btn_big download"><img class="download-button" src="assets/icons/download_icon_black.png">Download</a>
                 </div>
+                <div class="introduction-image inline-block">
+                    <div class="softwaremanager-scene">
+                        <img class="softwaremanager-image" src="assets/softwaremanager/search_tab_rounded.png">
+                    </div>
 
-                <img class="softwaremanager-image-2" src="assets/softwaremanager/search_tab_rounded.png">
+                    <img class="softwaremanager-image-2" src="assets/softwaremanager/search_tab_rounded.png">
+                </div>
+            </div>
+        </div>
+
+        <div id="api" class="tabcontent">
+
+            <h1 class="title"><span class="json-string">API Documentation</span> </h1>
+            <p>This API allows you to search for posts on rutracker.</p>
+
+            <div class="base-information-frame">
+                <h3>API URL</h3>
+                <p class="api-url">https://api.michijackson.xyz/</p>
+                <br>
+                <h3>Endpoint</h3>
+                <p class="endpoint-url"><span class="request-type">GET</span><span class="endpoint-type-container">/search?q=<span class="endpoint-parameter">{query}</span></span></p>
+                
+                <div class="endpoint-parameters-container">
+                    <div class="endpoint-parameters-header">
+                        <p>Parameter</p>
+                        <p>Type</p>
+                        <p>Required</p>
+                        <p>Description</p>
+                    </div>
+                    <div class="endpoint-parameters-content">
+                        <p class="endpoint-parameter">q</p>
+                        <p class="endpoint-type">String</p>
+                        <p class="endpoint-required">True</p>
+                        <p class="endpoint-description">Search query</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="request-frame">
+                <h2>Example Request</h2>
+                <div class="request-type-container">
+                    <p><span class="request-type">GET</span> <span class="request-type-subcontainer">api.michijackson.xyz/search?q=keks</span></p>
+                </div>
+            </div>
+            
+
+            <div class="api-response-frame">
+                <h3>Response</h3>
+            
+            <pre class="api-response"><span class="json-punctuation">{</span>
+    "cached"<span class="json-punctuation">:</span> <span class="json-boolean">false</span><span class="json-punctuation">,</span>
+    "count"<span class="json-punctuation">:</span> <span class="json-integer">1</span><span class="json-punctuation">,</span>
+    "data"<span class="json-punctuation">:</span> <span class="json-punctuation">[</span>
+        <span class="json-punctuation">{</span>
+        "author"<span class="json-punctuation">:</span> <span class="json-string">"Viterrson"</span><span class="json-punctuation">,</span>
+        "id"<span class="json-punctuation">:</span> <span class="json-integer">1</span><span class="json-punctuation">,</span>
+        "leechers"<span class="json-punctuation">:</span> <span class="json-integer">0</span><span class="json-punctuation">,</span>
+        "seeders"<span class="json-punctuation">:</span> <span class="json-integer">3</span><span class="json-punctuation">,</span>
+        "title"<span class="json-punctuation">:</span> <span class="json-string">"(Hard - Rock) Keks - Keks - 1983, MP3, 320 kbps"</span><span class="json-punctuation">,</span>
+        "url"<span class="json-punctuation">:</span> <span class="json-string">"https://rutracker.org/forum/viewtopic.php?t=3835559"</span>
+        <span class="json-punctuation">}</span>
+    <span class="json-punctuation">],</span>
+    "query"<span class="json-punctuation">:</span> <span class="json-string">"keks"</span><span class="json-punctuation">,</span>
+    "success"<span class="json-punctuation">:</span> <span class="json-boolean">true</span>
+    <span class="json-punctuation">}</span></pre>
+            </div>
+        </div>
+
+        <div id="docs" class="tabcontent">
+            <h1 class="title"><span style="color: #db65d5">Docs</span></h1>
+            <br>
+            <p>Simplify searching & downloading</p>
+        </div>
+
+        <div id="notfound" class="tabcontent">
+            <div class="notfound-frame">
+                <h1 class="notfound-title">404</h1>
+                <br>
+                <h1 class="notfound-subtext">(╯°□°)╯︵ ┻━┻</h1>
+                <a class="btn_big download" onclick="openTab(event, 'start')" style="cursor: pointer;">Go Home</a>
             </div>
         </div>
 
@@ -44,6 +126,58 @@
     <footer>
         <small>KeksPirates - SoftwareManager</small>
     </footer>
+
+    <script>
+    function openTab(evt, tabName, pushToHistory = true) {
+        var i, tabcontent, tablinks;
+        
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        
+        document.getElementById(tabName).style.display = "block";
+        
+        let activeButton = document.querySelector(`.tablinks[onclick*="${tabName}"]`);
+        if (activeButton) {
+            activeButton.className += " active";
+        }
+
+        if (pushToHistory) {
+            let path = "/";
+            if (tabName === 'api') path = "/api";
+            if (tabName === 'docs') path = "/docs";
+
+            history.pushState({ tab: tabName }, "", path);
+        }
+    }
+
+    window.addEventListener('popstate', function(event) {
+        if (event.state && event.state.tab) {
+            openTab(null, event.state.tab, false); 
+        } else {
+            openTab(null, 'start', false); 
+        }
+    });
+
+    window.onload = function() {
+        let currentPath = window.location.pathname;
+        
+        if (currentPath === '/api') {
+            openTab(null, 'api', false);
+        } else if (currentPath === '/docs') {
+            openTab(null, 'docs', false);
+        } else {
+            history.replaceState({ tab: 'start' }, "", "/");
+            openTab(null, 'start', false); 
+        }
+    };
+    </script>
 
 
 

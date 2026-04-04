@@ -25,7 +25,7 @@ header {
     user-select: none;
 }
 
-nav a.btn {
+.tab a {
     display: inline-block;
     padding: 0.4rem 0.8rem;
     margin-left: 0.5rem;
@@ -35,24 +35,28 @@ nav a.btn {
     box-shadow: 0 0 6px 1px #dd06cb00;
     font-family: var(--main-font);
     transition: background 0.5s, color 0.5s;
+    cursor: pointer;
 }
 
-nav a.btn:hover {
+nav a:hover {
     background: #db65d517;
     color: #ffd1fd;
 }
 
-nav a.btn.active {
+nav a.active {
     background: #db65d55d;
     color: #fdd2fc;
 }
 
-.logo img {
-    height: 55px;
-    width: auto;
-    padding: 0.20rem 0;
-    margin-top: 1rem;
-    margin-left: -1rem;
+.logo-text h1 {
+    font-family: var(--main-font);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background-image: linear-gradient(147deg, #da84d5, #db65d5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
 main {
@@ -294,6 +298,32 @@ pre.api-response {
 .json-string { color: #db65d5; }
 .json-boolean { color: #ffab4a; }
 .json-integer { color: #66ff80; }
+
+.notfound-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; 
+    min-height: 75vh;    
+    
+    text-align: center;
+    gap: 10px;
+}
+
+.notfound-title {
+    font-size: 4.0rem;
+    line-height: 4rem;
+    margin-top: 1.8rem;
+    background-image: linear-gradient(135deg, #c574c1, #b851b2);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.notfound-subtext {
+    font-size: 2rem;
+}
+
 
 @media(max-width: 560px) {
 
