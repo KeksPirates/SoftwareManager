@@ -88,6 +88,11 @@ def settings_dialog(self):
     transparent_window_container, transparent_window_checkbox = create_widget(QCheckBox, "Window Transparency (requires restart) (Linux/MacOS only): ")
     transparent_window_checkbox.setChecked(state.window_transparency)
     transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
+
+    # Accent Color
+    accent_color_container, accent_color_input = create_widget(QLineEdit, "Accent Color (requires restart): ", width=180, height=30)
+    accent_color_input.setPlaceholderText("e.g. #fca7d7")
+    accent_color_input.setText(state.accent_color)
     
     # API URL Widget
     api_url_container, api_url = create_widget(QLineEdit, "API Server URL: ", width=180, height=30)
@@ -289,7 +294,8 @@ def settings_dialog(self):
             image_offset.value(),
             image_opacity.value(),
             image_as_wallpaper=image_mode_checkbox.isChecked(),
-            image_position=image_position_combo.currentText()
+            image_position=image_position_combo.currentText(),
+            accent_color=accent_color_input.text().strip()
             )
 
     cancel_btn.clicked.connect(dialog.reject)
@@ -297,7 +303,7 @@ def settings_dialog(self):
     layout.addWidget(save_btn)
 
     tabs = QtWidgets.QTabWidget()
-    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
+    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container], tabs=tabs, stretch=True)
     create_tab("Image", [enable_image_container, image_mode_container, image_position_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
     create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
     create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)

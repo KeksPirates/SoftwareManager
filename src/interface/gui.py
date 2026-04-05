@@ -6,6 +6,7 @@ from interface.assets.base64_icons import settings_white_base64
 from interface.assets.base64_icons import settings_black_base64
 from interface.dialogs.downloadlist import download_list_update
 from interface.dialogs.update import get_version, UpdateDialog
+from interface.dialogs.theme import _accent_selection_color
 from utils.logging.logs import consoleLog, flush_log_buffer
 from interface.dialogs.downloadmodel import DownloadModel
 from interface.dialogs.settings import settings_dialog
@@ -177,6 +178,10 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.tracker_list.addItems(list(state.trackers.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
+        if state.accent_color:
+            self.tracker_list.setStyleSheet(
+                f"QComboBox QAbstractItemView::item:selected {{ background: {_accent_selection_color()}; }}"
+            )
         self.corner_layout.addWidget(self.tracker_list)
 
         # Settings button

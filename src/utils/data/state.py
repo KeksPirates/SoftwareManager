@@ -25,6 +25,7 @@ class AppState(QObject):
 
         # GUI
         self.window_transparency: bool = False
+        self.accent_color: str = ""
         self.trackertable: QTableWidget
         self.interfaces: List = []
         self.active_interfaces: List = []

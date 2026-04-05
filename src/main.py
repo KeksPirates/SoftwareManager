@@ -21,13 +21,17 @@ import time
 import sys
 
 def run_gui(app):
-    qdarktheme.setup_theme("auto")
+    custom_colors = {}
+    if state.accent_color:
+        custom_colors["primary"] = state.accent_color
+    qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
     widget = MainWindow()
     
     # Check OS for window transparency compatibility and apply
     if state.window_transparency and platform.system() != "Windows":
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
+        transparent_colors = {"background": "#00000000", **custom_colors}
+        qdarktheme.setup_theme("auto", custom_colors=transparent_colors)
 
     set_main_window(widget)
     widget.show()
