@@ -299,6 +299,38 @@ pre.api-response {
 .json-boolean { color: #ffab4a; }
 .json-integer { color: #66ff80; }
 
+.sources-text {
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.docs-grid .endpoint-parameters-header,
+.docs-grid .endpoint-parameters-content {
+    grid-template-columns: 10rem 14rem 1fr;
+}
+
+.docs-grid .endpoint-parameters-header p {
+    color: #8f8d8d;
+}
+
+.docs-grid .endpoint-parameters-content {
+    padding: 0.5rem 0;
+    border-top: 1px solid #ffffff0a;
+}
+
+.docs-grid .endpoint-parameters-content:first-of-type {
+    border-top: none;
+}
+
+.docs-tips .sources-text {
+    padding: 0.25rem 0;
+}
+
+
+.base-information-frame h2 {
+    color: #db65d5;
+}
+
 .notfound-frame {
     display: flex;
     flex-direction: column;
