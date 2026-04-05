@@ -163,8 +163,20 @@ class Image(QObject):
             self.overlay_label.adjustSize()
             self.overlay_label.raise_()
 
-            x = parent.width() - self.overlay_label.width() - int(state.image_offset)
-            y = parent.height() - self.overlay_label.height() - int(state.image_offset)
+            pos = state.image_position
+            off = int(state.image_offset)
+            w = self.overlay_label.width()
+            h = self.overlay_label.height()
+            if pos == "top-left":
+                x, y = off, off
+            elif pos == "top-right":
+                x, y = parent.width() - w - off, off
+            elif pos == "bottom-left":
+                x, y = off, parent.height() - h - off
+            elif pos == "center":
+                x, y = (parent.width() - w) // 2, (parent.height() - h) // 2
+            else:  # bottom-right (default)
+                x, y = parent.width() - w - off, parent.height() - h - off
 
             self.opacity_effect.setOpacity(state.image_opacity / 100)
 

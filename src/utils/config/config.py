@@ -35,7 +35,9 @@ def create_config():
         "enable_image": str(state.image_enabled),
         "image_width": str(state.image_width),
         "image_offset": str(state.image_offset),
-        "image_opacity": str(state.image_opacity)
+        "image_opacity": str(state.image_opacity),
+        "image_as_wallpaper": str(state.image_as_wallpaper),
+        "image_position": str(state.image_position)
     }
 
     if platform.system() == "Windows":
@@ -102,6 +104,8 @@ def read_config():
         state.image_width = config.getint("Image", "image_width", fallback=state.image_width)
         state.image_offset = config.getint("Image", "image_offset", fallback=state.image_offset)
         state.image_opacity = config.getint("Image", "image_opacity", fallback=state.image_opacity)
+        state.image_as_wallpaper = config.getboolean("Image", "image_as_wallpaper", fallback=state.image_as_wallpaper)
+        state.image_position = config.get("Image", "image_position", fallback=state.image_position)
 
         create_config()
 

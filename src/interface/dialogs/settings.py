@@ -13,8 +13,7 @@ from PySide6.QtWidgets import (
     QDialog, 
     QLabel, 
     QHBoxLayout,
-    QSpinBox,
-    QCheckBox,
+    QSpinBox,    QSlider,    QCheckBox,
     QFileDialog,
     QComboBox,
 )
@@ -29,6 +28,8 @@ def settings_dialog(self):
     temp_image_offset = state.image_offset
     temp_image_opacity = state.image_opacity
     temp_image_enabled = state.image_enabled
+    temp_image_as_wallpaper = state.image_as_wallpaper
+    temp_image_position = state.image_position
 
     def create_widget(widget_type, label_text, **kwargs):
         container = QWidget()
@@ -147,25 +148,80 @@ def settings_dialog(self):
     enable_image_checkbox.setChecked(state.image_enabled)
     enable_image_checkbox.toggled.connect(lambda checked: setattr(state, 'image_enabled', checked))
 
-    # Image Width SpinBox
-    image_width_container, image_width = create_widget(QSpinBox, "Image Width: ", width=180, height=30)
+    # Image Mode Checkbox
+    image_mode_container, image_mode_checkbox = create_widget(QCheckBox, "Wallpaper Mode: ")
+    image_mode_checkbox.setChecked(state.image_as_wallpaper)
+    image_mode_checkbox.toggled.connect(lambda checked: setattr(state, 'image_as_wallpaper', checked))
+
+    # Image Position Preset
+    positions = ["bottom-right", "bottom-left", "top-right", "top-left", "center"]
+    image_position_container, image_position_combo = create_widget(QComboBox, "Position: ", width=180, height=30)
+    image_position_combo.addItems(positions)
+    idx = image_position_combo.findText(state.image_position)
+    image_position_combo.setCurrentIndex(idx if idx >= 0 else 0)
+    image_position_combo.currentTextChanged.connect(lambda val: setattr(state, 'image_position', val))
+
+    _slider_style = """
+        QSlider::groove:horizontal {
+            height: 3px;
+            background: palette(mid);
+            border-radius: 1px;
+        }
+        QSlider::handle:horizontal {
+            width: 10px;
+            height: 10px;
+            margin: -4px 0;
+            border-radius: 5px;
+        }
+    """
+
+    # Image Width Slider
+    image_width_container = QWidget()
+    image_width_layout = QHBoxLayout(image_width_container)
+    image_width_layout.addWidget(QLabel("Image Width: "))
+    image_width = QSlider(Qt.Orientation.Horizontal)
+    image_width.setFixedWidth(180)
+    image_width.setStyleSheet(_slider_style)
     image_width.setMinimum(0)
     image_width.setMaximum(2500)
     image_width.setValue(state.image_width)
-    image_width.valueChanged.connect(lambda val: setattr(state, 'image_width', val))
+    image_width_val = QLabel(str(state.image_width))
+    image_width_val.setFixedWidth(36)
+    image_width.valueChanged.connect(lambda val: (setattr(state, 'image_width', val), image_width_val.setText(str(val))))
+    image_width_layout.addWidget(image_width_val)
+    image_width_layout.addWidget(image_width)
 
-    # Image Offset SpinBox
-    image_offset_container, image_offset = create_widget(QSpinBox, "Corner Offset: ", width=180, height=30)
+    # Image Offset Slider
+    image_offset_container = QWidget()
+    image_offset_layout = QHBoxLayout(image_offset_container)
+    image_offset_layout.addWidget(QLabel("Corner Offset: "))
+    image_offset = QSlider(Qt.Orientation.Horizontal)
+    image_offset.setFixedWidth(180)
+    image_offset.setStyleSheet(_slider_style)
     image_offset.setMinimum(0)
+    image_offset.setMaximum(500)
     image_offset.setValue(state.image_offset)
-    image_offset.valueChanged.connect(lambda val: setattr(state, 'image_offset', val))
+    image_offset_val = QLabel(str(state.image_offset))
+    image_offset_val.setFixedWidth(36)
+    image_offset.valueChanged.connect(lambda val: (setattr(state, 'image_offset', val), image_offset_val.setText(str(val))))
+    image_offset_layout.addWidget(image_offset_val)
+    image_offset_layout.addWidget(image_offset)
 
-    # Image Opacity SpinBox
-    image_opacity_container, image_opacity = create_widget(QSpinBox, "Image Opacity: ", width=180, height=30)
+    # Image Opacity Slider
+    image_opacity_container = QWidget()
+    image_opacity_layout = QHBoxLayout(image_opacity_container)
+    image_opacity_layout.addWidget(QLabel("Image Opacity: "))
+    image_opacity = QSlider(Qt.Orientation.Horizontal)
+    image_opacity.setFixedWidth(180)
+    image_opacity.setStyleSheet(_slider_style)
     image_opacity.setMinimum(0)
     image_opacity.setMaximum(100)
     image_opacity.setValue(state.image_opacity)
-    image_opacity.valueChanged.connect(lambda val: setattr(state, 'image_opacity', val))
+    image_opacity_val = QLabel(str(state.image_opacity))
+    image_opacity_val.setFixedWidth(36)
+    image_opacity.valueChanged.connect(lambda val: (setattr(state, 'image_opacity', val), image_opacity_val.setText(str(val))))
+    image_opacity_layout.addWidget(image_opacity_val)
+    image_opacity_layout.addWidget(image_opacity)
 
     # Speed Limiting
     down_speed_limit_container, down_speed_limit = create_widget(QSpinBox, "Max Download Speed (KiB, 0 for unlimited): ", width=180, height=30)
@@ -231,7 +287,9 @@ def settings_dialog(self):
             interface_select.currentText(),
             image_width.value(),
             image_offset.value(),
-            image_opacity.value()
+            image_opacity.value(),
+            image_as_wallpaper=image_mode_checkbox.isChecked(),
+            image_position=image_position_combo.currentText()
             )
 
     cancel_btn.clicked.connect(dialog.reject)
@@ -240,7 +298,7 @@ def settings_dialog(self):
 
     tabs = QtWidgets.QTabWidget()
     create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
-    create_tab("Image", [enable_image_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
+    create_tab("Image", [enable_image_container, image_mode_container, image_position_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
     create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
     create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
 
@@ -254,6 +312,8 @@ def settings_dialog(self):
             state.image_offset = temp_image_offset
             state.image_opacity = temp_image_opacity
             state.image_enabled = temp_image_enabled
+            state.image_as_wallpaper = temp_image_as_wallpaper
+            state.image_position = temp_image_position
 
     dialog.finished.connect(on_dialog_finished)
     dialog.exec()
