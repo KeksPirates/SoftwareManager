@@ -35,6 +35,7 @@ class AppState(QObject):
         self._image_width: int = 300 # Default to 300px
         self._image_offset: int = 50
         self._image_opacity: int = 100
+        self._image_as_wallpaper: bool = True
 
         # Trackers / Scraping
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers
@@ -102,6 +103,16 @@ class AppState(QObject):
     def image_enabled(self, new_state: bool):
         if new_state != self._image_enabled:
             self._image_enabled = new_state
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_as_wallpaper(self) -> bool:
+        return self._image_as_wallpaper
+
+    @image_as_wallpaper.setter
+    def image_as_wallpaper(self, new_state: bool):
+        if new_state != self._image_as_wallpaper:
+            self._image_as_wallpaper = new_state
             self.image_changed.emit(self._image_path)
 
 state = AppState()

@@ -39,32 +39,49 @@ class Image(QObject):
             self.overlay_label.hide()
             return
 
-        scaled_image = image.scaledToWidth(
-            state.image_width, Qt.TransformationMode.SmoothTransformation
-        )
-
-        max_width = parent.width()
-        max_height = parent.height()
-        if scaled_image.width() > max_width or scaled_image.height() > max_height:
-            scaled_image = scaled_image.scaled(
-                QSize(max_width, max_height),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+        if getattr(state, "image_as_wallpaper", False):
+            scaled_image = image.scaled(
+                parent.size(),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation
             )
 
-        pixmap = QPixmap.fromImage(scaled_image)
-        self.overlay_label.setPixmap(pixmap)
-        self.overlay_label.adjustSize()
-        self.overlay_label.raise_()
+            crop_x = (scaled_image.width() - parent.width()) // 2
+            crop_y = (scaled_image.height() - parent.height()) // 2
+            scaled_image = scaled_image.copy(crop_x, crop_y, parent.width(), parent.height())
 
-        x = parent.width() - self.overlay_label.width() - int(state.image_offset)
-        y = parent.height() - self.overlay_label.height() - int(state.image_offset)
+            pixmap = QPixmap.fromImage(scaled_image)
+            self.overlay_label.setPixmap(pixmap)
 
-        self.opacity_effect.setOpacity(state.image_opacity / 100)
+            self.overlay_label.setGeometry(0, 0, parent.width(), parent.height())
+            self.overlay_label.lower()
 
-        self.overlay_label.move(x, y)
+        else:
+            scaled_image = image.scaledToWidth(
+                state.image_width, Qt.TransformationMode.SmoothTransformation
+            )
+
+            max_width = parent.width()
+            max_height = parent.height()
+            if scaled_image.width() > max_width or scaled_image.height() > max_height:
+                scaled_image = scaled_image.scaled(
+                    QSize(max_width, max_height),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+            pixmap = QPixmap.fromImage(scaled_image)
+            self.overlay_label.setPixmap(pixmap)
+            self.overlay_label.adjustSize()
+            self.overlay_label.raise_()
+
+            x = parent.width() - self.overlay_label.width() - int(state.image_offset)
+            y = parent.height() - self.overlay_label.height() - int(state.image_offset)
+
+            self.opacity_effect.setOpacity(state.image_opacity / 100)
+
+            self.overlay_label.move(x, y)
         self.overlay_label.show()
 
     def update_image_overlay(self, new_image_path):
         self._load_and_display(new_image_path)
-
