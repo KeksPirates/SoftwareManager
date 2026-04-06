@@ -1,0 +1,476 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --main-font: "Manrope", sans-serif;
+}
+
+
+body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #0f1011;
+}
+
+header {
+    height: 65px;
+    background: #1a1c1d;
+    color: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.tab a {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    margin-left: 0.5rem;
+    text-decoration: none;
+    color: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 0 6px 1px #dd06cb00;
+    font-family: var(--main-font);
+    transition: background 0.5s, color 0.5s;
+    cursor: pointer;
+}
+
+nav a:hover {
+    background: #db65d517;
+    color: #ffd1fd;
+}
+
+nav a.active {
+    background: #db65d55d;
+    color: #fdd2fc;
+}
+
+.logo-text h1 {
+    font-family: var(--main-font);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background-image: linear-gradient(147deg, #da84d5, #db65d5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+main {
+    font-family: var(--main-font);
+    color: #fafafa;
+    padding: 3rem;
+}
+
+main h1.hometitle {
+    font-size: 4.0rem;
+    line-height: 4rem;
+    margin-top: 1.8rem;
+}
+
+main p.title_subtext {
+    margin-top: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.softwaremanager-scene {
+    perspective: 700px;
+    width: fit-content;
+}
+
+main img.softwaremanager-image {
+    margin-top: 0rem;
+    user-select: none;
+    transform: rotateX(8deg) rotateY(-12deg) rotateZ(2deg) scale(0.85) translateX(-1rem);
+    box-shadow: 15px 20px 15px #0f0f0f;
+
+    /* transition: transform 0.4s ease-out; */
+}
+
+/* main img.softwaremanager-image:hover {
+    transform: rotateX(8deg) rotateY(-13deg) rotateZ(2deg) scale(0.86) translateX(-1rem);
+} */
+
+/* transform: rotateX(8443deg) rotateY(-14234233deg) rotateZ(2deg) scale(4.863) translateX(-133rem); lmao */
+
+main .introduction-text {
+    position: relative;
+    text-align: right;
+    margin-right: -3rem;
+    margin-top: 3rem;
+    z-index: 2;
+    user-select: none;
+}
+
+.introduction-image {
+    position: relative;
+    z-index: 1;
+}
+
+.inline-block {
+    display: inline-block;
+    vertical-align: top;
+}
+
+main .introduction-frame {
+    text-align: center;
+    position: relative;
+    font-size: 0
+}
+
+main .introduction-frame > * {
+    font-size: 1rem;
+}
+
+
+main .btn_big {
+    font-family: var(--main-font);
+    background: #1a1c1d;
+    padding: 0.7rem 1.4rem;  
+    margin-top: 1.5rem;
+    border: none;
+    border-radius: 10px;
+    align-items: center;
+    display: inline-flex;
+    color: #fafafa;
+    text-decoration: none;
+    font-weight: bold;
+    user-select: none;
+}
+
+main .btn_big img {
+    height: 20px;
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+main .btn_big.github {
+    margin-right: 1rem;
+    transition: background 0.5s;
+}
+
+main .btn_big.github:hover {
+    background: #18191a;
+}
+
+main .btn_big.download {
+    background: #ca62c5;
+    color: #0f1011;
+    transition: background 0.5s;
+}
+
+main .btn_big.download:hover {
+    background: #b551b0;
+}
+
+main .introduction-text h1,
+main .introduction-text p {
+    user-select: text;
+}
+
+
+.softwaremanager-image-2 {
+    display: none;
+}
+
+footer {
+    color: #585858;
+    font-family: var(--main-font);
+    align-self: center;
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    user-select: none;
+}
+
+::selection {
+    background: #db65d528;
+}
+
+.base-information-frame {
+        background: #1a1c1d;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+}
+.program-preview {
+    box-sizing: inherit;
+    background: #1a1c1d;
+    width: auto;
+    height: 20rem;
+    border-radius: 10px;
+}
+
+pre.api-response {
+    font-family: monospace;
+    background: #151718;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.api-response-frame {
+        background: #1a1c1d;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+}
+
+.request-type {
+    color: #fdd2fc;
+    padding: 1px 6px;
+    background: #db65d55d;
+    border-radius: 6px;
+}
+
+.request-type-container {
+    background: #1a1c1d;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.endpoint-type-container {
+    background: #151718;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.request-type-subcontainer {
+    background: #1a1c1d;
+    padding: 0.5rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+
+.api-url {
+    background: #151718;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.endpoint-url {
+    background: #151718;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    color: #8f8d8d
+}
+
+.endpoint-parameters-container {
+    background: #151718;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    color: #8f8d8d;
+}
+
+.endpoint-parameters-header {
+    margin-top: -0.3rem;
+    margin-bottom: 0.9rem;
+    font-size: 0.9rem;
+    grid-template-columns: 9rem 9rem 9rem 9rem;
+    display: grid;
+}
+
+.endpoint-parameters-content {
+    font-size: 1rem;
+    grid-template-columns: 9rem 9rem 9rem 9rem;
+    display: grid;
+}
+
+.request-frame {
+    margin-top: 1rem;
+}
+
+.endpoint-parameter { color: #ffab4a; }
+.endpoint-type { color: #db65d5 }
+.endpoint-required { color: #66ff80}
+.endpoint-description { color: #b1b0b0 }
+
+.json-punctuation { color: #5c5c5c; }
+.json-string { color: #db65d5; }
+.json-boolean { color: #ffab4a; }
+.json-integer { color: #66ff80; }
+
+.sources-text {
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.docs-grid .endpoint-parameters-header,
+.docs-grid .endpoint-parameters-content {
+    grid-template-columns: 10rem 14rem 1fr;
+}
+
+.docs-grid .endpoint-parameters-header p {
+    color: #8f8d8d;
+}
+
+.docs-grid .endpoint-parameters-content {
+    padding: 0.5rem 0;
+    border-top: 1px solid #ffffff0a;
+}
+
+.docs-grid .endpoint-parameters-content:first-of-type {
+    border-top: none;
+}
+
+.docs-tips .sources-text {
+    padding: 0.25rem 0;
+}
+
+
+.base-information-frame h2 {
+    color: #db65d5;
+}
+
+.notfound-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; 
+    min-height: 75vh;    
+    
+    text-align: center;
+    gap: 10px;
+}
+
+.notfound-title {
+    font-size: 4.0rem;
+    line-height: 4rem;
+    margin-top: 1.8rem;
+    background-image: linear-gradient(135deg, #c574c1, #b851b2);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.notfound-subtext {
+    font-size: 2rem;
+}
+
+
+@media(max-width: 560px) {
+
+    header {
+        padding: 1rem;
+    }
+
+    main {
+        margin: 0rem;
+        padding: 1rem;
+        
+    }
+
+    main .introduction {
+        display: block;
+        margin-top: -1rem;
+        padding: 1rem;
+    }
+
+    main .introduction-text {
+        position: relative;
+        text-align: center;
+        margin-top: 0rem;
+        z-index: 2;
+        user-select: none;
+        margin-right: 0rem;
+        padding-bottom: 2rem;
+    }
+
+    main h1.hometitle {
+        font-size: 2rem;
+        line-height: 2.2rem;
+        text-align: left;
+    }
+
+    main p.title_subtext {
+        text-align: left;
+    }
+
+    .introduction-image {
+        display: none;
+    }
+
+    main .btn_big {
+        display: block;
+        margin: 1rem auto;
+    }
+
+    main .btn_big.github{
+        margin-right: 0rem;
+    }
+}
+
+@media (min-width: 561px) and (max-width: 1393px) {
+
+    header {
+        padding: 1rem;
+    }
+
+    main {
+        margin: 0rem;
+        padding: 1rem;
+        
+    }
+
+    main .introduction {
+        display: flex;
+        margin-top: -1rem;
+        padding: 1rem;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    main .introduction-text {
+        position: relative;
+        text-align: center;
+        margin-top: 0rem;
+        z-index: 2;
+        user-select: none;
+        margin-left: 2rem;
+        margin-right: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    main h1.hometitle {
+        font-size: 2rem;
+        line-height: 2.2rem;
+        text-align: center;
+    }
+
+    main p.title_subtext {
+        text-align: center;
+    }
+
+    .softwaremanager-image {
+        display: none;
+    }
+
+    .softwaremanager-image-2 {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .introduction-image {
+        width: 100%;
+        max-width: 50rem;
+        user-select: none;
+    }
+
+    main .introduction .inline-block {
+    display: block;
+    }
+
+    
+}
