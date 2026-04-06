@@ -3,7 +3,6 @@ from utils.logging.logs import consoleLog, remove_download_log
 import os
 
 def split_data(data):
-
     count = data.count
     downloads = data.data
 

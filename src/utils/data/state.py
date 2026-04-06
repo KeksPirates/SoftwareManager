@@ -25,10 +25,19 @@ class AppState(QObject):
 
         # GUI
         self.window_transparency: bool = False
+        self.accent_color: str = ""
         self.trackertable: QTableWidget
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
+
+        # Image
+        self._image_enabled: bool = False
+        self._image_width: int = 300 # Default to 300px
+        self._image_offset: int = 50
+        self._image_opacity: int = 100
+        self._image_as_wallpaper: bool = False
+        self._image_position: str = "bottom-right"  # top-left, top-right, bottom-left, bottom-right, center
 
         # Trackers / Scraping
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers
@@ -57,5 +66,95 @@ class AppState(QObject):
         if new_path != self._image_path:
             self._image_path = new_path
             self.image_changed.emit(new_path)
+
+    @property
+    def image_offset(self) -> int:
+        return self._image_offset
+
+    @image_offset.setter
+    def image_offset(self, new_offset: int):
+        if new_offset != self._image_offset:
+            self._image_offset = new_offset
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_width(self) -> int:
+        return self._image_width
+
+    @image_width.setter
+    def image_width(self, new_width: int):
+        if new_width != self._image_width:
+            self._image_width = new_width
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_opacity(self) -> int:
+        return self._image_opacity
+
+    @image_opacity.setter
+    def image_opacity(self, new_opacity: int):
+        if new_opacity != self._image_opacity:
+            self._image_opacity = new_opacity
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_enabled(self) -> bool:
+        return self._image_enabled
+
+    @image_enabled.setter
+    def image_enabled(self, new_state: bool):
+        if new_state != self._image_enabled:
+            self._image_enabled = new_state
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_as_wallpaper(self) -> bool:
+        return self._image_as_wallpaper
+
+    @image_as_wallpaper.setter
+    def image_as_wallpaper(self, new_state: bool):
+        if new_state != self._image_as_wallpaper:
+            self._image_as_wallpaper = new_state
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_position(self) -> str:
+        return self._image_position
+
+    @image_position.setter
+    def image_position(self, new_pos: str):
+        if new_pos != self._image_position:
+            self._image_position = new_pos
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_custom_position(self) -> bool:
+        return self._image_custom_position
+
+    @image_custom_position.setter
+    def image_custom_position(self, new_state: bool):
+        if new_state != self._image_custom_position:
+            self._image_custom_position = new_state
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_x(self) -> int:
+        return self._image_x
+
+    @image_x.setter
+    def image_x(self, val: int):
+        if val != self._image_x:
+            self._image_x = val
+            self.image_changed.emit(self._image_path)
+
+    @property
+    def image_y(self) -> int:
+        return self._image_y
+
+    @image_y.setter
+    def image_y(self, val: int):
+        if val != self._image_y:
+            self._image_y = val
+            self.image_changed.emit(self._image_path)
 
 state = AppState()
