@@ -24,6 +24,7 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 
 
 def settings_dialog(self):
+    temp_image_path = state.image_path
     temp_image_width = state.image_width
     temp_image_offset = state.image_offset
     temp_image_opacity = state.image_opacity
@@ -128,6 +129,7 @@ def settings_dialog(self):
     image_path_container, image_path = create_widget(QLineEdit, "Image Path: ")
     image_path.setText(state.image_path)
     image_path_layout = image_path_container.layout()
+    image_path.textChanged.connect(lambda text: setattr(state, 'image_path', text))
 
     def browse_image_path():
         file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
@@ -314,6 +316,7 @@ def settings_dialog(self):
 
     def on_dialog_finished(result): # Undo Image changes if "Save" button is not pressed
         if result == QtWidgets.QDialog.DialogCode.Rejected:
+            state.image_path = temp_image_path
             state.image_width = temp_image_width
             state.image_offset = temp_image_offset
             state.image_opacity = temp_image_opacity
