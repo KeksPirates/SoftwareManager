@@ -1,4 +1,6 @@
 from PySide6.QtGui import QColor
+from utils.logging.logs import consoleLog
+from utils.data.state import state
 import darkdetect
 
 def _is_dark_mode():
@@ -27,15 +29,32 @@ def _theme_colors():
         }
 
 
+def _accent_selection_color(alpha: float = 0.35) -> str:
+    if not state.accent_color:
+        return None
+    try:
+        hex_color = state.accent_color.lstrip('#')
+        if len(hex_color) != 6:
+            return None
+        r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+        return f"rgba({r}, {g}, {b}, {alpha})"
+    except ValueError:
+        consoleLog(f"Invalid Color: {state.accent_color}")
+        return None
+
+
 def _table_stylesheet(view_type="QTableWidget"):
     c = _theme_colors()
     dark = _is_dark_mode()
     color_rule = "" if dark else f"color: {c['text']};"
+    selected_bg = _accent_selection_color() or c["selected"]
+    selection_color_rule = f"selection-background-color: {selected_bg};" if state.accent_color else ""
     return f"""
         {view_type} {{
             border: none;
             outline: 0;
             font-size: 13px;
+            {selection_color_rule}
             {color_rule}
         }}
         {view_type}::item {{
@@ -45,7 +64,7 @@ def _table_stylesheet(view_type="QTableWidget"):
             {color_rule}
         }}
         {view_type}::item:selected {{
-            background: {c["selected"]};
+            background: {selected_bg};
             outline: none;
             border: none;
             border-bottom: 1px solid {c["border"]};

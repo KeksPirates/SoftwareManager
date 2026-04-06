@@ -13,8 +13,7 @@ from PySide6.QtWidgets import (
     QDialog, 
     QLabel, 
     QHBoxLayout,
-    QSpinBox,
-    QCheckBox,
+    QSpinBox,    QSlider,    QCheckBox,
     QFileDialog,
     QComboBox,
 )
@@ -25,248 +24,305 @@ SVG_FOLDER = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path 
 
 
 def settings_dialog(self):
+    temp_image_path = state.image_path
+    temp_image_width = state.image_width
+    temp_image_offset = state.image_offset
+    temp_image_opacity = state.image_opacity
+    temp_image_enabled = state.image_enabled
+    temp_image_as_wallpaper = state.image_as_wallpaper
+    temp_image_position = state.image_position
 
-        consoleLog("Settings dialog opened")
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Settings")
-        dialog.setFixedSize(700, 450)
-
-        dialog_layout = QVBoxLayout()
-        dialog.setLayout(dialog_layout)
-
-        if state.window_transparency and platform.system() != "Windows" and dialog:
-            dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        def close_settings():
-            dialog.reject()
-
-        update_checkbox_container = QWidget()
-        update_checkbox_layout = QHBoxLayout()
-
-        # Ignore updates checkbox
-
-        if platform.system() == "Windows":
-            update_checkbox = QCheckBox()
-            update_checkbox_container.setLayout(update_checkbox_layout)
-            update_checkbox_layout.addWidget(QLabel("Ignore Updates: "))
-            update_checkbox_layout.addStretch()
-            update_checkbox.setChecked(state.ignore_updates)
-            update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
-            update_checkbox_layout.addWidget(update_checkbox)
-
-        # Auto-resume downloads checkbox
-
-        autoresume_container = QWidget()
-        autoresume_layout = QHBoxLayout()
-
-        autoresume_checkbox = QCheckBox()
-        autoresume_container.setLayout(autoresume_layout)
-        autoresume_layout.addWidget(QLabel("Auto-Resume Downloads: "))
-
-        autoresume_layout.addStretch()
-        autoresume_checkbox.setChecked(state.autoresume)
-        autoresume_layout.addWidget(autoresume_checkbox)
-
-
-        # Transparent window checkbox
-        transparent_window_container = QWidget()
-        transparent_window_layout = QHBoxLayout()
-
-        transparent_window_checkbox = QCheckBox()
-        transparent_window_container.setLayout(transparent_window_layout)
-        transparent_window_layout.addWidget(QLabel("Window Transparency (requires restart) (Linux/MacOS only): "))
-
-        transparent_window_layout.addStretch()
-        transparent_window_checkbox.setChecked(state.window_transparency)
-        transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
-        transparent_window_layout.addWidget(transparent_window_checkbox)
-
-
-        # API Server Setting
-        api_url_container = QWidget()
-        api_url_layout = QHBoxLayout()
-
-        api_url = QLineEdit()
-        api_url_layout.addWidget(QLabel("API Server URL:"))
-        api_url_layout.addWidget(api_url)
-        api_url_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        api_url_container.setLayout(api_url_layout)
-        api_url.setText(state.api_url)
-
-
-        # Download Path
-        download_path_container = QWidget()
-        download_path_layout = QHBoxLayout()
-
-        download_path = QLineEdit()
-        download_path_layout.addWidget(QLabel("Download Path:"))
-        download_path_layout.addWidget(download_path)
-        download_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        download_path_container.setLayout(download_path_layout)
-        download_path.setText(state.download_path)
-
-        def browse_download_path():
-            dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
-            if dir_path:
-                download_path.setText(dir_path)
-
-        browse_button = QPushButton()
-        browse_button.setFixedSize(36, 36)
-        browse_button.setIconSize(QSize(24, 24))
-        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
-        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        browse_button.setStyleSheet("""
-            QPushButton {
-                border: none;
-                background: transparent;
-                padding: 0px;
-            }
-        """)
-
-        download_path_layout.addWidget(browse_button)
-        browse_button.clicked.connect(browse_download_path)
-
-
-        # Image Path
-        image_path_container = QWidget()
-        image_path_layout = QHBoxLayout()
-
-        image_path = QLineEdit()
-        image_path_layout.addWidget(QLabel("Image Path (requires restart, experimental):"))
-        image_path_layout.addWidget(image_path)
-        image_path_container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
-        image_path_container.setLayout(image_path_layout)
-        image_path.setText(state.image_path)
-
-        def browse_image_path():
-            file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
-            if file_path:
-                image_path.setText(file_path)
-
-        browse_button = QPushButton()
-        browse_button.setFixedSize(36, 36)
-        browse_button.setIconSize(QSize(24, 24))
-        browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
-        browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        browse_button.setStyleSheet("""
-            QPushButton {
-                border: none;
-                background: transparent;
-                padding: 0px;
-            }
-        """)
-        image_path_layout.addWidget(browse_button)
-        browse_button.clicked.connect(browse_image_path)
-
-
-        # Speed Limiting
-        down_speed_limit_container = QWidget()
-        down_speed_limit_layout = QHBoxLayout()
-
-        down_speed_limit_layout.addWidget(QLabel("Max Download Speed (KiB, 0 for unlimited): "))
-        down_speed_limit = QSpinBox()
-        down_speed_limit.setMinimum(0)
-        down_speed_limit.setMaximum(10000000)
-        down_speed_limit.setValue(state.down_speed_limit)
-        down_speed_limit_container.setLayout(down_speed_limit_layout)
-        down_speed_limit_layout.addWidget(down_speed_limit)
-        down_speed_limit.setFixedWidth(180)
-        down_speed_limit.setFixedHeight(30)
-
-        up_speed_limit_container = QWidget()
-        up_speed_limit_layout = QHBoxLayout()
-
-        up_speed_limit_layout.addWidget(QLabel("Max Upload Speed (KiB, 0 for unlimited): "))
-        up_speed_limit = QSpinBox()
-        up_speed_limit.setMinimum(0)
-        up_speed_limit.setMaximum(10000000)
-        up_speed_limit.setValue(state.up_speed_limit)
-        up_speed_limit_container.setLayout(up_speed_limit_layout)
-        up_speed_limit_layout.addWidget(up_speed_limit)
-        up_speed_limit.setFixedWidth(180)
-        up_speed_limit.setFixedHeight(30)
-
-        
-        # Connection Configs
-        max_connections_container = QWidget()
-        max_connections_layout = QHBoxLayout()
-
-        max_connections_layout.addWidget(QLabel("Max Connections: "))
-        max_connections = QSpinBox()
-        max_connections.setMinimum(0)
-        max_connections.setMaximum(10000000)
-        max_connections.setValue(state.max_connections)
-        max_connections_container.setLayout(max_connections_layout)
-        max_connections_layout.addWidget(max_connections)
-        max_connections.setFixedWidth(180)
-        max_connections.setFixedHeight(30)
-
-
-        # Download Configs
-        max_downloads_container = QWidget()
-        max_downloads_layout = QHBoxLayout()
-
-        max_downloads_layout.addWidget(QLabel("Max Downloads: "))
-        max_downloads = QSpinBox()
-        max_downloads.setMinimum(0)
-        max_downloads.setMaximum(10000000)
-        max_downloads.setValue(state.max_downloads)
-        max_downloads_container.setLayout(max_downloads_layout)
-        max_downloads_layout.addWidget(max_downloads)
-        max_downloads.setFixedWidth(180)
-        max_downloads.setFixedHeight(30)
-
-
-        # Interface Binding
-        interface_container = QWidget()
-        interface_layout = QHBoxLayout()
-
-        interface_label = QLabel("Network Interface:")
-        interface_layout.addWidget(interface_label)
-        interface_select = QComboBox()
-        interface_select.addItems(["None"] + state.interfaces)
-
-        target = state.bound_interface if state.bound_interface else "None"
-
-        index = interface_select.findText(target)
-        if index >= 0:
-            interface_select.setCurrentIndex(index)
-        else:
-            interface_select.setCurrentIndex(0)
-
-        interface_select.setFixedWidth(180)
-        interface_select.setFixedHeight(30)
-        interface_layout.addWidget(interface_select)
-        interface_container.setLayout(interface_layout)
-
-
-        # Save / Cancel buttons
+    def create_widget(widget_type, label_text, **kwargs):
+        container = QWidget()
         layout = QHBoxLayout()
+        container.setLayout(layout)
+        layout.addWidget(QLabel(label_text))
 
-        save_btn = QPushButton("Save")
-        cancel_btn = QPushButton("Cancel")
-        save_btn.clicked.connect(lambda: save_settings(
-            close_settings, 
+        widget = widget_type()
+
+        if widget_type in (QSpinBox,):
+            layout.addWidget(widget)
+            widget.setMinimum(kwargs.get("minimum", 0))
+            widget.setMaximum(kwargs.get("maximum", 10000000))
+            widget.setFixedWidth(kwargs.get("width", 180))
+            widget.setFixedHeight(kwargs.get("height", 30))
+        elif widget_type in (QCheckBox,):
+            layout.addStretch()
+            layout.addWidget(widget)
+        elif widget_type in (QLineEdit,):
+            layout.addWidget(widget)
+            container.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+            if "width" in kwargs:
+                widget.setFixedWidth(kwargs["width"])
+            if "height" in kwargs:
+                widget.setFixedHeight(kwargs["height"])
+        elif widget_type in (QComboBox,):
+            layout.addWidget(widget)
+            widget.setFixedWidth(kwargs.get("width", 180))
+            widget.setFixedHeight(kwargs.get("height", 30))
+
+        return container, widget
+
+    consoleLog("Settings dialog opened")
+    dialog = QDialog(self)
+    dialog.setWindowTitle("Settings")
+    dialog.setFixedSize(580, 400)
+
+    dialog_layout = QVBoxLayout()
+    dialog.setLayout(dialog_layout)
+
+    if state.window_transparency and platform.system() != "Windows" and dialog:
+        dialog.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    # Ignore Updates checkbox
+    update_checkbox_container, update_checkbox = create_widget(QCheckBox, "Ignore Updates: ")
+    if platform.system() == "Windows":
+        update_checkbox.setChecked(state.ignore_updates)
+        update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
+
+    # Autoresume Container Checkbox
+    autoresume_container, autoresume_checkbox = create_widget(QCheckBox, "Auto-Resume Downloads: ")
+    autoresume_checkbox.setChecked(state.autoresume)
+    autoresume_checkbox.toggled.connect(lambda checked: setattr(state, 'autoresume', checked))
+
+    # Transparent Window Checkbox
+    transparent_window_container, transparent_window_checkbox = create_widget(QCheckBox, "Window Transparency (requires restart) (Linux/MacOS only): ")
+    transparent_window_checkbox.setChecked(state.window_transparency)
+    transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
+
+    # Accent Color
+    accent_color_container, accent_color_input = create_widget(QLineEdit, "Accent Color (requires restart): ", width=180, height=30)
+    accent_color_input.setPlaceholderText("e.g. #fca7d7")
+    accent_color_input.setText(state.accent_color)
+    
+    # API URL Widget
+    api_url_container, api_url = create_widget(QLineEdit, "API Server URL: ", width=180, height=30)
+    api_url.setText(state.api_url)
+
+    # Download Path Widget
+    download_path_container, download_path = create_widget(QLineEdit, "Download Path: ")
+    download_path.setText(state.download_path)
+    download_path_layout = download_path_container.layout()
+
+    def browse_download_path():
+        dir_path = QFileDialog.getExistingDirectory(dialog, "Select Download Directory", state.download_path)
+        if dir_path:
+            download_path.setText(dir_path)
+
+    browse_button = create_widget(QPushButton, "", width=36, height=36)[1]
+    browse_button.setIconSize(QSize(24, 24))
+    browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+    browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+    browse_button.setStyleSheet("""
+        QPushButton {
+            border: none;
+            background: transparent;
+            padding: 0px;
+        }
+    """)
+
+    download_path_layout.addWidget(browse_button)
+    browse_button.clicked.connect(browse_download_path)
+
+
+    # Image Path
+    image_path_container, image_path = create_widget(QLineEdit, "Image Path: ")
+    image_path.setText(state.image_path)
+    image_path_layout = image_path_container.layout()
+    image_path.textChanged.connect(lambda text: setattr(state, 'image_path', text))
+
+    def browse_image_path():
+        file_path = QFileDialog.getOpenFileName(dialog, "Select Image File", state.image_path, "Image Files (*.png *.jpg)")[0]
+        if file_path:
+            image_path.setText(file_path)
+
+    browse_button = create_widget(QPushButton, "", width=36, height=36)[1]
+    browse_button.setIconSize(QSize(24, 24))
+    browse_button.setIcon(svg_icon(SVG_FOLDER, 24))
+    browse_button.setCursor(Qt.CursorShape.PointingHandCursor)
+    browse_button.setStyleSheet("""
+        QPushButton {
+            border: none;
+            background: transparent;
+            padding: 0px;
+        }
+    """)
+    image_path_layout.addWidget(browse_button)
+    browse_button.clicked.connect(browse_image_path)
+
+    # Enable Image Checkbox
+    enable_image_container, enable_image_checkbox = create_widget(QCheckBox, "Enable Image (requires image path): ", width=180, height=30)
+    enable_image_checkbox.setChecked(state.image_enabled)
+    enable_image_checkbox.toggled.connect(lambda checked: setattr(state, 'image_enabled', checked))
+
+    # Image Mode Checkbox
+    image_mode_container, image_mode_checkbox = create_widget(QCheckBox, "Wallpaper Mode: ")
+    image_mode_checkbox.setChecked(state.image_as_wallpaper)
+    image_mode_checkbox.toggled.connect(lambda checked: setattr(state, 'image_as_wallpaper', checked))
+
+    # Image Position Preset
+    positions = ["bottom-right", "bottom-left", "top-right", "top-left", "center"]
+    image_position_container, image_position_combo = create_widget(QComboBox, "Position: ", width=180, height=30)
+    image_position_combo.addItems(positions)
+    idx = image_position_combo.findText(state.image_position)
+    image_position_combo.setCurrentIndex(idx if idx >= 0 else 0)
+    image_position_combo.currentTextChanged.connect(lambda val: setattr(state, 'image_position', val))
+
+    _slider_style = """
+        QSlider::groove:horizontal {
+            height: 3px;
+            background: palette(mid);
+            border-radius: 1px;
+        }
+        QSlider::handle:horizontal {
+            width: 10px;
+            height: 10px;
+            margin: -4px 0;
+            border-radius: 5px;
+        }
+    """
+
+    # Image Width Slider
+    image_width_container = QWidget()
+    image_width_layout = QHBoxLayout(image_width_container)
+    image_width_layout.addWidget(QLabel("Image Width: "))
+    image_width = QSlider(Qt.Orientation.Horizontal)
+    image_width.setFixedWidth(180)
+    image_width.setStyleSheet(_slider_style)
+    image_width.setMinimum(0)
+    image_width.setMaximum(2500)
+    image_width.setValue(state.image_width)
+    image_width_val = QLabel(str(state.image_width))
+    image_width_val.setFixedWidth(36)
+    image_width.valueChanged.connect(lambda val: (setattr(state, 'image_width', val), image_width_val.setText(str(val))))
+    image_width_layout.addWidget(image_width_val)
+    image_width_layout.addWidget(image_width)
+
+    # Image Offset Slider
+    image_offset_container = QWidget()
+    image_offset_layout = QHBoxLayout(image_offset_container)
+    image_offset_layout.addWidget(QLabel("Corner Offset: "))
+    image_offset = QSlider(Qt.Orientation.Horizontal)
+    image_offset.setFixedWidth(180)
+    image_offset.setStyleSheet(_slider_style)
+    image_offset.setMinimum(0)
+    image_offset.setMaximum(500)
+    image_offset.setValue(state.image_offset)
+    image_offset_val = QLabel(str(state.image_offset))
+    image_offset_val.setFixedWidth(36)
+    image_offset.valueChanged.connect(lambda val: (setattr(state, 'image_offset', val), image_offset_val.setText(str(val))))
+    image_offset_layout.addWidget(image_offset_val)
+    image_offset_layout.addWidget(image_offset)
+
+    # Image Opacity Slider
+    image_opacity_container = QWidget()
+    image_opacity_layout = QHBoxLayout(image_opacity_container)
+    image_opacity_layout.addWidget(QLabel("Image Opacity: "))
+    image_opacity = QSlider(Qt.Orientation.Horizontal)
+    image_opacity.setFixedWidth(180)
+    image_opacity.setStyleSheet(_slider_style)
+    image_opacity.setMinimum(0)
+    image_opacity.setMaximum(100)
+    image_opacity.setValue(state.image_opacity)
+    image_opacity_val = QLabel(str(state.image_opacity))
+    image_opacity_val.setFixedWidth(36)
+    image_opacity.valueChanged.connect(lambda val: (setattr(state, 'image_opacity', val), image_opacity_val.setText(str(val))))
+    image_opacity_layout.addWidget(image_opacity_val)
+    image_opacity_layout.addWidget(image_opacity)
+
+    # Speed Limiting
+    down_speed_limit_container, down_speed_limit = create_widget(QSpinBox, "Max Download Speed (KiB, 0 for unlimited): ", width=180, height=30)
+    down_speed_limit.setMinimum(0)
+    down_speed_limit.setValue(state.down_speed_limit)
+
+    up_speed_limit_container, up_speed_limit = create_widget(QSpinBox, "Max Upload Speed (KiB, 0 for unlimited): ", width=180, height=30)
+    up_speed_limit.setMinimum(0)
+    up_speed_limit.setValue(state.up_speed_limit)
+
+    # Connection Configs
+    max_connections_container, max_connections = create_widget(QSpinBox, "Max Connections: ", width=180, height=30)
+    max_connections.setMinimum(0)
+    max_connections.setValue(state.max_connections)
+
+
+    # Download Configs
+    max_downloads_container, max_downloads = create_widget(QSpinBox, "Max Downloads: ", width=180, height=30)
+    max_downloads.setMinimum(0)
+    max_downloads.setValue(state.max_downloads)
+
+    # Interface Binding
+    interface_container = QWidget()
+    interface_layout = QHBoxLayout()
+
+    interface_label = QLabel("Network Interface:")
+    interface_layout.addWidget(interface_label)
+    interface_select = QComboBox()
+    interface_select.addItems(["None"] + state.interfaces)
+
+    target = state.bound_interface if state.bound_interface else "None"
+
+    index = interface_select.findText(target)
+    if index >= 0:
+        interface_select.setCurrentIndex(index)
+    else:
+        interface_select.setCurrentIndex(0)
+
+    interface_select.setFixedWidth(180)
+    interface_select.setFixedHeight(30)
+    interface_layout.addWidget(interface_select)
+    interface_container.setLayout(interface_layout)
+
+
+    # Save / Cancel buttons
+    layout = QHBoxLayout()
+
+    save_btn = QPushButton("Save")
+    cancel_btn = QPushButton("Cancel")
+    save_btn.clicked.connect(lambda: handle_save())
+
+    def handle_save():
+        save_settings(
+            dialog.accept, 
             api_url.text(), 
             download_path.text(), 
-            down_speed_limit.value(), 
+            down_speed_limit.value(),
             up_speed_limit.value(), 
             image_path.text(), 
             autoresume_checkbox.isChecked(), 
             max_connections.value(), 
             max_downloads.value(), 
-            interface_select.currentText()))
+            interface_select.currentText(),
+            image_width.value(),
+            image_offset.value(),
+            image_opacity.value(),
+            image_as_wallpaper=image_mode_checkbox.isChecked(),
+            image_position=image_position_combo.currentText(),
+            accent_color=accent_color_input.text().strip()
+            )
 
-        cancel_btn.clicked.connect(dialog.reject)
-        layout.addWidget(cancel_btn)
-        layout.addWidget(save_btn)
+    cancel_btn.clicked.connect(dialog.reject)
+    layout.addWidget(cancel_btn)
+    layout.addWidget(save_btn)
 
-        tabs = QtWidgets.QTabWidget()
-        create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container], tabs=tabs, stretch=True)
-        create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
-        create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
+    tabs = QtWidgets.QTabWidget()
+    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container], tabs=tabs, stretch=True)
+    create_tab("Image", [enable_image_container, image_mode_container, image_position_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
+    create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
+    create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
 
-        dialog_layout.addWidget(tabs)
-        dialog_layout.addLayout(layout)
 
-        dialog.exec()
+    dialog_layout.addWidget(tabs)
+    dialog_layout.addLayout(layout)
+
+    def on_dialog_finished(result): # Undo Image changes if "Save" button is not pressed
+        if result == QtWidgets.QDialog.DialogCode.Rejected:
+            state.image_path = temp_image_path
+            state.image_width = temp_image_width
+            state.image_offset = temp_image_offset
+            state.image_opacity = temp_image_opacity
+            state.image_enabled = temp_image_enabled
+            state.image_as_wallpaper = temp_image_as_wallpaper
+            state.image_position = temp_image_position
+
+    dialog.finished.connect(on_dialog_finished)
+    dialog.exec()

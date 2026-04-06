@@ -20,15 +20,18 @@ import signal
 import time
 import sys
 
-def run_gui():
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-    qdarktheme.setup_theme("auto")
+def run_gui(app):
+    custom_colors = {}
+    if state.accent_color:
+        custom_colors["primary"] = state.accent_color
+    qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
     widget = MainWindow()
     
     # Check OS for window transparency compatibility and apply
     if state.window_transparency and platform.system() != "Windows":
         widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        qdarktheme.setup_theme("auto", custom_colors={"background": "#00000000"})
+        transparent_colors = {"background": "#00000000", **custom_colors}
+        qdarktheme.setup_theme("auto", custom_colors=transparent_colors)
 
     set_main_window(widget)
     widget.show()
@@ -42,7 +45,11 @@ def keyboardinterrupthandler(signum, frame):
 def main():
     # Begin counting startup time
     start_time = time.perf_counter()
-    # Parse saved files
+    
+    # Initialize UI Engine
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+
+    # Parse saved files 
     read_config()
     logs = get_download_logs()
     _, downloads = split_data(logs)
@@ -65,7 +72,7 @@ def main():
     elapsed = time.perf_counter() - start_time
     consoleLog(f"Initialization completed in {elapsed:.2f}s. Launching GUI")
     # Launch GUI
-    run_gui()
+    run_gui(app)
 
 if __name__ == "__main__":
     main()
