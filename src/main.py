@@ -6,16 +6,20 @@ from utils.logging.logs import set_main_window
 from network.libtorrent_int import check_space
 from utils.general.shutdown import closehelper
 from utils.general.wrappers import run_thread
+from interface.assets.base64_icons import logo_base64
+from PySide6.QtWidgets import QSystemTrayIcon, QMenu
 from utils.general.shutdown import force_exit
 from utils.config.config import read_config
 from utils.logging.logs import consoleLog
 from interface.gui import MainWindow
 from utils.data.state import state
+from PySide6.QtGui import QAction, QPixmap
 from PySide6 import QtWidgets
 from PySide6.QtCore import Qt
 import qdarktheme
 import threading
 import platform
+import base64
 import signal
 import time
 import sys
@@ -26,6 +30,22 @@ def run_gui(app):
         custom_colors["primary"] = state.accent_color
     qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
     widget = MainWindow()
+
+    pixmap = QPixmap()
+    image_data = base64.b64decode(logo_base64)
+    pixmap.loadFromData(image_data)
+
+    tray = QSystemTrayIcon()
+    tray.setIcon(pixmap)
+    tray.setVisible(True)
+
+    menu = QMenu()
+
+    quit = QAction("Quit")
+    quit.triggered.connect(app.quit)
+    menu.addAction(quit)
+
+    tray.setContextMenu(menu)
     
     # Check OS for window transparency compatibility and apply
     if state.window_transparency and platform.system() != "Windows":
