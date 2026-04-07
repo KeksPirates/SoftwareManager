@@ -1,9 +1,11 @@
 from utils.logging.logs import consoleLog, remove_download_log
+from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link
 from PySide6.QtCore import Qt, QPoint, QTimer
 from utils.general.wrappers import run_thread
 from PySide6.QtWidgets import QMessageBox
 from utils.data.state import state
+from send2trash import send2trash
 from PySide6 import QtWidgets
 import threading
 import webbrowser
@@ -158,6 +160,7 @@ class ContextMenu_TrackerTable:
         self.context_menu = QtWidgets.QMenu(main_window)
         self.context_menu.addAction("Copy Tracker URL", self.copyMagnetURIAction)
         self.context_menu.addAction("Open in Browser", self.openInBrowserAction)
+        self.context_menu.addAction("Download Item", self.downloadItemAction)
 
         state.trackertable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         state.trackertable.customContextMenuRequested.connect(self._show_context_menu)
@@ -215,3 +218,12 @@ class ContextMenu_TrackerTable:
             if url:
                 try: webbrowser.open(url)
                 except Exception as e: consoleLog(f"Failed to open URL: {e}", True)
+
+    def downloadItemAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.trackers):
+            return
+
+        run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),)))
