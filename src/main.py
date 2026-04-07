@@ -41,9 +41,15 @@ def run_gui(app):
 
     menu = QMenu()
 
+    show = QAction("Show")
+    show.triggered.connect(lambda: widget.show())
+    menu.addAction(show)
+
     quit = QAction("Quit")
     quit.triggered.connect(lambda: (closehelper(), force_exit()))
     menu.addAction(quit)
+
+    tray.activated.connect(lambda reason: widget.show() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
 
     tray.setContextMenu(menu)
     
