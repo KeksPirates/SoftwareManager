@@ -5,7 +5,7 @@
 
 ; Version is passed via /D on the command line: iscc /DMyAppVersion=...
 #ifndef MyAppVersion
-  #define MyAppVersion "dev"
+  #define MyAppVersion "stable"
 #endif
 
 ; SourceDir is passed via /D on the command line

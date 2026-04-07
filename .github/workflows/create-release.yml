@@ -1,9 +1,7 @@
-name: Release
+name: Build Executables (Dev)
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,14 +17,18 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            artifact_name: SoftwareManager-${{ github.sha }}-linux
+            artifact_name: SoftwareManager-stable-${{ github.sha }}-linux
+            asset_name: SoftwareManager-stable-${{ github.sha }}-linux
           - os: windows-latest
-            artifact_name: SoftwareManager-${{ github.sha }}-windows
+            artifact_name: SoftwareManager-stable-${{ github.sha }}-windows
+            asset_name: SoftwareManager-stable-${{ github.sha }}-windows
           - os: macos-latest
-            artifact_name: SoftwareManager-${{ github.sha }}-macos
+            artifact_name: SoftwareManager-stable-${{ github.sha }}-macos
+            asset_name: SoftwareManager-stable-${{ github.sha }}-macos
 
     runs-on: ${{ matrix.os }}
     outputs:
+      version: ${{ steps.version.outputs.version }}
       short_sha: ${{ steps.version.outputs.short_sha }}
 
     steps:
@@ -61,10 +63,13 @@ jobs:
         id: version
         shell: bash
         run: |
-          SHORT_SHA="${{ github.sha }}"
-          SHORT_SHA="${SHORT_SHA:0:7}"
-          echo "VERSION=$SHORT_SHA" >> $GITHUB_ENV
+          COMMIT_SHA=${{ github.sha }}
+          SHORT_SHA=${COMMIT_SHA:0:7}
+          VERSION="${SHORT_SHA}-stable"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
 
       - name: Inject commit hash into code
         shell: bash
@@ -154,28 +159,34 @@ jobs:
           mkdir -p dist-final
           if [ "$RUNNER_OS" == "Windows" ]; then
             mv nuitka-build/main.dist dist-final/${{ env.APP_NAME }}
+            ls -la dist-final/${{ env.APP_NAME }}/
           else
             chmod +x dist/${{ env.APP_NAME }}
             mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
           fi
+          ls -la dist-final/
 
       - name: Create ZIP (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Compress-Archive -Path "dist-final/${{ env.APP_NAME }}/*" -DestinationPath "dist-final/${{ matrix.artifact_name }}.zip"
+          Write-Host "Created ZIP: ${{ matrix.artifact_name }}.zip"
 
       - name: Build Installer (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          SETUP_NAME="SoftwareManager-${{ env.VERSION }}-windows-setup"
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          SETUP_NAME="SoftwareManager-stable-${SHORT_SHA}-windows-setup"
           iscc //DMyAppVersion="${{ env.VERSION }}" \
                //DMySourceDir="dist-final\\${{ env.APP_NAME }}" \
                //DMyOutputDir="dist-final" \
                //DMyOutputFilename="${SETUP_NAME}" \
                installer.iss
           echo "SETUP_NAME=${SETUP_NAME}" >> $GITHUB_ENV
+          ls -la dist-final/
 
       - name: Upload build artifact (Windows)
         if: runner.os == 'Windows'
@@ -199,10 +210,10 @@ jobs:
     name: Create Release
     needs: build
     runs-on: ubuntu-22.04
+    if: success()
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
@@ -211,27 +222,30 @@ jobs:
         run: |
           mkdir -p release
           SHORT_SHA="${{ needs.build.outputs.short_sha }}"
-          cp artifacts/ubuntu-22.04-build/SoftwareManager-*-linux      release/SoftwareManager-${SHORT_SHA}-linux
-          cp artifacts/windows-latest-build/SoftwareManager-*-windows.zip      release/SoftwareManager-${SHORT_SHA}-windows.zip
-          cp artifacts/windows-latest-build/SoftwareManager-*-windows-setup.exe  release/SoftwareManager-${SHORT_SHA}-windows-setup.exe
-          cp artifacts/macos-latest-build/SoftwareManager-*-macos      release/SoftwareManager-${SHORT_SHA}-macos
-          chmod +x release/SoftwareManager-*-linux release/SoftwareManager-*-macos
+          cp artifacts/ubuntu-22.04-build/SoftwareManager-stable-*-linux release/SoftwareManager-stable-${SHORT_SHA}-linux
+          cp artifacts/windows-latest-build/SoftwareManager-stable-*-windows.zip release/SoftwareManager-stable-${SHORT_SHA}-windows.zip
+          cp artifacts/windows-latest-build/SoftwareManager-stable-*-windows-setup.exe release/SoftwareManager-stable-${SHORT_SHA}-windows-setup.exe
+          cp artifacts/macos-latest-build/SoftwareManager-stable-*-macos release/SoftwareManager-stable-${SHORT_SHA}-macos
+          chmod +x release/SoftwareManager-stable-*-linux release/SoftwareManager-stable-*-macos
+          ls -la release/
 
       - name: Generate checksums
         run: |
           cd release
           sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
-      - name: Create Release
+      - name: Create Release (Public)
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ needs.build.outputs.short_sha }}
+          tag_name: ${{ needs.build.outputs.version }}
+          name: ${{ needs.build.outputs.version }}
           generate_release_notes: true
           files: |
-            release/SoftwareManager-${{ needs.build.outputs.short_sha }}-linux
-            release/SoftwareManager-${{ needs.build.outputs.short_sha }}-windows.zip
-            release/SoftwareManager-${{ needs.build.outputs.short_sha }}-windows-setup.exe
-            release/SoftwareManager-${{ needs.build.outputs.short_sha }}-macos
+            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-linux
+            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-windows.zip
+            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-windows-setup.exe
+            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-macos
             release/SHA256SUMS.txt
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
