@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QLabel, QGraphicsOpacityEffect, QStackedWidget
-from PySide6.QtCore import Qt, QSize, QEvent, QObject
+from PySide6.QtCore import Qt, QSize, QEvent, QObject, QTimer
 from PySide6.QtGui import QImage, QPixmap
 from utils.data.state import state
 import darkdetect
@@ -17,8 +17,15 @@ class Image(QObject):
         self.overlay_label.setGraphicsEffect(self.opacity_effect)
 
         self._current_image_path = None
+        self._cached_qimage = None
         self._wallpaper_active = False
         self._original_stylesheets = {}
+
+        self._resize_timer = QTimer(self)
+        self._resize_timer.setSingleShot(True)
+        self._resize_timer.setInterval(100)
+        self._resize_timer.timeout.connect(self._on_resize_finished)
+
         parent.installEventFilter(self)
         state.image_changed.connect(self.update_image_overlay)
 
@@ -28,8 +35,12 @@ class Image(QObject):
     def eventFilter(self, obj, event):
         if obj == self.application and event.type() == QEvent.Type.Resize:
             if self._current_image_path:
-                self._load_and_display(self._current_image_path)
+                self._resize_timer.start()
         return False
+
+    def _on_resize_finished(self):
+        if self._current_image_path:
+            self._apply_layout()
 
     def _set_wallpaper_transparency(self, enabled):
         if self._wallpaper_active == enabled:
@@ -117,11 +128,26 @@ class Image(QObject):
             self._set_wallpaper_transparency(False)
             return
         self._current_image_path = image_path
-        parent = self.application
-        image = QImage(image_path)
-        if image.isNull():
+
+        # Only reload from disk when the path actually changed
+        if self._cached_qimage is None or image_path != getattr(self, '_cached_path', None):
+            image = QImage(image_path)
+            if image.isNull():
+                self.overlay_label.hide()
+                self._cached_qimage = None
+                return
+            self._cached_qimage = image
+            self._cached_path = image_path
+
+        self._apply_layout()
+
+    def _apply_layout(self):
+        if self._cached_qimage is None or not state.image_enabled:
             self.overlay_label.hide()
             return
+
+        parent = self.application
+        image = self._cached_qimage
 
         if getattr(state, "image_as_wallpaper", False):
             scaled_image = image.scaled(
@@ -184,4 +210,6 @@ class Image(QObject):
         self.overlay_label.show()
 
     def update_image_overlay(self, new_image_path):
+        if new_image_path != getattr(self, '_cached_path', None):
+            self._cached_qimage = None
         self._load_and_display(new_image_path)
