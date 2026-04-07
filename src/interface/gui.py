@@ -132,6 +132,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self._tracker_hover_delegate = TrackerHoverDelegate(lambda: self._tracker_hovered_row, self)
 
         state.trackertable = _create_tracker_table(self)
+        state.trackertable.cellDoubleClicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),))))
 
         container = QWidget()
         containerLayout = QVBoxLayout()
@@ -142,9 +143,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.download_model = DownloadModel()
         self.downloadList = _create_download_list(self)
         self.downloadList.viewport().installEventFilter(self)
-
-        table = state.trackertable
-        # table.clicked.connect(lambda: setattr(self, '_tracker_hovered_row', table.indexAt(table.viewport().mapFromGlobal(QtGui.QCursor.pos())).row()))
 
         self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),))))
 
