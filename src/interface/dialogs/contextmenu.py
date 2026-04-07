@@ -1,14 +1,18 @@
 from utils.logging.logs import consoleLog, remove_download_log
+from utils.data.tracker import get_magnet_link
+from PySide6.QtCore import Qt, QPoint, QTimer
+from utils.general.wrappers import run_thread
 from PySide6.QtWidgets import QMessageBox
-from PySide6.QtCore import Qt, QPoint
 from utils.data.state import state
 from PySide6 import QtWidgets
+import threading
+import webbrowser
 import subprocess
 import platform
 import time
 import os
 
-class ContextMenu:
+class ContextMenu_Downloads:
     def __init__(self, main_window):
         self.main_window = main_window
         self.context_menu = QtWidgets.QMenu(main_window)
@@ -147,3 +151,67 @@ class ContextMenu:
                     consoleLog(f"Error deleting files: {last_error}", True)
             else:
                 consoleLog(f"Removed entry (files not found): {torrent_name}", True)
+
+class ContextMenu_TrackerTable:
+    def __init__(self, main_window):
+        self.main_window = main_window
+        self.context_menu = QtWidgets.QMenu(main_window)
+        self.context_menu.addAction("Copy Tracker URL", self.copyMagnetURIAction)
+        self.context_menu.addAction("Open in Browser", self.openInBrowserAction)
+
+        state.trackertable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        state.trackertable.customContextMenuRequested.connect(self._show_context_menu)
+
+    @property
+    def TrackerTable(self):
+        return state.trackertable
+
+    def _show_context_menu(self, pos: QPoint):
+        index = self.TrackerTable.indexAt(pos)
+        if index.isValid():
+            self._context_menu_row = index.row()
+            self.context_menu.exec(self.TrackerTable.viewport().mapToGlobal(pos))
+
+    def copyMagnetURIAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.trackers):
+            return
+
+        item = list(state.trackertable.selectedItems())[0]
+
+        def copy_magnet_uri(items):
+            if state.posts:
+                row = items[0].row()
+                post = state.posts[row]
+                url = post.get("url")
+
+                magnet = get_magnet_link(url)
+
+                if magnet:
+                    QTimer.singleShot(0, lambda: copy_to_clipboard(magnet))
+
+        def copy_to_clipboard(magnet):
+            clipboard = QtWidgets.QApplication.clipboard()
+            clipboard.setText(magnet)
+            consoleLog("Magnet URI copied to clipboard!", True)
+
+        run_thread(threading.Thread(target=copy_magnet_uri, args=([item],)))
+
+    def openInBrowserAction(self):
+        if not hasattr(self, '_context_menu_row'):
+            return
+        row = self._context_menu_row
+        if row < 0 or row >= len(state.trackers):
+            return
+
+        item = list(state.trackertable.selectedItems())[0]
+        row = item.row()
+
+        if state.posts:
+            post = state.posts[row]
+            url = post.get("url")
+            if url:
+                try: webbrowser.open(url)
+                except Exception as e: consoleLog(f"Failed to open URL: {e}", True)

@@ -143,6 +143,9 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.downloadList = _create_download_list(self)
         self.downloadList.viewport().installEventFilter(self)
 
+        table = state.trackertable
+        # table.clicked.connect(lambda: setattr(self, '_tracker_hovered_row', table.indexAt(table.viewport().mapFromGlobal(QtGui.QCursor.pos())).row()))
+
         self.dlbutton.clicked.connect(lambda: run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),))))
 
         container.setLayout(containerLayout)
@@ -251,7 +254,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.active_timer.timeout.connect(self.show_empty_downloads)
         self.active_timer.start(500)
 
-        self._context_menu = interface.dialogs.contextmenu.ContextMenu(self)
+        self._context_menu_downloads = interface.dialogs.contextmenu.ContextMenu_Downloads(self)
+        self._context_menu_trackertable = interface.dialogs.contextmenu.ContextMenu_TrackerTable(self)
         self.image_overlay = Image(self)
 
     def _apply_default_headers(self, table):
@@ -343,7 +347,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         table.setRowCount(len(state.posts))
         for x, rowdata in enumerate(state.posts):
-            for y, (key, data) in enumerate(rowdata.items()):
+            for y, (_, data) in enumerate(rowdata.items()):
                 item = QTableWidgetItem(str(data))
                 item.setData(Qt.ItemDataRole.UserRole, x)
                 table.setItem(x, y, item)
