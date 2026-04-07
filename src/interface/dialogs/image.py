@@ -35,6 +35,7 @@ class Image(QObject):
     def eventFilter(self, obj, event):
         if obj == self.application and event.type() == QEvent.Type.Resize:
             if self._current_image_path:
+                self._apply_layout_fast()
                 self._resize_timer.start()
         return False
 
@@ -140,6 +141,41 @@ class Image(QObject):
             self._cached_path = image_path
 
         self._apply_layout()
+
+    def _apply_layout_fast(self):
+        if self._cached_qimage is None or not state.image_enabled:
+            return
+
+        parent = self.application
+        image = self._cached_qimage
+
+        if getattr(state, "image_as_wallpaper", False):
+            scaled = image.scaled(
+                parent.size(),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.FastTransformation
+            )
+            cx = (scaled.width() - parent.width()) // 2
+            cy = (scaled.height() - parent.height()) // 2
+            cropped = scaled.copy(cx, cy, parent.width(), parent.height())
+            self.overlay_label.setPixmap(QPixmap.fromImage(cropped))
+            self.overlay_label.setGeometry(0, 0, parent.width(), parent.height())
+        else:
+            w = self.overlay_label.width()
+            h = self.overlay_label.height()
+            pos = state.image_position
+            off = int(state.image_offset)
+            if pos == "top-left":
+                x, y = off, off
+            elif pos == "top-right":
+                x, y = parent.width() - w - off, off
+            elif pos == "bottom-left":
+                x, y = off, parent.height() - h - off
+            elif pos == "center":
+                x, y = (parent.width() - w) // 2, (parent.height() - h) // 2
+            else:
+                x, y = parent.width() - w - off, parent.height() - h - off
+            self.overlay_label.move(x, y)
 
     def _apply_layout(self):
         if self._cached_qimage is None or not state.image_enabled:
