@@ -50,6 +50,9 @@ class SteamripScraper:
         for i in range(len(names)):
             ret.append({"title" : names[i], "url" : links[i]})
 
+        self.cache["data"] = ret
+        self.cache["last_fetched"] = current_time
+
         return ret
 
     def scrape_steamrip_game_downloads(self, gamelink):
@@ -71,8 +74,6 @@ class SteamripScraper:
         for link in download_links:
             if len(link) != 1:
                 ret.append(link)
-
-        self.cache["data"] = ret
 
         return ret
 

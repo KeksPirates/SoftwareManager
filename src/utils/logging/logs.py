@@ -8,6 +8,27 @@ import os
 import re
 
 
+def _downloads_file_path() -> str:
+    return os.path.join(state.settings_path, "downloads.json")
+
+def _load_downloads() -> list[Download]:
+    downloads_file = _downloads_file_path()
+    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
+        try:
+            with open(downloads_file, "r") as file:
+                existing_data = json.load(file)
+                return [Download(**d) for d in existing_data.get("data", [])]
+        except (json.JSONDecodeError, TypeError) as e:
+            consoleLog(f"Error loading downloads.json: {e}")
+    return []
+
+def _save_downloads(downloads: list[Download]) -> DownloadList:
+    download_list = DownloadList(data=downloads, count=len(downloads))
+    with open(_downloads_file_path(), "w") as file:
+        json.dump(asdict(download_list), file, indent=4)
+    return download_list
+
+
 def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
     # wait for metadata outside the lock to avoid blocking other threads
     magnetdl = state.active_downloads.get(magnet_uri)
@@ -28,17 +49,7 @@ def add_download_log(title, url, magnet_uri, completed) -> DownloadList:
         return _add_download_log_inner(title, url, magnet_uri, completed, path)
 
 def _add_download_log_inner(title, url, magnet_uri, completed, path) -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except json.JSONDecodeError:
-            downloads = []
-    else:
-        downloads = []
+    downloads = _load_downloads()
 
     if any((magnet_uri and d.magnet_uri == magnet_uri) or (url and d.url == url) for d in downloads):
         if magnet_uri and magnet_uri in state.active_downloads:
@@ -60,30 +71,14 @@ def _add_download_log_inner(title, url, magnet_uri, completed, path) -> Download
     ))
 
     consoleLog(f"Added {title} to Log File")
-    
-    download_list = DownloadList(data=downloads, count=len(downloads))
-    with open(downloads_file, "w") as file:
-        json.dump(asdict(download_list), file, indent=4)
-    
-    return download_list
+    return _save_downloads(downloads)
 
 def remove_download_log(magnet_uri) -> DownloadList:
     with state.downloads_lock:
         return _remove_download_log_inner(magnet_uri)
 
 def _remove_download_log_inner(magnet_uri) -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except json.JSONDecodeError:
-            downloads = []
-    else:
-        downloads = []
-
+    downloads = _load_downloads()
 
     magnet_link = (magnet_uri or "").strip()
     if not magnet_link:
@@ -93,30 +88,14 @@ def _remove_download_log_inner(magnet_uri) -> DownloadList:
     downloads = [d for d in downloads if (getattr(d, 'magnet_uri', None) or "").strip() != magnet_link and (getattr(d, 'url', None) or "").strip() != magnet_link]
 
     consoleLog(f"Removed {title} from Log File")
-
-    download_list = DownloadList(data=downloads, count=len(downloads))
-    with open(downloads_file, "w") as file:
-        json.dump(asdict(download_list), file, indent=4)
-    
-    return download_list
+    return _save_downloads(downloads)
 
 def update_download_completed(magnet_uri, completed) -> DownloadList:
     with state.downloads_lock:
         return _update_download_completed_inner(magnet_uri, completed)
 
 def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except (json.JSONDecodeError, TypeError) as e:
-            consoleLog(f"Error loading downloads.json: {e}")
-            downloads = []
-    else:
-        downloads = []
+    downloads = _load_downloads()
 
     identifier = (magnet_uri or "").strip()
     if state.debug:
@@ -145,13 +124,8 @@ def _update_download_completed_inner(magnet_uri, completed) -> DownloadList:
         consoleLog("No matching download found to update")
         return DownloadList(data=downloads, count=len(downloads))
 
-    download_list = DownloadList(data=downloads, count=len(downloads))
-    with open(downloads_file, "w") as file:
-        json.dump(asdict(download_list), file, indent=4)
-    
     consoleLog("Updated download log")
-    
-    return download_list
+    return _save_downloads(downloads)
     
 
 def get_download_logs() -> DownloadList:
@@ -159,18 +133,7 @@ def get_download_logs() -> DownloadList:
         return _get_download_logs_inner()
 
 def _get_download_logs_inner() -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except json.JSONDecodeError:
-            downloads = []
-    else:
-        downloads = []
-    
+    downloads = _load_downloads()
     return DownloadList(data=downloads, count=len(downloads))
 
 
@@ -195,18 +158,7 @@ def update_download_completed_by_hash(info_hash, completed) -> DownloadList:
         return _update_download_completed_by_hash_inner(info_hash, completed)
 
 def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadList:
-    downloads_file = os.path.join(state.settings_path, "downloads.json")
-    
-    if os.path.exists(downloads_file) and os.path.getsize(downloads_file) > 0:
-        try:
-            with open(downloads_file, "r") as file:
-                existing_data = json.load(file)
-                downloads = [Download(**d) for d in existing_data.get("data", [])]
-        except (json.JSONDecodeError, TypeError) as e:
-            consoleLog(f"Error loading downloads.json: {e}")
-            downloads = []
-    else:
-        downloads = []
+    downloads = _load_downloads()
 
     info_hash_upper = (info_hash or "").upper().strip()
     consoleLog(f"Updating download by hash: {info_hash_upper}")
@@ -228,13 +180,8 @@ def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadLi
         consoleLog("No matching download found to update")
         return DownloadList(data=downloads, count=len(downloads))
 
-    download_list = DownloadList(data=downloads, count=len(downloads))
-    with open(downloads_file, "w") as file:
-        json.dump(asdict(download_list), file, indent=4)
-    
     consoleLog("Updated download log")
-    
-    return download_list
+    return _save_downloads(downloads)
 
 
 def set_main_window(window):

@@ -10,7 +10,7 @@ import time
 import os
 
 
-loop_running = False
+_loop_lock = threading.Lock()
 
 def get_free_space_mb(dirname):
     if platform.system() == 'Windows':
@@ -23,7 +23,9 @@ def get_free_space_mb(dirname):
 
 def check_space():
     while not state.shutdown_event.is_set():
-        for _, magnetdl in list(state.active_downloads.items()):
+        with state.downloads_lock:
+            items = list(state.active_downloads.items())
+        for _, magnetdl in items:
             try:
                 status = magnetdl.status()
             except RuntimeError:
@@ -81,9 +83,11 @@ def add_download(magnet_uri):
     init_session()
     free_space = get_free_space_mb(state.download_path)
 
-    if magnet_uri in state.active_downloads:
+    with state.downloads_lock:
+        already_active = magnet_uri in state.active_downloads
+        handle = state.active_downloads.get(magnet_uri) if already_active else None
+    if already_active:
         try:
-            handle = state.active_downloads[magnet_uri]
             status = handle.status()
 
             if status.has_metadata:
@@ -93,7 +97,8 @@ def add_download(magnet_uri):
 
                     consoleLog(f"File Deleted, redownloading: {status.name}")
                     state.dl_session.remove_torrent(handle)
-                    del state.active_downloads[magnet_uri]
+                    with state.downloads_lock:
+                        del state.active_downloads[magnet_uri]
                 else:
                     consoleLog("Skipping Downloading, download already running...")
                     return False
@@ -102,23 +107,26 @@ def add_download(magnet_uri):
                 return False
         except RuntimeError as e:
             consoleLog(f"Error in LibTorrent Handle: {e}")
-            del state.active_downloads[magnet_uri]
+            with state.downloads_lock:
+                del state.active_downloads[magnet_uri]
 
     try:
         params = lt.parse_magnet_uri(magnet_uri)
         params.save_path = state.download_path
 
         handle = state.dl_session.add_torrent(params)
+        metadata_timeout = 60
+        metadata_start = time.time()
         while not handle.has_metadata():
+            if time.time() - metadata_start > metadata_timeout:
+                state.dl_session.remove_torrent(handle)
+                consoleLog("Timed out waiting for torrent metadata")
+                return False
             time.sleep(1)
 
         total_size = handle.get_torrent_info().total_size()
 
-        if free_space > total_size:
-            magnetdl = lt.parse_magnet_uri(magnet_uri)
-            magnetdl.save_path = state.download_path
-            download = state.dl_session.add_torrent(magnetdl)
-        else:
+        if free_space <= total_size:
             state.dl_session.remove_torrent(handle)
             consoleLog("Not enough free space to download this item.")
             return False
@@ -126,8 +134,9 @@ def add_download(magnet_uri):
     except Exception as e:
         consoleLog(f"Failed to add torrent or fetch info: {e}")
         return False
-    if download:
-        state.active_downloads[magnet_uri] = download
+    if handle:
+        with state.downloads_lock:
+            state.active_downloads[magnet_uri] = handle
     consoleLog(f"Added {magnet_uri} to downloads")
 
     run_thread(threading.Thread(target=dl_status_loop))
@@ -140,9 +149,10 @@ def add_seed(magnet_uri, file_path):
 
     init_session()
 
-    if magnet_uri in state.active_downloads:
-        consoleLog("Already seeding this torrent")
-        return False
+    with state.downloads_lock:
+        if magnet_uri in state.active_downloads:
+            consoleLog("Already seeding this torrent")
+            return False
 
     try:
         magnetdl = lt.parse_magnet_uri(magnet_uri)
@@ -151,43 +161,43 @@ def add_seed(magnet_uri, file_path):
     except Exception as e:
         consoleLog(f"Failed to add seed: {e}")
         return False
-    state.active_downloads[magnet_uri] = handle
+    with state.downloads_lock:
+        state.active_downloads[magnet_uri] = handle
     state.seeded_magnets.add(magnet_uri)
     return True
 
 
 def dl_status_loop():
-    global loop_running
-    if loop_running == True:
+    if not _loop_lock.acquire(blocking=False):
         return
     
-    loop_running = True
-    completed_set = set()
-    
-    if not state.active_downloads:
-        consoleLog("No active downloads")
-        loop_running = False
-        return
-    
-    while state.active_downloads and not state.shutdown_event.is_set():
-        for magnet_uri, magnetdl in list(state.active_downloads.items()):
-            try:
-                status = magnetdl.status()
-            except RuntimeError:
-                continue
-            
-            if status.state == lt.torrent_status.seeding and magnet_uri not in completed_set:
-                consoleLog(f"Download completed: {status.name}")
-                
-                completed_set.add(magnet_uri)
+    try:
+        completed_set = set()
         
         if not state.active_downloads:
-            loop_running = False
-            break
+            consoleLog("No active downloads")
+            return
         
-        time.sleep(1)
-    
-    loop_running = False
+        while state.active_downloads and not state.shutdown_event.is_set():
+            with state.downloads_lock:
+                items = list(state.active_downloads.items())
+            for magnet_uri, magnetdl in items:
+                try:
+                    status = magnetdl.status()
+                except RuntimeError:
+                    continue
+                
+                if status.state == lt.torrent_status.seeding and magnet_uri not in completed_set:
+                    consoleLog(f"Download completed: {status.name}")
+                    
+                    completed_set.add(magnet_uri)
+            
+            if not state.active_downloads:
+                break
+            
+            time.sleep(1)
+    finally:
+        _loop_lock.release()
 
 def update_settings():
 
