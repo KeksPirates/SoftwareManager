@@ -388,6 +388,14 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         super().changeEvent(event)
 
     def closeEvent(self, event: QCloseEvent):
+        if state.close_to_tray is True:
+            event.ignore()
+            self.hide()
+            return
+        else:
+            self.shutdown(event)
+
+    def shutdown(self, event: QCloseEvent):
         closehelper()
         event.accept()
         from utils.general.shutdown import force_exit

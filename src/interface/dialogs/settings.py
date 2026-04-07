@@ -272,6 +272,11 @@ def settings_dialog(self):
     interface_layout.addWidget(interface_select)
     interface_container.setLayout(interface_layout)
 
+    # Close To Tray
+    close_to_tray_container, close_to_tray_checkbox = create_widget(QCheckBox, "Close to Tray: ")
+    close_to_tray_checkbox.setChecked(state.close_to_tray)
+    close_to_tray_checkbox.toggled.connect(lambda checked: setattr(state, 'close_to_tray', checked))
+
 
     # Save / Cancel buttons
     layout = QHBoxLayout()
@@ -297,7 +302,8 @@ def settings_dialog(self):
             image_opacity.value(),
             image_as_wallpaper=image_mode_checkbox.isChecked(),
             image_position=image_position_combo.currentText(),
-            accent_color=accent_color_input.text().strip()
+            accent_color=accent_color_input.text().strip(),
+            close_to_tray=close_to_tray_checkbox.isChecked()
             )
 
     cancel_btn.clicked.connect(dialog.reject)
@@ -305,7 +311,7 @@ def settings_dialog(self):
     layout.addWidget(save_btn)
 
     tabs = QtWidgets.QTabWidget()
-    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container], tabs=tabs, stretch=True)
+    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container, close_to_tray_container], tabs=tabs, stretch=True)
     create_tab("Image", [enable_image_container, image_mode_container, image_position_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
     create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
     create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)

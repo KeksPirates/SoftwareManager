@@ -42,7 +42,7 @@ def run_gui(app):
     menu = QMenu()
 
     quit = QAction("Quit")
-    quit.triggered.connect(app.quit)
+    quit.triggered.connect(lambda: (closehelper(), force_exit()))
     menu.addAction(quit)
 
     tray.setContextMenu(menu)

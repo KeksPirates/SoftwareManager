@@ -15,7 +15,8 @@ def create_config():
         "ignore_updates": str(state.ignore_updates),
         "autoresume": str(state.autoresume),        
         "window_transparency": str(state.window_transparency),
-        "accent_color": str(state.accent_color)
+        "accent_color": str(state.accent_color),
+        "close_to_tray": str(state.close_to_tray)
     }
 
     config["Network"] = {
@@ -86,6 +87,7 @@ def read_config():
         state.autoresume = config.getboolean("General", "autoresume", fallback=state.autoresume)
         state.window_transparency = config.getboolean("General", "window_transparency", fallback=state.window_transparency)
         state.accent_color = config.get("General", "accent_color", fallback=state.accent_color)
+        state.close_to_tray = config.getboolean("General", "close_to_tray", fallback=state.close_to_tray)
 
         # Network
         state.api_url = config.get("Network", "api_url", fallback=state.api_url)
