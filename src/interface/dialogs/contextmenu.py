@@ -134,14 +134,11 @@ class ContextMenu_Downloads:
                 except Exception as e:
                     consoleLog(f"Exception while removing download from LibTorrent: {e}")
             if download_path and os.path.exists(download_path):
-                import shutil
                 last_error = None
                 for attempt in range(3):
                     try:
                         if os.path.isfile(download_path):
-                            os.remove(download_path)
-                        else:
-                            shutil.rmtree(download_path)
+                            send2trash(download_path)
                         consoleLog(f"Deleted files for: {torrent_name}", True)
                         last_error = None
                         break
