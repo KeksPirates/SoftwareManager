@@ -1,4 +1,5 @@
 from network.direct_download.handle import DirectDownloadHandle
+from utils.general.shutdown import closehelper
 from utils.logging.logs import consoleLog
 from utils.data.state import state
 from PySide6.QtCore import Qt
@@ -91,6 +92,7 @@ def download_update(assets: list):
     progress.setValue(100)
     QtWidgets.QApplication.processEvents()
 
+    closehelper()
     subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
     time.sleep(1)
-    sys.exit(0)
+    os._exit(0)
