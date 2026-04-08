@@ -29,7 +29,7 @@ jobs:
         run: python scripts/sync_readme_dependencies.py
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "Sync README dependencies"
           branch: auto/sync-readme-dependencies
