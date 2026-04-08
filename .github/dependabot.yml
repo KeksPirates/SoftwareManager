@@ -11,3 +11,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "darkdetect"
+        versions: [">=0.8.0"]
