@@ -37,10 +37,16 @@ def run_download(post, headers: Optional[dict] = None):
 
     if ismagnet:
         link = result
+        if not link:
+            consoleLog("Failed to retrieve magnet link")
+            return
         add_magnet(link)
         add_download_log(post.get("title", "Unknown"), "", link, False)
     else:
         link, link_headers = result if isinstance(result, tuple) else (result, None)
+        if not link:
+            consoleLog("Failed to retrieve download link")
+            return
         final_headers = headers or link_headers
         add_direct_download(link, post.get("title", "Unknown"), headers=final_headers, single_threaded=final_headers is not None)
 

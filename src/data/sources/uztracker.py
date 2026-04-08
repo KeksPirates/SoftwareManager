@@ -43,7 +43,7 @@ class UztrackerScraper:
 
         except requests.RequestException as e:
             consoleLog(f"Failed to fetch {search_url}: {e}")
-            return None
+            return []
 
     def get_download_link(self, post: Dict):
         return get_magnet_link(post["url"])

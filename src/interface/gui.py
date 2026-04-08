@@ -315,6 +315,15 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
     def _on_log_signal(self, text):
         if hasattr(self, 'consoleLog'):
             self.consoleLog.append(text)
+            # Delete lines if exceeding 500
+            doc = self.consoleLog.document()
+            if doc.blockCount() > 500:
+                cursor = self.consoleLog.textCursor()
+                cursor.movePosition(cursor.MoveOperation.Start)
+                cursor.movePosition(cursor.MoveOperation.Down, cursor.MoveMode.KeepAnchor, doc.blockCount() - 500)
+                cursor.removeSelectedText()
+                cursor.deleteChar()
+                
             self.consoleLog.verticalScrollBar().setValue(
                 self.consoleLog.verticalScrollBar().maximum()
             )

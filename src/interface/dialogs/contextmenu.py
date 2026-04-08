@@ -34,10 +34,12 @@ class ContextMenu:
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
-            return
-        magnet_link = list(state.active_downloads.keys())[row]
-        magnetdl = state.active_downloads[magnet_link]
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            keys = list(state.active_downloads.keys())
+            magnet_link = keys[row]
+            magnetdl = state.active_downloads[magnet_link]
         download_path = magnetdl.save_path()
         if download_path and os.path.exists(download_path):
             if platform.system() == "Windows":
@@ -51,9 +53,11 @@ class ContextMenu:
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.active_downloads):
-            return
-        magnet_link = list(state.active_downloads.keys())[row]
+        with state.downloads_lock:
+            if row < 0 or row >= len(state.active_downloads):
+                return
+            keys = list(state.active_downloads.keys())
+            magnet_link = keys[row]
         clipboard = QtWidgets.QApplication.clipboard()
         clipboard.setText(magnet_link)
 
@@ -64,7 +68,8 @@ class ContextMenu:
         with state.downloads_lock:
             if row < 0 or row >= len(state.active_downloads):
                 return
-            magnet_link = list(state.active_downloads.keys())[row]
+            keys = list(state.active_downloads.keys())
+            magnet_link = keys[row]
             magnetdl = state.active_downloads[magnet_link]
 
         # Cache the name BEFORE removing from session
