@@ -35,10 +35,11 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
 ## Python Dependencies
 (also included in requirements.txt)
 
-   ```bash
+<!-- python-dependencies:start -->
+   ```text
    requests (2.32.2)
-   PySide6 (6.10.1)
-   beautifulsoup (44.13.5)
+   PySide6-Essentials (6.10.1)
+   beautifulsoup4 (4.13.5)
    darkdetect (0.7.1)
    pyinstaller (6.15.0)
    PyQtDarkTheme-fork (2.3.4)
@@ -47,6 +48,7 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
    libtorrent (2.0.11)
    libtorrent-windows-dll (0.0.3)
    ```
+<!-- python-dependencies:end -->
 
 ## Activity
 

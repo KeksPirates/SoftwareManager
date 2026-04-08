@@ -1,0 +1,38 @@
+name: Sync README Dependencies
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - requirements.txt
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Update README dependencies
+        run: python scripts/sync_readme_dependencies.py
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "Sync README dependencies"
+          branch: auto/sync-readme-dependencies
+          title: "Sync README dependencies"
+          body: "Automated update of the Python Dependencies section in README.md to match `requirements.txt`."
+          labels: documentation
