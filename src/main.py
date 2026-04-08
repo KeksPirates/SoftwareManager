@@ -31,6 +31,12 @@ def run_gui(app):
     qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
     widget = MainWindow()
 
+    # Check OS for window transparency compatibility and apply
+    if state.window_transparency and platform.system() != "Windows":
+        widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        transparent_colors = {"background": "#00000000", **custom_colors}
+        qdarktheme.setup_theme("auto", custom_colors=transparent_colors)
+
     pixmap = QPixmap()
     image_data = base64.b64decode(logo_base64)
     pixmap.loadFromData(image_data)
@@ -50,17 +56,11 @@ def run_gui(app):
     menu.addAction(quit)
 
     tray.activated.connect(lambda reason: widget.show() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
-
     tray.setContextMenu(menu)
-    
-    # Check OS for window transparency compatibility and apply
-    if state.window_transparency and platform.system() != "Windows":
-        widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        transparent_colors = {"background": "#00000000", **custom_colors}
-        qdarktheme.setup_theme("auto", custom_colors=transparent_colors)
 
     set_main_window(widget)
     widget.show()
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
 
 def keyboardinterrupthandler(signum, frame):
