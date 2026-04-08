@@ -64,29 +64,44 @@ class ContextMenu_Downloads:
         clipboard.setText(magnet_link)
 
     def cancelDownloadAction(self):
-        if not hasattr(self, '_context_menu_row'):
-            return
-        row = self._context_menu_row
-        with state.downloads_lock:
-            if row < 0 or row >= len(state.active_downloads):
-                return
-            magnet_link = list(state.active_downloads.keys())[row]
-            magnetdl = state.active_downloads[magnet_link]
+        selected_rows = sorted(set(index.row() for index in self.downloadList.selectedIndexes()), reverse=True)
 
-        # Cache the name BEFORE removing from session
-        try:
-            torrent_name = magnetdl.status().name
-        except RuntimeError:
-            torrent_name = "Unknown"
+        if not selected_rows:
+            return
+
+        names = []
+        items_to_remove = []
+
+        with state.downloads_lock:
+            keys = list(state.active_downloads.keys())
+
+            for row in selected_rows:
+                if 0 <= row < len(keys):
+                    magnet_link = keys[row]
+                    magnetdl = state.active_downloads[magnet_link]
+
+                    try:
+                        name = magnetdl.status().name
+                    except RuntimeError:
+                        name = "Unknown"
+
+                    names.append(name)
+                    items_to_remove.append((magnet_link, magnetdl, name))
 
         confirm = QMessageBox.question(
-            self.main_window, "Cancel Download",
-            f"Are you sure you want to cancel the download of '{torrent_name}'?",
+            self.main_window,
+            "Cancel Downloads",
+            f"Are you sure you want to cancel {len(names)} download(s)?\n\n" + "\n".join(names),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        if confirm == QMessageBox.StandardButton.Yes:
+
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        for magnet_link, magnetdl, name in items_to_remove:
             with state.downloads_lock:
                 state.active_downloads.pop(magnet_link, None)
+
             remove_download_log(magnet_link)
 
             if state.dl_session:
@@ -95,44 +110,65 @@ class ContextMenu_Downloads:
                 except Exception as e:
                     consoleLog(f"Exception while removing download from LibTorrent: {e}")
 
-            consoleLog(f"Cancelled download: {torrent_name}", True)
+            consoleLog(f"Cancelled download: {name}", True)
 
 
     def deleteFileAction(self):
-        if not hasattr(self, '_context_menu_row'):
+        selected_rows = sorted(set(index.row() for index in self.downloadList.selectedIndexes()), reverse=True)
+
+        if not selected_rows:
             return
-        row = self._context_menu_row
+
+        items_to_remove = []
+
         with state.downloads_lock:
-            if row < 0 or row >= len(state.active_downloads):
-                return
-            magnet_link = list(state.active_downloads.keys())[row]
-            magnetdl = state.active_downloads[magnet_link]
-        try:
-            status = magnetdl.status()
-            save_path = status.save_path
-            torrent_name = status.name
-        except RuntimeError:
-            consoleLog("Error: torrent handle already invalid", True)
-            with state.downloads_lock:
-                state.active_downloads.pop(magnet_link, None)
-            remove_download_log(magnet_link)
+            keys = list(state.active_downloads.keys())
+
+            for row in selected_rows:
+                if 0 <= row < len(keys):
+                    magnet_link = keys[row]
+                    magnetdl = state.active_downloads[magnet_link]
+
+                    try:
+                        status = magnetdl.status()
+                        save_path = status.save_path
+                        torrent_name = status.name
+                    except RuntimeError:
+                        consoleLog("Error: torrent handle already invalid", True)
+                        continue
+
+                    download_path = os.path.join(save_path, torrent_name)
+
+                    items_to_remove.append((magnet_link, magnetdl, torrent_name, download_path))
+
+        if not items_to_remove:
             return
-        download_path = os.path.join(save_path, torrent_name)
+
+        names = [item[2] for item in items_to_remove]
+
         confirm = QMessageBox.question(
-            self.main_window, "Delete Files",
-            f"Are you sure you want to delete the downloaded files of '{torrent_name}'? This action cannot be undone.",
+            self.main_window,
+            "Delete Files",
+            f"Are you sure you want to delete {len(names)} download(s)?\n\n" + "\n".join(names),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
-        if confirm == QMessageBox.StandardButton.Yes:
+
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        for magnet_link, magnetdl, torrent_name, download_path in items_to_remove:
             with state.downloads_lock:
                 state.active_downloads.pop(magnet_link, None)
+
             remove_download_log(magnet_link)
+
             if state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                     time.sleep(0.5)
                 except Exception as e:
                     consoleLog(f"Exception while removing download from LibTorrent: {e}")
+
             if download_path and os.path.exists(download_path):
                 last_error = None
                 for attempt in range(3):
@@ -146,6 +182,7 @@ class ContextMenu_Downloads:
                         last_error = e
                         if attempt < 2:
                             time.sleep(0.5)
+
                 if last_error:
                     consoleLog(f"Error deleting files: {last_error}", True)
             else:
