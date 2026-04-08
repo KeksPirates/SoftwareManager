@@ -36,3 +36,4 @@ jobs:
           title: "Sync README dependencies"
           body: "Automated update of the Python Dependencies section in README.md to match `requirements.txt`."
           labels: documentation
+          token: ${{ secrets.RELEASE_TOKEN }}
