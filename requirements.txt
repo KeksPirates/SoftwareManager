@@ -1,4 +1,4 @@
-requests==2.32.2
+requests==2.33.0
 PySide6-Essentials==6.10.1
 beautifulsoup4==4.14.3
 darkdetect==0.8.0
