@@ -1,7 +1,7 @@
 from utils.logging.logs import consoleLog, remove_download_log
 from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link
-from PySide6.QtCore import Qt, QPoint, QTimer
+from PySide6.QtCore import Qt, QPoint, QTimer, QObject, Signal
 from utils.general.wrappers import run_thread
 from PySide6.QtWidgets import QMessageBox
 from utils.data.state import state
@@ -13,6 +13,14 @@ import subprocess
 import platform
 import time
 import os
+
+class Worker(QObject):
+    finished = Signal(str)
+
+    def run(self, url):
+        magnet = get_magnet_link(url)
+        if magnet:
+            self.finished.emit(magnet)
 
 class ContextMenu_Downloads:
     def __init__(self, main_window):
@@ -192,7 +200,7 @@ class ContextMenu_TrackerTable:
     def __init__(self, main_window):
         self.main_window = main_window
         self.context_menu = QtWidgets.QMenu(main_window)
-        self.context_menu.addAction("Copy Tracker URL", self.copyMagnetURIAction)
+        self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
         self.context_menu.addAction("Open in Browser", self.openInBrowserAction)
         self.context_menu.addAction("Download Item", self.downloadItemAction)
 
@@ -216,25 +224,29 @@ class ContextMenu_TrackerTable:
         if row < 0 or row >= len(state.trackers):
             return
 
-        item = list(state.trackertable.selectedItems())[0]
+        selected = state.trackertable.selectedItems()
+        if not selected:
+            return
 
-        def copy_magnet_uri(items):
-            if state.posts:
-                row = items[0].row()
-                post = state.posts[row]
-                url = post.get("url")
+        row = selected[0].row()
 
-                magnet = get_magnet_link(url)
+        if not state.posts or row >= len(state.posts):
+            return
 
-                if magnet:
-                    QTimer.singleShot(0, lambda: copy_to_clipboard(magnet))
+        post = state.posts[row]
+        url = post.get("url")
+        if not url:
+            return
 
         def copy_to_clipboard(magnet):
             clipboard = QtWidgets.QApplication.clipboard()
             clipboard.setText(magnet)
             consoleLog("Magnet URI copied to clipboard!", True)
 
-        run_thread(threading.Thread(target=copy_magnet_uri, args=([item],)))
+        self._magnet_worker = Worker()
+        self._magnet_worker.finished.connect(copy_to_clipboard)
+
+        run_thread(threading.Thread(target=self._magnet_worker.run, args=(url,)))
 
     def openInBrowserAction(self):
         if not hasattr(self, '_context_menu_row'):
