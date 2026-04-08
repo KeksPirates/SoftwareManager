@@ -47,6 +47,7 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
    psutil (7.1.0)
    libtorrent (2.0.11)
    libtorrent-windows-dll (0.0.3)
+   send2trash (2.1.0)
    ```
 
 ## Activity
