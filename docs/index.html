@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="darkreader-lock">
     <link rel="stylesheet" href="main.css"/>
     <title>SoftwareManager - Main</title>
     <!-- <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico"> -->
@@ -225,9 +226,11 @@
             openTab(null, 'api', false);
         } else if (currentPath === '/docs') {
             openTab(null, 'docs', false);
-        } else {
+        } else if (currentPath === '/') {
             history.replaceState({ tab: 'start' }, "", "/");
-            openTab(null, 'start', false); 
+            openTab(null, 'start', false);
+        } else {
+            openTab(null, 'notfound', false);
         }
     };
     </script>
