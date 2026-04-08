@@ -248,4 +248,4 @@ jobs:
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-macos
             release/SHA256SUMS.txt
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
