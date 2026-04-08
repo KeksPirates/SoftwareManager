@@ -37,11 +37,11 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
 
 <!-- python-dependencies:start -->
    ```text
-   requests (2.32.2)
-   PySide6-Essentials (6.10.1)
-   beautifulsoup4 (4.13.5)
-   darkdetect (0.7.1)
-   pyinstaller (6.15.0)
+   requests (2.33.0)
+   PySide6-Essentials (6.11.0)
+   beautifulsoup4 (4.14.3)
+   darkdetect (0.8.0)
+   pyinstaller (6.19.0)
    PyQtDarkTheme-fork (2.3.4)
    plyer (2.1.0)
    psutil (7.1.0)
