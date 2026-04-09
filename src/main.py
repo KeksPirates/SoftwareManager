@@ -25,7 +25,7 @@ import signal
 import time
 import sys
 
-SERVER_NAME = "SoftwareManager_python"
+SERVER_NAME = "SoftwareManager_KeksPirates"
 
 class SingleInstance(QObject):
     def __init__(self):

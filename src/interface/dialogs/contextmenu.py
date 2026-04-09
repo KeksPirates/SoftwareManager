@@ -186,7 +186,7 @@ class ContextMenu_Downloads:
                 last_error = None
                 for attempt in range(3):
                     try:
-                        if os.path.isfile(download_path):
+                        if os.path.isfile(download_path) or os.path.isdir(download_path):
                             send2trash(download_path)
                         consoleLog(f"Deleted files for: {torrent_name}", True)
                         last_error = None
@@ -226,16 +226,8 @@ class ContextMenu_TrackerTable:
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.trackers):
-            return
 
-        selected = state.trackertable.selectedItems()
-        if not selected:
-            return
-
-        row = selected[0].row()
-
-        if not state.posts or row >= len(state.posts):
+        if not state.posts or row < 0 or row >= len(state.posts):
             return
 
         post = state.posts[row]
@@ -257,24 +249,21 @@ class ContextMenu_TrackerTable:
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.trackers):
+
+        if not state.posts or row < 0 or row >= len(state.posts):
             return
 
-        item = list(state.trackertable.selectedItems())[0]
-        row = item.row()
-
-        if state.posts:
-            post = state.posts[row]
-            url = post.get("url")
-            if url:
-                try: webbrowser.open(url)
-                except Exception as e: consoleLog(f"Failed to open URL: {e}", True)
+        post = state.posts[row]
+        url = post.get("url")
+        if url:
+            try: webbrowser.open(url)
+            except Exception as e: consoleLog(f"Failed to open URL: {e}", True)
 
     def downloadItemAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
         row = self._context_menu_row
-        if row < 0 or row >= len(state.trackers):
+        if not state.posts or row < 0 or row >= len(state.posts):
             return
 
         run_thread(threading.Thread(target=download_selected, args=(state.trackertable.selectedItems(),)))
