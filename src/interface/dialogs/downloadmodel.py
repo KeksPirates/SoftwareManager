@@ -34,7 +34,8 @@ class DownloadModel(QAbstractTableModel):
                 return None
             
             try:
-                magnet_link = list(state.active_downloads.keys())[index.row()]
+                keys = list(state.active_downloads.keys())
+                magnet_link = keys[index.row()]
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
             except (IndexError, KeyError, RuntimeError):
@@ -101,7 +102,8 @@ class DownloadModel(QAbstractTableModel):
             if row >= len(state.active_downloads) or row < 0:
                 return
             try:
-                magnet_link = list(state.active_downloads.keys())[row]
+                keys = list(state.active_downloads.keys())
+                magnet_link = keys[row]
                 magnetdl = state.active_downloads[magnet_link]
                 status = magnetdl.status()
             except (IndexError, KeyError, RuntimeError):

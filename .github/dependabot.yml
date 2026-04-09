@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # Keeps your GitHub Actions (CI/CD) up to date daily
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  # Keeps your Python dependencies (requirements.txt / pyproject.toml) up to date daily
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "darkdetect"
+        versions: [">=0.8.0"]

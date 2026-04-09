@@ -39,6 +39,9 @@ class AppState(QObject):
         self._image_opacity: int = 100
         self._image_as_wallpaper: bool = False
         self._image_position: str = "bottom-right"  # top-left, top-right, bottom-left, bottom-right, center
+        self._image_custom_position: bool = False
+        self._image_x: int = 0
+        self._image_y: int = 0
 
         # Trackers / Scraping
         self.posts: list[Dict[str,str]] | None = None  # titles, urls, author, seeders, leechers

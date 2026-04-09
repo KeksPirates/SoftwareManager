@@ -1,9 +1,11 @@
 from interface.utils.tabhelper import create_tab
+from interface.dialogs.theme import _accent_selection_color
 from utils.config.settings import save_settings
 from interface.utils.svghelper import svg_icon
 from utils.logging.logs import consoleLog
 from PySide6.QtCore import Qt, QSize
 from utils.data.state import state
+from PySide6.QtGui import QColor
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QLineEdit, 
@@ -13,9 +15,10 @@ from PySide6.QtWidgets import (
     QDialog, 
     QLabel, 
     QHBoxLayout,
-    QSpinBox,    QSlider,    QCheckBox,
+    QSpinBox, QSlider, QCheckBox,
     QFileDialog,
     QComboBox,
+    QColorDialog
 )
 
 import platform
@@ -91,9 +94,31 @@ def settings_dialog(self):
     transparent_window_checkbox.toggled.connect(lambda checked: setattr(state, 'window_transparency', checked))
 
     # Accent Color
-    accent_color_container, accent_color_input = create_widget(QLineEdit, "Accent Color (requires restart): ", width=180, height=30)
+    accent_color_container, accent_color_input = create_widget(QLineEdit, "Accent Color: ", width=180, height=30)
+    accent_color_button = QPushButton("")
+    accent_color_button.setFixedSize(21, 21)
+    accent_color_button.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def update_accent_button_color(color_str):
+        c = color_str.strip()
+        accent_color_button.setStyleSheet(
+            f"QPushButton {{ background-color: {c if c else 'transparent'}; border: 1px solid palette(mid); border-radius: 3px; }}"
+        )
+
+    def browse_accent_color():
+        current = accent_color_input.text().strip()
+        initial = QColor(current) if current else QColor()
+        color = QColorDialog.getColor(initial, dialog, "Select Accent Color")
+        if color.isValid():
+            accent_color_input.setText(color.name())
+
+    accent_color_input.textChanged.connect(update_accent_button_color)
+    accent_color_button.clicked.connect(browse_accent_color)
     accent_color_input.setPlaceholderText("e.g. #fca7d7")
     accent_color_input.setText(state.accent_color)
+    update_accent_button_color(state.accent_color)
+    accent_color_container.layout().insertWidget(1, accent_color_button)
+
     
     # API URL Widget
     api_url_container, api_url = create_widget(QLineEdit, "API Server URL: ", width=180, height=30)
@@ -305,6 +330,13 @@ def settings_dialog(self):
             accent_color=accent_color_input.text().strip(),
             close_to_tray=close_to_tray_checkbox.isChecked()
             )
+        color = _accent_selection_color()
+        if color:
+            self.tracker_list.setStyleSheet(
+                f"QComboBox QAbstractItemView::item:selected {{ background: {color}; }}"
+            )
+        else:
+            self.tracker_list.setStyleSheet("")
 
     cancel_btn.clicked.connect(dialog.reject)
     layout.addWidget(cancel_btn)

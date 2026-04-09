@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from collections import deque
 from typing import Optional
 import libtorrent as lt
 import threading
@@ -31,7 +32,7 @@ class DirectDownloadStatus:
         self._upload_rate = 0
 
         self._chunk_bytes: dict[int, int] = {}  
-        self._speed_window: list[tuple[float, int]] = [] 
+        self._speed_window: deque[tuple[float, int]] = deque() 
         self._speed_window_size = 3.0
 
     @property
@@ -65,9 +66,8 @@ class DirectDownloadStatus:
             self._speed_window.append((now, self._total_wanted_done))
 
             cutoff = now - self._speed_window_size
-            self._speed_window = [
-                (t, b) for t, b in self._speed_window if t >= cutoff
-            ]
+            while self._speed_window and self._speed_window[0][0] < cutoff:
+                self._speed_window.popleft()
             if len(self._speed_window) >= 2:
                 oldest_time, oldest_bytes = self._speed_window[0]
                 dt = now - oldest_time

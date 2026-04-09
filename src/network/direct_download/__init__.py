@@ -15,9 +15,10 @@ def add_direct_download(url: str, title: str, dl_path: Optional[str] = None, hea
     if dl_path is None:
         dl_path = state.download_path
 
-    if url in state.active_downloads:
-        consoleLog(f"Download already active: {title}")
-        return
+    with state.downloads_lock:
+        if url in state.active_downloads:
+            consoleLog(f"Download already active: {title}")
+            return
 
     filename = (
         detect_filename_from_headers(url, DirectDownloadHandle.USER_AGENT)
@@ -26,7 +27,8 @@ def add_direct_download(url: str, title: str, dl_path: Optional[str] = None, hea
     )
 
     handle = DirectDownloadHandle(url, filename, dl_path, headers, single_threaded)
-    state.active_downloads[url] = handle
+    with state.downloads_lock:
+        state.active_downloads[url] = handle
     add_download_log(title, url, "", False)
     handle.start()
     consoleLog(f"Started direct download: {filename}")

@@ -2,6 +2,9 @@ from network.libtorrent_int import update_settings
 from utils.config.config import create_config
 from utils.logging.logs import consoleLog
 from utils.data.state import state
+import qdarktheme
+import platform
+
 
 
 
@@ -36,6 +39,10 @@ def save_settings(close=lambda: None, apiurl=None, download_path=None, down_spee
         state.image_position = image_position
     if accent_color is not None:
         state.accent_color = accent_color
+        custom_colors = {"primary": state.accent_color} if state.accent_color else {}
+        if state.window_transparency and platform.system() != "Windows":
+            custom_colors["background"] = "#00000000"
+        qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
     if close_to_tray is not None:
         state.close_to_tray = close_to_tray
 

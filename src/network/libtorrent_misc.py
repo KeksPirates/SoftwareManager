@@ -9,19 +9,23 @@ import os
 
 def cleanup_session():
     if state.dl_session is not None:
-        for magnetdl in state.active_downloads.values():
-            if hasattr(magnetdl, 'pause'):  # Check it's a handle
-                magnetdl.pause()
+        with state.downloads_lock:
+            for magnetdl in state.active_downloads.values():
+                if hasattr(magnetdl, 'pause'):  # check it's a handle
+                    magnetdl.pause()
         
         del state.dl_session
         state.dl_session = None
-        state.active_downloads.clear()
+        with state.downloads_lock:
+            state.active_downloads.clear()
 
 def send_notification(shutdown_event):
     notified = set()
     while not shutdown_event.is_set():
         try:
-            for magnet_uri, magnetdl in list(state.active_downloads.items()):
+            with state.downloads_lock:
+                items = list(state.active_downloads.items())
+            for magnet_uri, magnetdl in items:
                 if isinstance(magnetdl, dict):
                     continue
                 
@@ -42,7 +46,9 @@ def update_log(shutdown_event):
     updated = set()
     while not shutdown_event.is_set():
         try:
-            for magnet_uri, magnetdl in list(state.active_downloads.items()):
+            with state.downloads_lock:
+                items = list(state.active_downloads.items())
+            for magnet_uri, magnetdl in items:
                 if isinstance(magnetdl, dict):
                     continue
                 
@@ -63,7 +69,9 @@ def update_log(shutdown_event):
 def check_deleted_files(shutdown_event):
     while not shutdown_event.is_set():
         try:
-            for magnet_uri, magnetdl in list(state.active_downloads.items()):
+            with state.downloads_lock:
+                items = list(state.active_downloads.items())
+            for magnet_uri, magnetdl in items:
                 if isinstance(magnetdl, dict):
                     continue
                 
@@ -75,7 +83,8 @@ def check_deleted_files(shutdown_event):
                     if not os.path.exists(file_path):
                         consoleLog(f"Registered File Deletion: {status.name}")
                         state.dl_session.remove_torrent(magnetdl)
-                        del state.active_downloads[magnet_uri]
+                        with state.downloads_lock:
+                            del state.active_downloads[magnet_uri]
         except Exception as e:
             consoleLog(f"Exception while checking for file deletions: {e}")
         time.sleep(5)
