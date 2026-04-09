@@ -8,7 +8,7 @@ import platform
 
 
 
-def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None, bound_interface=None, image_width=None, image_offset=None, image_opacity=None, image_as_wallpaper=None, image_position=None, accent_color=None):
+def save_settings(close=lambda: None, apiurl=None, download_path=None, down_speed_limit=None, up_speed_limit=None, image_path=None, autoresume=None, max_connections=None, max_downloads=None, bound_interface=None, image_width=None, image_offset=None, image_opacity=None, image_as_wallpaper=None, image_position=None, accent_color=None, close_to_tray=None):
     if apiurl is not None:
         state.api_url = apiurl
     if download_path is not None:
@@ -43,6 +43,8 @@ def save_settings(close=lambda: None, apiurl=None, download_path=None, down_spee
         if state.window_transparency and platform.system() != "Windows":
             custom_colors["background"] = "#00000000"
         qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
+    if close_to_tray is not None:
+        state.close_to_tray = close_to_tray
 
     update_settings() # Update LibTorrent Session Settings
     consoleLog("Saved Settings")

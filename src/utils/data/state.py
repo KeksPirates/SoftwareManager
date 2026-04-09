@@ -30,6 +30,7 @@ class AppState(QObject):
         self.interfaces: List = []
         self.active_interfaces: List = []
         self.bound_interface: Any = None
+        self.close_to_tray: bool = True
 
         # Image
         self._image_enabled: bool = False

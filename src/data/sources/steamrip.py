@@ -37,13 +37,12 @@ class SteamripScraper:
 
         links = []
         names = []
+
         for gamehtml in games:
             link = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
-            links += re.findall(r'(?<=href=")[^"]*', link.__str__())
-            name = gamehtml.find("a", href=lambda x: x and x.startswith("/"))
-            names += re.findall(r'(?<=\/">)[^<]*', name.__str__())
-
-        # construct the list[dict[str,str]]
+            if link:
+                links.append("https://steamrip.com" + link["href"])
+                names.append(link.get_text())
 
         ret = []
 
@@ -55,8 +54,7 @@ class SteamripScraper:
 
         return ret
 
-    def scrape_steamrip_game_downloads(self, gamelink):
-        url = "https://steamrip.com" + gamelink
+    def scrape_steamrip_game_downloads(self, url):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         download_link_elements = soup.find_all("a",class_="shortc-button")
