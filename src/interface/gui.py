@@ -42,7 +42,8 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QTableWidgetItem,
     QTextEdit,
-    QStatusBar
+    QStatusBar,
+    QStyledItemDelegate,
 )
 
 from PySide6.QtGui import (
@@ -59,6 +60,11 @@ import base64
 
 def windowCloseHelper():
     QGuiApplication.quit()
+
+class CenteredDelegate(QStyledItemDelegate):
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        option.displayAlignment = Qt.AlignmentFlag.AlignVCenter
 
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     eventFilter = eventFilter
@@ -176,6 +182,8 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
 
         # Tracker list
         self.tracker_list = QComboBox()
+        self.tracker_list.setContentsMargins(0, 0, 0, 0)
+        self.tracker_list.setItemDelegate(CenteredDelegate(self.tracker_list))
         self.tracker_list.addItems(list(state.trackers.keys()))
         self.tracker_list.setCursor(Qt.CursorShape.PointingHandCursor)
         self.tracker_list.activated.connect(self.set_tracker)
