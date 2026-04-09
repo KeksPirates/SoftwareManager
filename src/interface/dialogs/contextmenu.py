@@ -1,7 +1,7 @@
+from PySide6.QtCore import Qt, QPoint, QObject, Signal, QRunnable, QThreadPool
 from utils.logging.logs import consoleLog, remove_download_log
 from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link
-from PySide6.QtCore import Qt, QPoint, QTimer, QObject, Signal
 from utils.general.wrappers import run_thread
 from PySide6.QtWidgets import QMessageBox
 from utils.data.state import state
@@ -14,13 +14,21 @@ import platform
 import time
 import os
 
-class Worker(QObject):
+
+class WorkerSignals(QObject):
     finished = Signal(str)
 
-    def run(self, url):
-        magnet = get_magnet_link(url)
+
+class Worker(QRunnable):
+    def __init__(self, url):
+        super().__init__()
+        self.url = url
+        self.signals = WorkerSignals()
+
+    def run(self):
+        magnet = get_magnet_link(self.url)
         if magnet:
-            self.finished.emit(magnet)
+            self.signals.finished.emit(magnet)
 
 class ContextMenu_Downloads:
     def __init__(self, main_window):
@@ -220,6 +228,8 @@ class ContextMenu_TrackerTable:
     def copyMagnetURIAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
+        if not hasattr(self, "_workers"):
+            self._workers = []
         row = self._context_menu_row
         if row < 0 or row >= len(state.trackers):
             return
@@ -243,10 +253,18 @@ class ContextMenu_TrackerTable:
             clipboard.setText(magnet)
             consoleLog("Magnet URI copied to clipboard!", True)
 
-        self._magnet_worker = Worker()
-        self._magnet_worker.finished.connect(copy_to_clipboard)
+        
+        def start_worker(url):
+            worker = Worker(url)
+            worker.signals.finished.connect(copy_to_clipboard)
 
-        run_thread(threading.Thread(target=self._magnet_worker.run, args=(url,)))
+            self._workers.append(worker)
+
+            worker.signals.finished.connect(lambda _: self._workers.remove(worker))
+
+            QThreadPool.globalInstance().start(worker)
+
+        start_worker(url)
 
     def openInBrowserAction(self):
         if not hasattr(self, '_context_menu_row'):

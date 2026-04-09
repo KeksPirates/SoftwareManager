@@ -1,6 +1,7 @@
 from network.libtorrent_misc import send_notification, update_log, check_deleted_files
 from utils.logging.loghandler import split_data, check_completed, check_downloads
 from network.interface import list_interfaces, init_interfaces
+from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from utils.logging.logs import get_download_logs
 from utils.logging.logs import set_main_window
 from network.libtorrent_int import check_space
@@ -10,12 +11,12 @@ from interface.assets.base64_icons import logo_base64
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu
 from utils.general.shutdown import force_exit
 from utils.config.config import read_config
+from PySide6.QtGui import QAction, QPixmap
 from utils.logging.logs import consoleLog
 from interface.gui import MainWindow
+from PySide6.QtCore import Qt, QObject
 from utils.data.state import state
-from PySide6.QtGui import QAction, QPixmap
 from PySide6 import QtWidgets
-from PySide6.QtCore import Qt
 import qdarktheme
 import threading
 import platform
@@ -23,6 +24,40 @@ import base64
 import signal
 import time
 import sys
+
+SERVER_NAME = "SoftwareManager_python"
+
+class SingleInstance(QObject):
+    def __init__(self):
+        super().__init__()
+        self.server = QLocalServer()
+
+        socket = QLocalSocket()
+        socket.connectToServer(SERVER_NAME)
+
+        if socket.waitForConnected(100):
+            socket.write(b"raise")
+            socket.flush()
+            socket.waitForBytesWritten(100)
+            self.is_running = True
+        else:
+            QLocalServer.removeServer(SERVER_NAME)
+            self.server.listen(SERVER_NAME)
+            self.server.newConnection.connect(self.handle_connection)
+            self.is_running = False
+            self.is_running = False
+
+    def handle_connection(self):
+        socket = self.server.nextPendingConnection()
+        socket.readyRead.connect(lambda: self.read_socket(socket))
+
+    def read_socket(self, socket):
+        msg = socket.readAll().data()
+        if msg == b"raise":
+            self.on_raise()
+
+    def on_raise(self):
+        pass
 
 def run_gui(app):
     custom_colors = {}
@@ -57,6 +92,20 @@ def run_gui(app):
 
     tray.activated.connect(lambda reason: widget.show() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
     tray.setContextMenu(menu)
+
+    def show_from_tray():
+        widget.show()
+        widget.raise_()
+        widget.activateWindow()
+
+    single = SingleInstance()
+    if single.is_running:
+        consoleLog("Another instance is already running. Exiting this instance.")
+        closehelper()
+        force_exit()
+
+    app._single_instance = single
+    single.on_raise = show_from_tray
 
     set_main_window(widget)
     widget.show()
