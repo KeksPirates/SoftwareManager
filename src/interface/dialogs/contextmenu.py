@@ -32,7 +32,7 @@ class ContextMenu_Downloads:
         self.main_window = main_window
         self.context_menu = QtWidgets.QMenu(main_window)
         self.context_menu.addAction("Open Containing Folder", self.openFolderAction)
-        self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
+        self.context_menu.addAction("Copy Download Link", self.copyMagnetURIAction)
         self.context_menu.addAction("Remove from list", self.cancelDownloadAction)
         self.context_menu.addAction("Delete File", self.deleteFileAction)
 
@@ -205,9 +205,9 @@ class ContextMenu_TrackerTable:
     def __init__(self, main_window):
         self.main_window = main_window
         self.context_menu = QtWidgets.QMenu(main_window)
-        self.context_menu.addAction("Copy Magnet URI", self.copyMagnetURIAction)
+        self.context_menu.addAction("Copy Download Link", self.copyMagnetURIAction)
         self.context_menu.addAction("Open in Browser", self.openInBrowserAction)
-        self.context_menu.addAction("Download Item", self.downloadItemAction)
+        self.context_menu.addAction("Download", self.downloadItemAction)
 
         state.trackertable.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         state.trackertable.customContextMenuRequested.connect(self._show_context_menu)
