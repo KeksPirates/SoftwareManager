@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QPoint, QObject, Signal, QRunnable, QThreadPool
+from PySide6.QtCore import Qt, QPoint, Signal, QThreadPool, QThread
 from utils.logging.logs import consoleLog, remove_download_log
 from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link
@@ -15,20 +15,17 @@ import time
 import os
 
 
-class WorkerSignals(QObject):
+class MagnetWorker(QThread):
     finished = Signal(str)
 
-
-class Worker(QRunnable):
-    def __init__(self, url):
-        super().__init__()
+    def __init__(self, url, parent=None):
+        super().__init__(parent)
         self.url = url
-        self.signals = WorkerSignals()
 
     def run(self):
         magnet = get_magnet_link(self.url)
         if magnet:
-            self.signals.finished.emit(magnet)
+            self.finished.emit(magnet)
 
 class ContextMenu_Downloads:
     def __init__(self, main_window):
@@ -228,8 +225,6 @@ class ContextMenu_TrackerTable:
     def copyMagnetURIAction(self):
         if not hasattr(self, '_context_menu_row'):
             return
-        if not hasattr(self, "_workers"):
-            self._workers = []
         row = self._context_menu_row
         if row < 0 or row >= len(state.trackers):
             return
@@ -248,23 +243,15 @@ class ContextMenu_TrackerTable:
         if not url:
             return
 
-        def copy_to_clipboard(magnet):
-            clipboard = QtWidgets.QApplication.clipboard()
-            clipboard.setText(magnet)
-            consoleLog("Magnet URI copied to clipboard!", True)
+        worker = MagnetWorker(url, parent=self.main_window)
+        worker.finished.connect(self._on_magnet_fetched)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
 
-        
-        def start_worker(url):
-            worker = Worker(url)
-            worker.signals.finished.connect(copy_to_clipboard)
-
-            self._workers.append(worker)
-
-            worker.signals.finished.connect(lambda _: self._workers.remove(worker))
-
-            QThreadPool.globalInstance().start(worker)
-
-        start_worker(url)
+    def _on_magnet_fetched(self, magnet):
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(magnet)
+        consoleLog("Magnet URI copied to clipboard!", True)
 
     def openInBrowserAction(self):
         if not hasattr(self, '_context_menu_row'):
