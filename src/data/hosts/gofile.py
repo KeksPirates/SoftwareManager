@@ -1,41 +1,64 @@
 from utils.logging.logs import consoleLog
 import requests
+import hashlib
+import time
 import re
+
+_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+_WT_SECRET = "5d4f7g8sd45fsd"
+_API_BASE = "https://api.gofile.io"
+
+
+def _generate_website_token(account_token):
+    time_bucket = str(int(time.time() / 14400))
+    raw = f"{_USER_AGENT}::en-US::{account_token}::{time_bucket}::{_WT_SECRET}"
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 def scrape_gofile(url):
-
-    filetoken = re.findall(r"(?<=https...gofile.io\/d\/).*", url)[0]
-    session = requests.Session()
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0",
-        "Accept": "*/*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Referer": "https://gofile.io/",
-        "Authorization": f"Bearer lUUtRAccOuRUoZhelNSslDFSlpOgKLDj",
-        "X-Website-Token": "ffd9ffa831c50b9e68ca5e65cbbbd1a50e9a32e63022e17c7c6748388a1ed73b",
-        "X-BL": "en-US",
-        "Origin": "https://gofile.io",
-        "Sec-GPC": "1",
-        "Connection": "keep-alive",
-        "TE": "trailers"
-    }
-
-    r = session.get(
-        f"https://api.gofile.io/contents/{filetoken}",
-        headers=headers,
-    )
-
-    try:
-
-        temp: dict = r.json()["data"]["children"]
-        child = [key for key in temp.keys()]
-
-        link = temp[child[0]]["link"]
-        return link, headers
-    except Exception:
-        consoleLog("GoFile Authorization failed, if the Issue persists, please open an Issue on GitHub")
+    match = re.search(r"gofile\.io/d/([a-zA-Z0-9]+)", url)
+    if not match:
+        consoleLog("GoFile: Invalid URL")
         return None
 
+    content_id = match.group(1)
+    session = requests.Session()
+
+    # Create a guest account
+    r = session.post(f"{_API_BASE}/accounts", headers={"User-Agent": _USER_AGENT})
+    data = r.json()
+    if data.get("status") != "ok":
+        consoleLog("GoFile: Failed to create guest account")
+        return None
+
+    account_token = data["data"]["token"]
+    website_token = _generate_website_token(account_token)
+
+    headers = {
+        "User-Agent": _USER_AGENT,
+        "Authorization": f"Bearer {account_token}",
+        "X-Website-Token": website_token,
+        "X-BL": "en-US",
+        "Referer": "https://gofile.io/",
+        "Origin": "https://gofile.io",
+    }
+
+    # Fetch folder contents
+    r = session.get(f"{_API_BASE}/contents/{content_id}", headers=headers)
+    data = r.json()
+    if data.get("status") != "ok":
+        consoleLog(f"GoFile: API error - {data.get('status')}")
+        return None
+
+    children = data["data"].get("children", {})
+    if not children:
+        consoleLog("GoFile: No files found")
+        return None
+
+    first_child = next(iter(children.values()))
+    link = first_child.get("link")
+    if not link:
+        consoleLog("GoFile: No download link in response")
+        return None
+
+    return link, headers

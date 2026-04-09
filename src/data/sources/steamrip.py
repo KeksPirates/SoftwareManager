@@ -1,5 +1,7 @@
 from data.hosts.buzzheavier import scrape_buzzheavier
 from data.hosts.gofile import scrape_gofile
+from data.hosts.vikingfile import scrape_vikingfile
+from data.hosts.megadb import scrape_megadb
 from utils.logging.logs import consoleLog
 from bs4 import BeautifulSoup
 from typing import Dict
@@ -25,9 +27,14 @@ class SteamripScraper:
         if self.cache["data"] != [] and (current_time - self.cache["last_fetched"] < self.cache_expiry):
             return self.cache["data"]
 
-        url = f"https://steamrip.com/games-list-page/"
-        response = requests.get(url)
-        text = response.text
+        try:
+            url = f"https://steamrip.com/games-list-page/"
+            response = requests.get(url)
+            response.raise_for_status()
+            text = response.text
+        except requests.RequestException as e:
+            consoleLog(f"SteamRip: Failed to fetch games list - {e}")
+            return []
 
         soup = BeautifulSoup(text, "html.parser")
         games = soup.find_all("li", class_="az-list-item")
@@ -55,17 +62,29 @@ class SteamripScraper:
         return ret
 
     def scrape_steamrip_game_downloads(self, url):
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            consoleLog(f"SteamRip: Failed to fetch game page - {e}")
+            return []
+
         soup = BeautifulSoup(response.text, "html.parser")
         download_link_elements = soup.find_all("a",class_="shortc-button")
-        download_links = ["buzzheavier", "gofile"]
+        download_links = ["buzzheavier", "gofile", "vikingfile", "megadb"]
 
         for download_link in download_link_elements:
             pure = download_link.attrs.get("href")
+            if not pure or len(pure) < 3:
+                continue
             if pure[2] == "b":
                 download_links[0] = "https:" + pure
             if pure[2] == "g":
                 download_links[1] = "https:" + pure
+            if pure[2] == "v":
+                download_links[2] = "https:" + pure
+            if pure[2] == "m":
+                download_links[3] = "https:" + pure
 
         ret = []
 
@@ -78,21 +97,46 @@ class SteamripScraper:
     def get_download_link(self, post: Dict):
         url = post["url"]
         links = self.scrape_steamrip_game_downloads(url)
+
+        if not links:
+            consoleLog("SteamRip: No download links found")
+            return None, None
+
         best = ""
         for link in links:
             if link[0] == "h":
                 best = link
                 break
 
-        if links.index(best) == 0:
-            link = scrape_buzzheavier(best)
-            return link
-        elif links.index(best) == 1:
-            link, headers = scrape_gofile(best)
-            return link, headers
-        else:
-            consoleLog("Unable to retrieve download link due to captcha, launching browser...")
-            webbrowser.open(best)
+        if not best:
+            consoleLog("SteamRip: No valid download links found")
+            return None, None
+
+        try:
+            idx = links.index(best)
+        except ValueError:
+            consoleLog("SteamRip: Failed to resolve download host")
+            return None, None
+
+        try:
+            if idx == 0:
+                link = scrape_buzzheavier(best)
+                return link
+            elif idx == 1:
+                link, headers = scrape_gofile(best)
+                return link, headers
+            elif idx == 2:
+                scrape_vikingfile(best)
+                return None, None
+            elif idx == 3:
+                scrape_megadb(best)
+                return None, None
+            else:
+                consoleLog("SteamRip: Unknown host, launching browser...")
+                webbrowser.open(best)
+                return None, None
+        except Exception as e:
+            consoleLog(f"SteamRip: Scraper failed - {e}")
             return None, None
 
     def search(self, query: str):
