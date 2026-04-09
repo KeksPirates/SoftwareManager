@@ -59,7 +59,18 @@ class SingleInstance(QObject):
     def on_raise(self):
         pass
 
+def check_running(app):
+    single = SingleInstance()
+    if single.is_running:
+        print("Another instance is already running. Exiting this instance.")
+        closehelper()
+        force_exit()
+
+    app._single_instance = single
+
+
 def run_gui(app):
+    single = app._single_instance
     custom_colors = {}
     if state.accent_color:
         custom_colors["primary"] = state.accent_color
@@ -98,13 +109,6 @@ def run_gui(app):
         widget.raise_()
         widget.activateWindow()
 
-    single = SingleInstance()
-    if single.is_running:
-        consoleLog("Another instance is already running. Exiting this instance.")
-        closehelper()
-        force_exit()
-
-    app._single_instance = single
     single.on_raise = show_from_tray
 
     set_main_window(widget)
@@ -120,10 +124,10 @@ def keyboardinterrupthandler(signum, frame):
 def main():
     # Begin counting startup time
     start_time = time.perf_counter()
-    
     # Initialize UI Engine
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-
+    # Check if SoftwareManager is already running
+    check_running(app)
     # Parse saved files 
     read_config()
     logs = get_download_logs()
