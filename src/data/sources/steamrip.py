@@ -9,23 +9,22 @@ import webbrowser
 import requests
 import time
 import re
+import copy
 
 class SteamripScraper:
     name = "steamrip"
     headers = ["Game"]
     is_magnet = False
 
-
     def __init__(self):
         self.cache = { "data": [], "last_fetched": 0 }
         self.cache_expiry = 300
 
     def scrape_steamrip_links(self):
-        
         current_time = time.time()
 
-        if self.cache["data"] != [] and (current_time - self.cache["last_fetched"] < self.cache_expiry):
-            return self.cache["data"]
+        if self.cache["data"] and (current_time - self.cache["last_fetched"] < self.cache_expiry):
+            return copy.deepcopy(self.cache["data"])
 
         try:
             url = f"https://steamrip.com/games-list-page/"
@@ -71,7 +70,7 @@ class SteamripScraper:
 
         soup = BeautifulSoup(response.text, "html.parser")
         download_link_elements = soup.find_all("a",class_="shortc-button")
-        download_links = ["buzzheavier", "gofile", "vikingfile", "megadb"]
+        download_links = ["", "", "", ""]
 
         for download_link in download_link_elements:
             pure = download_link.attrs.get("href")
@@ -89,7 +88,7 @@ class SteamripScraper:
         ret = []
 
         for link in download_links:
-            if len(link) != 1:
+            if link != "":
                 ret.append(link)
 
         return ret
