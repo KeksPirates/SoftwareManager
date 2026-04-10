@@ -31,6 +31,7 @@ class AppState(QObject):
         self.active_interfaces: List = []
         self.bound_interface: Any = None
         self.close_to_tray: bool = True
+        self.show_megadb_notification: bool = True
 
         # Image
         self._image_enabled: bool = False

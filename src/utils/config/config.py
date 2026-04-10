@@ -16,7 +16,8 @@ def create_config():
         "autoresume": str(state.autoresume),        
         "window_transparency": str(state.window_transparency),
         "accent_color": str(state.accent_color),
-        "close_to_tray": str(state.close_to_tray)
+        "close_to_tray": str(state.close_to_tray),
+        "show_megadb_notification": str(state.show_megadb_notification)
     }
 
     config["Network"] = {
@@ -88,6 +89,7 @@ def read_config():
         state.window_transparency = config.getboolean("General", "window_transparency", fallback=state.window_transparency)
         state.accent_color = config.get("General", "accent_color", fallback=state.accent_color)
         state.close_to_tray = config.getboolean("General", "close_to_tray", fallback=state.close_to_tray)
+        state.show_megadb_notification = config.getboolean("General", "show_megadb_notification", fallback=state.show_megadb_notification)
 
         # Network
         state.api_url = config.get("Network", "api_url", fallback=state.api_url)

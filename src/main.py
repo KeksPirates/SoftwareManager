@@ -111,6 +111,9 @@ def run_gui(app):
 
     single.on_raise = show_from_tray
 
+    from data.hosts.megadb import ui_bridge, show_megadb_notification
+    ui_bridge.show_notification.connect(show_megadb_notification)
+
     set_main_window(widget)
     widget.show()
     signal.signal(signal.SIGINT, signal.SIG_DFL)

@@ -1,3 +1,4 @@
+from data.hosts.megadb import show_megadb_notification
 from interface.utils.tabhelper import create_tab
 from interface.dialogs.theme import _accent_selection_color
 from utils.config.settings import save_settings
@@ -302,6 +303,11 @@ def settings_dialog(self):
     close_to_tray_checkbox.setChecked(state.close_to_tray)
     close_to_tray_checkbox.toggled.connect(lambda checked: setattr(state, 'close_to_tray', checked))
 
+    # Show MegaDB Notification
+    show_megadb_notification_container, show_megadb_notification_checkbox = create_widget(QCheckBox, "Show MegaDB Notifications: ")
+    show_megadb_notification_checkbox.setChecked(state.show_megadb_notification)
+    show_megadb_notification_checkbox.toggled.connect(lambda checked: setattr(state, 'show_megadb_notification', checked))
+
 
     # Save / Cancel buttons
     layout = QHBoxLayout()
@@ -328,7 +334,8 @@ def settings_dialog(self):
             image_as_wallpaper=image_mode_checkbox.isChecked(),
             image_position=image_position_combo.currentText(),
             accent_color=accent_color_input.text().strip(),
-            close_to_tray=close_to_tray_checkbox.isChecked()
+            close_to_tray=close_to_tray_checkbox.isChecked(),
+            show_megadb_notification=show_megadb_notification_checkbox.isChecked()
             )
         color = _accent_selection_color()
         if color:
@@ -343,7 +350,7 @@ def settings_dialog(self):
     layout.addWidget(save_btn)
 
     tabs = QtWidgets.QTabWidget()
-    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container, close_to_tray_container], tabs=tabs, stretch=True)
+    create_tab("General", [autoresume_container, update_checkbox_container, transparent_window_container, accent_color_container, close_to_tray_container, show_megadb_notification_container], tabs=tabs, stretch=True)
     create_tab("Image", [enable_image_container, image_mode_container, image_position_container, image_width_container, image_offset_container, image_opacity_container], tabs=tabs, stretch=True)
     create_tab("Paths", [download_path_container, image_path_container], tabs=tabs, stretch=True)
     create_tab("Network", [interface_container, max_connections_container, max_downloads_container, up_speed_limit_container, down_speed_limit_container, api_url_container], tabs=tabs, stretch=True)
