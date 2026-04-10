@@ -23,7 +23,7 @@ def show_megadb_notification():
         notification_popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
     button = notification_popup.addButton("Don't show again", QMessageBox.ButtonRole.AcceptRole)
     button.clicked.connect(lambda: setattr(state, "show_megadb_notification", False))
-    save_settings(show_megadb_notification=False)
+    save_settings(show_megadb_notification=state.show_megadb_notification)
     notification_popup.exec()
 
 def scrape_megadb(url):
