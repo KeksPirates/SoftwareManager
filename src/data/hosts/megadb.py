@@ -19,7 +19,8 @@ def show_megadb_notification():
                                            )
     notification_popup.setTextFormat(Qt.TextFormat.RichText)
     notification_popup.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-    notification_popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+    if state.window_transparency is True:
+        notification_popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
     button = notification_popup.addButton("Don't show again", QMessageBox.ButtonRole.AcceptRole)
     button.clicked.connect(lambda: setattr(state, "show_megadb_notification", False))
     save_settings(show_megadb_notification=False)
