@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QMessageBox
+from utils.data.state import state
 import qdarktheme
 
 class NotificationPopup(QMessageBox):
@@ -6,7 +7,10 @@ class NotificationPopup(QMessageBox):
         super().__init__(parent)
 
         if darkmode is True:
-            qdarktheme.setup_theme("auto")
+            custom_colors = {}
+            if state.accent_color:
+                custom_colors["primary"] = state.accent_color
+            qdarktheme.setup_theme("auto", custom_colors=custom_colors if custom_colors else None)
 
         self.setIcon(QMessageBox.Icon.Information)
         self.setWindowTitle(title)
