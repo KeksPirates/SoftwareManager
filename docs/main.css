@@ -12,6 +12,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     background: #0f1011;
+    opacity: 1 !important;
 }
 
 header {
