@@ -238,6 +238,7 @@ jobs:
       - name: Create Release (Public)
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.RELEASE_TOKEN }}
           tag_name: ${{ needs.build.outputs.version }}
           name: ${{ needs.build.outputs.version }}
           generate_release_notes: true
@@ -247,5 +248,3 @@ jobs:
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-windows-setup.exe
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-macos
             release/SHA256SUMS.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
