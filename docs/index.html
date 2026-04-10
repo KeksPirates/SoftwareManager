@@ -8,6 +8,21 @@
     <title>SoftwareManager - Main</title>
     <!-- <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico"> -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Open Graph / Discord Embed -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SoftwareManager">
+    <meta property="og:description" content="Simply search and download software from various sources.">
+    <meta property="og:image" content="https://softwaremanager.xyz/assets/softwaremanager/search_tab_rounded.png">
+    <meta property="og:url" content="https://softwaremanager.xyz/">
+    <meta property="og:site_name" content="KeksPirates">
+    <meta name="theme-color" content="#db65d5">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SoftwareManager">
+    <meta name="twitter:description" content="Simply search and download software from various sources.">
+    <meta name="twitter:image" content="https://softwaremanager.xyz/assets/softwaremanager/search_tab_rounded.png">
 </head>
 
 
@@ -195,7 +210,12 @@
             tablinks[i].className = tablinks[i].className.replace(" active", "");
         }
         
-        document.getElementById(tabName).style.display = "block";
+        var target = document.getElementById(tabName);
+        target.style.display = "block";
+        // restart animation
+        target.classList.remove('tab-animate');
+        void target.offsetWidth;
+        target.classList.add('tab-animate');
         
         let activeButton = document.querySelector(`.tablinks[onclick*="${tabName}"]`);
         if (activeButton) {
@@ -218,6 +238,17 @@
             openTab(null, 'start', false); 
         }
     });
+
+    // Determine the correct tab immediately (before full load) to prevent flash
+    (function() {
+        let currentPath = window.location.pathname;
+        let tabName = 'start';
+        if (currentPath === '/api') tabName = 'api';
+        else if (currentPath === '/docs') tabName = 'docs';
+        else if (currentPath !== '/') tabName = 'notfound';
+        // Show only the correct tab right away
+        document.getElementById(tabName).style.display = 'block';
+    })();
 
     window.onload = function() {
         let currentPath = window.location.pathname;

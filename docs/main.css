@@ -65,6 +65,27 @@ main {
     padding: 3rem;
 }
 
+/* Hide all tabs by default to prevent flash on page load */
+.tabcontent {
+    display: none;
+}
+
+/* Tab switch animation */
+@keyframes tabFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tabcontent.tab-animate {
+    animation: tabFadeIn 0.3s ease-out forwards;
+}
+
 main h1.hometitle {
     font-size: 4.0rem;
     line-height: 4rem;
