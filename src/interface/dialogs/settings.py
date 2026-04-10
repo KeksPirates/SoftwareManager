@@ -1,6 +1,5 @@
-from data.hosts.megadb import show_megadb_notification
-from interface.utils.tabhelper import create_tab
 from interface.dialogs.theme import _accent_selection_color
+from interface.utils.tabhelper import create_tab
 from utils.config.settings import save_settings
 from interface.utils.svghelper import svg_icon
 from utils.logging.logs import consoleLog

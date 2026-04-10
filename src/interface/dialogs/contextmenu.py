@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QPoint, Signal, QThreadPool, QThread
+from PySide6.QtCore import Qt, QPoint, Signal, QThread
 from utils.logging.logs import consoleLog, remove_download_log
 from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link

@@ -1,6 +1,6 @@
 from data.hosts.buzzheavier import scrape_buzzheavier
-from data.hosts.gofile import scrape_gofile
 from data.hosts.vikingfile import scrape_vikingfile
+from data.hosts.gofile import scrape_gofile
 from data.hosts.megadb import scrape_megadb
 from utils.logging.logs import consoleLog
 from bs4 import BeautifulSoup
@@ -8,7 +8,6 @@ from typing import Dict
 import webbrowser
 import requests
 import time
-import re
 import copy
 
 class SteamripScraper:
