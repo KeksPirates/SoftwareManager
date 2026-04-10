@@ -13,7 +13,10 @@ class UIBridge(QObject):
 ui_bridge = UIBridge()
 
 def show_megadb_notification():
-    notification_popup = NotificationPopup("Opened MegaDB link in browser", "Beware of malicious Ads. Make sure to have an adblocker installed.\n" '<br><a href="https://ublockorigin.com">Visit uBlock Origin</a>')
+    notification_popup = NotificationPopup(title="Opened MegaDB link in browser",
+                                           text="Beware of malicious Ads. Make sure to have an adblocker installed.\n" '<br><a href="https://ublockorigin.com">Visit uBlock Origin</a>',
+                                           darkmode=False if state.window_transparency else True
+                                           )
     notification_popup.setTextFormat(Qt.TextFormat.RichText)
     notification_popup.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
     notification_popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
