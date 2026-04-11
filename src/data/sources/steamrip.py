@@ -110,23 +110,19 @@ class SteamripScraper:
             consoleLog("SteamRip: No valid download links found")
             return None, None
 
-        try:
-            idx = links.index(best)
-        except ValueError:
-            consoleLog("SteamRip: Failed to resolve download host")
-            return None, None
 
         try:
-            if idx == 0:
+            consoleLog(f"Found download link: {best}")
+            if "buzzheavier" in best:
                 link = scrape_buzzheavier(best)
                 return link
-            elif idx == 1:
+            elif "gofile" in best:
                 link, headers = scrape_gofile(best)
                 return link, headers
-            elif idx == 2:
+            elif "vikingfile" in best:
                 scrape_vikingfile(best)
                 return None, None
-            elif idx == 3:
+            elif "megadb" in best:
                 scrape_megadb(best)
                 return None, None
             else:
