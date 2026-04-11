@@ -24,7 +24,7 @@ jobs:
           - os: macos-latest
             artifact_name: SoftwareManager-test-${{ github.sha }}-macos
 
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
