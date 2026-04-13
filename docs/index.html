@@ -44,7 +44,18 @@
             <a class="tablinks" onclick="openTab(event, 'docs')">Docs</a>
             <!-- <a class="tablinks" onclick="openTab(event, 'notfound')">404</a> -->
         </nav>
+        <button class="hamburger" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </header>
+    <div class="mobile-nav-overlay" onclick="closeMobileMenu()"></div>
+    <nav class="mobile-nav">
+        <a class="mobile-tablinks" onclick="openTab(event, 'start'); closeMobileMenu();">Home</a>
+        <a class="mobile-tablinks" onclick="openTab(event, 'api'); closeMobileMenu();">API</a>
+        <a class="mobile-tablinks" onclick="openTab(event, 'docs'); closeMobileMenu();">Docs</a>
+    </nav>
 
 
 
@@ -203,6 +214,30 @@
     </footer>
 
     <script>
+    function toggleMobileMenu() {
+        document.querySelector('.hamburger').classList.toggle('active');
+        document.querySelector('.mobile-nav').classList.toggle('active');
+        document.querySelector('.mobile-nav-overlay').classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+    }
+
+    function closeMobileMenu() {
+        document.querySelector('.hamburger').classList.remove('active');
+        document.querySelector('.mobile-nav').classList.remove('active');
+        document.querySelector('.mobile-nav-overlay').classList.remove('active');
+        document.body.classList.remove('menu-open');
+    }
+
+    function syncMobileActiveTab(tabName) {
+        document.querySelectorAll('.mobile-tablinks').forEach(function(link) {
+            link.classList.remove('active');
+            if (link.textContent.trim().toLowerCase() === tabName ||
+                (tabName === 'start' && link.textContent.trim().toLowerCase() === 'home')) {
+                link.classList.add('active');
+            }
+        });
+    }
+
     function openTab(evt, tabName, pushToHistory = true) {
         var i, tabcontent, tablinks;
         

@@ -15,6 +15,10 @@ body {
     opacity: 1 !important;
 }
 
+body.menu-open {
+    overflow: hidden;
+}
+
 header {
     height: 65px;
     background: #1a1c1d;
@@ -198,6 +202,93 @@ main .introduction-text p {
     display: none;
 }
 
+/* Hamburger button - hidden on desktop */
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1001;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #fafafa;
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile nav overlay */
+.mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.mobile-nav-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Mobile slide-in nav */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100%;
+    background: #1a1c1d;
+    z-index: 1000;
+    flex-direction: column;
+    padding: 5rem 1.5rem 2rem;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.mobile-nav.active {
+    right: 0;
+}
+
+.mobile-nav a {
+    display: block;
+    padding: 1rem 1rem;
+    color: #fafafa;
+    text-decoration: none;
+    font-family: var(--main-font);
+    font-size: 1.1rem;
+    border-radius: 10px;
+    transition: background 0.3s;
+    cursor: pointer;
+}
+
+.mobile-nav a:hover,
+.mobile-nav a.active {
+    background: #db65d51a;
+    color: #fdd2fc;
+}
+
 footer {
     color: #585858;
     font-family: var(--main-font);
@@ -379,42 +470,60 @@ pre.api-response {
 }
 
 
-@media(max-width: 560px) {
+@media(max-width: 768px) {
+
+    /* Show hamburger, hide desktop nav */
+    .hamburger {
+        display: flex;
+    }
+
+    .mobile-nav {
+        display: flex;
+    }
+
+    .tab {
+        display: none;
+    }
 
     header {
         padding: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
     }
 
     main {
-        margin: 0rem;
+        margin: 0;
         padding: 1rem;
-        
     }
 
-    main .introduction {
-        display: block;
-        margin-top: -1rem;
-        padding: 1rem;
+    main .introduction-frame {
+        text-align: center;
     }
 
     main .introduction-text {
         position: relative;
         text-align: center;
-        margin-top: 0rem;
+        margin-top: 0;
+        margin-right: 0;
         z-index: 2;
         user-select: none;
-        margin-right: 0rem;
-        padding-bottom: 2rem;
+        padding-bottom: 1.5rem;
     }
 
     main h1.hometitle {
-        font-size: 2rem;
-        line-height: 2.2rem;
-        text-align: left;
+        font-size: 2.2rem;
+        line-height: 2.4rem;
+        text-align: center;
+    }
+
+    main h1.hometitle br {
+        display: none;
     }
 
     main p.title_subtext {
-        text-align: left;
+        text-align: center;
+        font-size: 1rem;
     }
 
     .introduction-image {
@@ -422,25 +531,103 @@ pre.api-response {
     }
 
     main .btn_big {
-        display: block;
-        margin: 1rem auto;
+        display: inline-flex;
+        margin-top: 1rem;
+        width: 100%;
+        justify-content: center;
+        padding: 0.9rem 1.4rem;
     }
 
-    main .btn_big.github{
-        margin-right: 0rem;
+    main .btn_big.github {
+        margin-right: 0;
+    }
+
+    /* Responsive tables / grids */
+    .endpoint-parameters-header {
+        display: none;
+    }
+
+    .endpoint-parameters-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.75rem 0;
+        border-top: 1px solid #ffffff0a;
+    }
+
+    .endpoint-parameters-content p {
+        font-size: 0.95rem;
+    }
+
+    .endpoint-parameters-content p::before {
+        font-size: 0.75rem;
+        color: #8f8d8d;
+        display: block;
+        margin-bottom: 0.1rem;
+    }
+
+    .docs-grid .endpoint-parameters-content {
+        grid-template-columns: 1fr;
+    }
+
+    .docs-grid .endpoint-parameters-content p:nth-child(1)::before { content: "Source"; }
+    .docs-grid .endpoint-parameters-content p:nth-child(2)::before { content: "Category"; }
+    .docs-grid .endpoint-parameters-content p:nth-child(3)::before { content: "Notes"; }
+
+    /* API page: stack param fields with labels */
+    #api .endpoint-parameters-content p:nth-child(1)::before { content: "Parameter"; }
+    #api .endpoint-parameters-content p:nth-child(2)::before { content: "Type"; }
+    #api .endpoint-parameters-content p:nth-child(3)::before { content: "Required"; }
+    #api .endpoint-parameters-content p:nth-child(4)::before { content: "Description"; }
+
+    .endpoint-type-container {
+        word-break: break-all;
+    }
+
+    pre.api-response {
+        font-size: 0.8rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .api-url,
+    .endpoint-url,
+    .request-type-subcontainer {
+        word-break: break-all;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .base-information-frame {
+        padding: 0.75rem;
+    }
+
+    footer {
+        position: relative;
+        padding: 1rem;
+    }
+
+    .notfound-title {
+        font-size: 3rem;
+        line-height: 3rem;
+    }
+
+    .notfound-subtext {
+        font-size: 1.4rem;
     }
 }
 
-@media (min-width: 561px) and (max-width: 1393px) {
+@media (min-width: 769px) and (max-width: 1393px) {
 
     header {
         padding: 1rem;
     }
 
     main {
-        margin: 0rem;
-        padding: 1rem;
-        
+        margin: 0;
+        padding: 1.5rem;
     }
 
     main .introduction {
@@ -454,7 +641,7 @@ pre.api-response {
     main .introduction-text {
         position: relative;
         text-align: center;
-        margin-top: 0rem;
+        margin-top: 0;
         z-index: 2;
         user-select: none;
         margin-left: 2rem;
@@ -463,8 +650,8 @@ pre.api-response {
     }
 
     main h1.hometitle {
-        font-size: 2rem;
-        line-height: 2.2rem;
+        font-size: 2.5rem;
+        line-height: 2.7rem;
         text-align: center;
     }
 
@@ -491,8 +678,6 @@ pre.api-response {
     }
 
     main .introduction .inline-block {
-    display: block;
+        display: block;
     }
-
-    
 }
