@@ -45,7 +45,6 @@ class SingleInstance(QObject):
             self.server.listen(SERVER_NAME)
             self.server.newConnection.connect(self.handle_connection)
             self.is_running = False
-            self.is_running = False
 
     def handle_connection(self):
         socket = self.server.nextPendingConnection()

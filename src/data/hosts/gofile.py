@@ -23,42 +23,44 @@ def scrape_gofile(url):
 
     content_id = match.group(1)
     session = requests.Session()
+    try:
+        # Create a guest account
+        r = session.post(f"{_API_BASE}/accounts", headers={"User-Agent": _USER_AGENT}, timeout=15)
+        data = r.json()
+        if data.get("status") != "ok":
+            consoleLog("GoFile: Failed to create guest account")
+            return None
 
-    # Create a guest account
-    r = session.post(f"{_API_BASE}/accounts", headers={"User-Agent": _USER_AGENT})
-    data = r.json()
-    if data.get("status") != "ok":
-        consoleLog("GoFile: Failed to create guest account")
-        return None
+        account_token = data["data"]["token"]
+        website_token = _generate_website_token(account_token)
 
-    account_token = data["data"]["token"]
-    website_token = _generate_website_token(account_token)
+        headers = {
+            "User-Agent": _USER_AGENT,
+            "Authorization": f"Bearer {account_token}",
+            "X-Website-Token": website_token,
+            "X-BL": "en-US",
+            "Referer": "https://gofile.io/",
+            "Origin": "https://gofile.io",
+        }
 
-    headers = {
-        "User-Agent": _USER_AGENT,
-        "Authorization": f"Bearer {account_token}",
-        "X-Website-Token": website_token,
-        "X-BL": "en-US",
-        "Referer": "https://gofile.io/",
-        "Origin": "https://gofile.io",
-    }
+        # Fetch folder contents
+        r = session.get(f"{_API_BASE}/contents/{content_id}", headers=headers, timeout=15)
+        data = r.json()
+        if data.get("status") != "ok":
+            consoleLog(f"GoFile: API error - {data.get('status')}")
+            return None
 
-    # Fetch folder contents
-    r = session.get(f"{_API_BASE}/contents/{content_id}", headers=headers)
-    data = r.json()
-    if data.get("status") != "ok":
-        consoleLog(f"GoFile: API error - {data.get('status')}")
-        return None
+        children = data["data"].get("children", {})
+        if not children:
+            consoleLog("GoFile: No files found")
+            return None
 
-    children = data["data"].get("children", {})
-    if not children:
-        consoleLog("GoFile: No files found")
-        return None
+        first_child = next(iter(children.values()))
+        link = first_child.get("link")
+        if not link:
+            consoleLog("GoFile: No download link in response")
+            return None
 
-    first_child = next(iter(children.values()))
-    link = first_child.get("link")
-    if not link:
-        consoleLog("GoFile: No download link in response")
-        return None
-
-    return link, headers
+        return link, headers
+    finally:
+        session.close()

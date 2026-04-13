@@ -187,13 +187,15 @@ def _update_download_completed_by_hash_inner(info_hash, completed) -> DownloadLi
 def set_main_window(window):
     state.main_window = window
 
-def flush_log_buffer(): # credits to claude
-    if state.log_buffer:
+def flush_log_buffer():
+    with state._log_lock:
+        buffer = list(state.log_buffer)
+        state.log_buffer.clear()
+    if buffer:
         try:
             from interface.gui import MainWindow
-            for log_entry in state.log_buffer:
+            for log_entry in buffer:
                 MainWindow.add_log(log_entry)
-            state.log_buffer = []
         except Exception as e:
             consoleLog(f"Exception while flushing log buffer: {e}")
 
@@ -205,9 +207,11 @@ def consoleLog(text, printAnyways = False):
     try:
         from interface.gui import MainWindow
         if not MainWindow.add_log(formatted_text):
-            state.log_buffer.append(formatted_text)
+            with state._log_lock:
+                state.log_buffer.append(formatted_text)
     except Exception:
-        state.log_buffer.append(formatted_text)
+        with state._log_lock:
+            state.log_buffer.append(formatted_text)
     
     if state.debug or printAnyways:
         print(formatted_text)

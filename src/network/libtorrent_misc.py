@@ -48,13 +48,14 @@ def update_log(shutdown_event):
         try:
             with state.downloads_lock:
                 items = list(state.active_downloads.items())
+                seeded = set(state.seeded_magnets)
             for magnet_uri, magnetdl in items:
                 if isinstance(magnetdl, dict):
                     continue
                 
                 status = magnetdl.status()
                 
-                if status.state == lt.torrent_status.seeding and magnet_uri not in updated and magnet_uri not in state.seeded_magnets:
+                if status.state == lt.torrent_status.seeding and magnet_uri not in updated and magnet_uri not in seeded:
                     consoleLog(f"Marking {status.name} as completed")
                     if hasattr(status, 'info_hashes'):
                         info_hash = str(status.info_hashes.v1)

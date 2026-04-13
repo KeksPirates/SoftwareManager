@@ -163,7 +163,7 @@ def add_seed(magnet_uri, file_path):
         return False
     with state.downloads_lock:
         state.active_downloads[magnet_uri] = handle
-    state.seeded_magnets.add(magnet_uri)
+        state.seeded_magnets.add(magnet_uri)
     return True
 
 
