@@ -1,4 +1,3 @@
-from network.libtorrent_misc import send_notification, update_log, check_deleted_files
 from utils.logging.loghandler import split_data, check_completed, check_downloads
 from network.interface import list_interfaces, init_interfaces
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
@@ -9,6 +8,7 @@ from utils.general.shutdown import closehelper
 from utils.general.wrappers import run_thread
 from interface.assets.base64_icons import logo_base64
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu
+from network.libtorrent_misc import AppDaemons
 from utils.general.shutdown import force_exit
 from utils.config.config import read_config
 from PySide6.QtGui import QAction, QPixmap
@@ -142,9 +142,8 @@ def main():
     init_interfaces()
     consoleLog(f"Current Bound: {state.bound_interface}")
     # Start background daemon threads
-    run_thread(threading.Thread(target=send_notification, args=(state.shutdown_event,), daemon=True))
-    run_thread(threading.Thread(target=update_log, args=(state.shutdown_event,), daemon=True))
-    run_thread(threading.Thread(target=check_deleted_files, args=(state.shutdown_event,), daemon=True))
+    app._daemons = AppDaemons()
+    app._daemons.start_all()
     # Start background non-daemon threads
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
