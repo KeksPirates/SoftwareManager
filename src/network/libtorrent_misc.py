@@ -28,15 +28,17 @@ class AppDaemons(QObject):
         self.updated_magnets = set()
 
         # Create Timers
-        self.deleted_files_timer = QTimer()
-        self.completed_downloads_timer = QTimer()
+        self.deleted_files_timer = QTimer(self)
+        self.completed_downloads_timer = QTimer(self)
 
         # Connect Timer Signals
         self.deleted_files_timer.timeout.connect(self.check_deleted_files)
         self.completed_downloads_timer.timeout.connect(self.check_completed_downloads)
 
     def start_all(self):
-        self.deleted_files_timer.start(5000)
+        consoleLog("Starting Timer: deleted_files")
+        self.deleted_files_timer.start(2000)
+        consoleLog("Starting Timer: completed_downloads")
         self.completed_downloads_timer.start(5000)
 
     def check_deleted_files(self):

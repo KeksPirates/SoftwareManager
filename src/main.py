@@ -14,7 +14,7 @@ from utils.config.config import read_config
 from PySide6.QtGui import QAction, QPixmap
 from utils.logging.logs import consoleLog
 from interface.gui import MainWindow
-from PySide6.QtCore import Qt, QObject
+from PySide6.QtCore import Qt, QObject, QThread
 from utils.data.state import state
 from PySide6 import QtWidgets
 import qdarktheme
@@ -142,8 +142,12 @@ def main():
     init_interfaces()
     consoleLog(f"Current Bound: {state.bound_interface}")
     # Start background daemon threads
+    app._daemon_thread = QThread()
     app._daemons = AppDaemons()
-    app._daemons.start_all()
+    app._daemons.moveToThread(app._daemon_thread)
+    app._daemon_thread.started.connect(app._daemons.start_all)
+    app.aboutToQuit.connect(app._daemon_thread.quit)
+    app._daemon_thread.start()
     # Start background non-daemon threads
     run_thread(threading.Thread(target=check_completed, args=(downloads, state.autoresume)))
     run_thread(threading.Thread(target=check_downloads, args=(downloads,)))
