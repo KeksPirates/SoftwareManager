@@ -41,7 +41,6 @@ def download_update(assets: list):
     progress = QtWidgets.QProgressDialog("Downloading update... (0.0 MB/s)", None, 0, 100)
     progress.setWindowTitle("Updating")
     progress.setWindowModality(Qt.WindowModality.ApplicationModal)
-    progress.setCancelButton(None)
     progress.setMinimumDuration(0)
     progress.setAutoClose(False)
     progress.setAutoReset(False)
@@ -79,9 +78,19 @@ def download_update(assets: list):
             timer.stop()
             loop.quit()
 
+        if progress.wasCanceled():
+            state.down_speed_limit = original_limit
+            consoleLog("Update download cancelled by user.")
+            timer.stop()
+            loop.quit()
+            return
+
     timer.timeout.connect(poll_progress)
     timer.start()
     loop.exec()
+
+    if progress.wasCanceled():
+        return
 
     if handle.status().error:
         return
@@ -94,6 +103,11 @@ def download_update(assets: list):
         else:
             progress.close()
             consoleLog("Error: Invalid file hash, file may be corrupted")
+            QtWidgets.QMessageBox.critical(
+                None, 
+                "Update Failed", 
+                "Error: Invalid file hash, file may be corrupted"
+            )
             sys.exit(0)
     else:
         consoleLog("Skipping hash verification (no hash found for release)")
