@@ -1,4 +1,5 @@
 from utils.data.models import Download, DownloadList
+from PySide6.QtCore import QObject, Signal
 from utils.data.state import state
 from dataclasses import asdict
 from datetime import datetime
@@ -7,6 +8,10 @@ import time
 import os
 import re
 
+class LogSignal(QObject):
+    new_log = Signal(str)
+
+log_emitter = LogSignal()
 
 def _downloads_file_path() -> str:
     return os.path.join(state.settings_path, "downloads.json")
@@ -189,29 +194,20 @@ def set_main_window(window):
 
 def flush_log_buffer():
     with state._log_lock:
-        buffer = list(state.log_buffer)
+        for text in state.log_buffer:
+            log_emitter.new_log.emit(text)
+        
         state.log_buffer.clear()
-    if buffer:
-        try:
-            from interface.gui import MainWindow
-            for log_entry in buffer:
-                MainWindow.add_log(log_entry)
-        except Exception as e:
-            consoleLog(f"Exception while flushing log buffer: {e}")
 
 def consoleLog(text, printAnyways = False):
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     formatted_text = f"[{current_time}] {text}"
 
-    try:
-        from interface.gui import MainWindow
-        if not MainWindow.add_log(formatted_text):
-            with state._log_lock:
-                state.log_buffer.append(formatted_text)
-    except Exception:
-        with state._log_lock:
-            state.log_buffer.append(formatted_text)
+    with state._log_lock:
+        state.log_buffer.append(formatted_text)
+    
+    log_emitter.new_log.emit(formatted_text)
     
     if state.debug or printAnyways:
         print(formatted_text)

@@ -17,6 +17,7 @@ from interface.utils.searchhelper import run_search
 from interface.utils.tabhelper import create_tab
 from utils.general.shutdown import closehelper
 from utils.general.wrappers import run_thread
+from utils.logging.logs import log_emitter
 from interface.dialogs.image import Image
 from utils.data.state import state
 
@@ -68,14 +69,12 @@ class CenteredDelegate(QStyledItemDelegate):
 
 class MainWindow(QtWidgets.QMainWindow, QWidget):
     eventFilter = eventFilter
-    log_signal = Signal(str)
     search_results_signal = Signal(list)
     _instance = None
 
     def __init__(self):
         super().__init__()
         MainWindow._instance = self
-        self.log_signal.connect(self._on_log_signal)
         self.search_results_signal.connect(self._on_search_results)
 
         pixmap = QPixmap()
@@ -132,6 +131,7 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
         self.consoleLog = QTextEdit()
         self.statusbar = QStatusBar()
 
+        log_emitter.new_log.connect(self._on_log_signal)
         flush_log_buffer()
 
         self._tracker_elided_delegate = ElidedItemDelegate(lambda: self._tracker_hovered_row, self)
@@ -318,13 +318,6 @@ class MainWindow(QtWidgets.QMainWindow, QWidget):
                 consoleLog(f"Search error: {e}", True)
                 self.search_results_signal.emit([])
         run_thread(threading.Thread(target=_search_thread))
-
-    @staticmethod
-    def add_log(text):
-        if hasattr(MainWindow, "_instance") and MainWindow._instance:
-            MainWindow._instance.log_signal.emit(text)
-            return True
-        return False
 
     def _on_log_signal(self, text):
         if hasattr(self, 'consoleLog'):
