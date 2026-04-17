@@ -61,6 +61,7 @@ class AppState(QObject):
         self.max_connections: int = 200
         self.max_downloads: int = 10
         self.downloads_lock = threading.RLock()
+        self._log_lock = threading.Lock()
 
     @property
     def image_path(self) -> str:

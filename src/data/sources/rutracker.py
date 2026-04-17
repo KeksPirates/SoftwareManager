@@ -2,6 +2,7 @@ from utils.network.jsonhandler import split_data, format_data
 from utils.data.tracker import get_magnet_link
 from utils.logging.logs import consoleLog
 from utils.data.state import state
+from urllib.parse import quote
 from typing import Dict
 import requests
 
@@ -11,10 +12,18 @@ class RutrackerScraper:
     is_magnet = True
 
     def search(self, query):
-        search = requests.get(f"{state.api_url}/search?q={query}", timeout=15)
+        try:
+            search = requests.get(f"{state.api_url}/search?q={quote(query)}", timeout=15)
+        except requests.RequestException as e:
+            consoleLog(f"Failed to reach server: {e}")
+            return []
         consoleLog("Sent request to server")
         if search:
-            _, data, _, success, cached = split_data(search.text)
+            try:
+                _, data, _, success, cached = split_data(search.text)
+            except (KeyError, ValueError) as e:
+                consoleLog(f"Failed to parse server response: {e}")
+                return []
             if cached:
                 consoleLog("Server response cached")
             if success:

@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt, QPoint, Signal, QThread
+from network.direct_download.handle import DirectDownloadHandle
 from utils.logging.logs import consoleLog, remove_download_log
 from utils.network.download import download_selected
 from utils.data.tracker import get_magnet_link
@@ -121,7 +122,12 @@ class ContextMenu_Downloads:
 
             remove_download_log(magnet_link)
 
-            if state.dl_session:
+            if isinstance(magnetdl, DirectDownloadHandle):
+                try:
+                    magnetdl.stop()
+                except Exception as e:
+                    consoleLog(f"Exception while stopping direct download: {e}")
+            elif state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
                 except Exception as e:
@@ -179,29 +185,24 @@ class ContextMenu_Downloads:
 
             remove_download_log(magnet_link)
 
-            if state.dl_session:
+            if isinstance(magnetdl, DirectDownloadHandle):
+                try:
+                    magnetdl.stop()
+                except Exception as e:
+                    consoleLog(f"Exception while stopping direct download: {e}")
+            elif state.dl_session:
                 try:
                     state.dl_session.remove_torrent(magnetdl)
-                    time.sleep(0.5)
                 except Exception as e:
                     consoleLog(f"Exception while removing download from LibTorrent: {e}")
 
             if download_path and os.path.exists(download_path):
-                last_error = None
-                for attempt in range(3):
-                    try:
-                        if os.path.isfile(download_path) or os.path.isdir(download_path):
-                            send2trash(download_path)
-                        consoleLog(f"Deleted files for: {torrent_name}", True)
-                        last_error = None
-                        break
-                    except Exception as e:
-                        last_error = e
-                        if attempt < 2:
-                            time.sleep(0.5)
-
-                if last_error:
-                    consoleLog(f"Error deleting files: {last_error}", True)
+                try:
+                    if os.path.isfile(download_path) or os.path.isdir(download_path):
+                        send2trash(download_path)
+                    consoleLog(f"Deleted files for: {torrent_name}", True)
+                except Exception as e:
+                    consoleLog(f"Error deleting files: {e}", True)
             else:
                 consoleLog(f"Removed entry (files not found): {torrent_name}", True)
 

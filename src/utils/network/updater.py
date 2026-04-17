@@ -2,13 +2,12 @@ from network.direct_download.handle import DirectDownloadHandle
 from utils.general.shutdown import closehelper
 from utils.logging.logs import consoleLog
 from utils.data.state import state
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer, QEventLoop
 from PySide6 import QtWidgets
 import libtorrent as lt
 import subprocess
 import tempfile
 import hashlib
-import time
 import sys
 import os
 
@@ -42,7 +41,6 @@ def download_update(assets: list):
     progress = QtWidgets.QProgressDialog("Downloading update... (0.0 MB/s)", None, 0, 100)
     progress.setWindowTitle("Updating")
     progress.setWindowModality(Qt.WindowModality.ApplicationModal)
-    progress.setCancelButton(None)
     progress.setMinimumDuration(0)
     progress.setAutoClose(False)
     progress.setAutoReset(False)
@@ -55,14 +53,19 @@ def download_update(assets: list):
     handle = DirectDownloadHandle(url, filename, tempfile.gettempdir())
     handle.start()
 
-    while True:
-        QtWidgets.QApplication.processEvents()
+    loop = QEventLoop()
+    timer = QTimer()
+    timer.setInterval(100)
+
+    def poll_progress():
         status = handle.status()
 
         if status.error:
             state.down_speed_limit = original_limit
             progress.close()
             consoleLog(f"Update download failed: {status.error}")
+            timer.stop()
+            loop.quit()
             return
 
         if status.total_wanted > 0:
@@ -72,9 +75,25 @@ def download_update(assets: list):
             progress.setLabelText(f"Downloading update... ({speed_mb:.1f} MB/s)")
 
         if status.state == lt.torrent_status.seeding:
-            break
+            timer.stop()
+            loop.quit()
 
-        time.sleep(0.1)
+        if progress.wasCanceled():
+            state.down_speed_limit = original_limit
+            consoleLog("Update download cancelled by user.")
+            timer.stop()
+            loop.quit()
+            return
+
+    timer.timeout.connect(poll_progress)
+    timer.start()
+    loop.exec()
+
+    if progress.wasCanceled():
+        return
+
+    if handle.status().error:
+        return
 
     state.down_speed_limit = original_limit
 
@@ -84,6 +103,11 @@ def download_update(assets: list):
         else:
             progress.close()
             consoleLog("Error: Invalid file hash, file may be corrupted")
+            QtWidgets.QMessageBox.critical(
+                None, 
+                "Update Failed", 
+                "Error: Invalid file hash, file may be corrupted"
+            )
             sys.exit(0)
     else:
         consoleLog("Skipping hash verification (no hash found for release)")
@@ -94,5 +118,4 @@ def download_update(assets: list):
 
     closehelper()
     subprocess.Popen([installer_path, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/SP-", "/CLOSEAPPLICATIONS"])
-    time.sleep(1)
     os._exit(0)

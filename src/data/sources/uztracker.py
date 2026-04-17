@@ -19,7 +19,7 @@ class UztrackerScraper:
         posts = []
 
         try:
-            response = requests.get(search_url)
+            response = requests.get(search_url, timeout=15)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             links = soup.find_all('tr', class_="tCenter hl-tr", id=lambda x: x and x.startswith('tor_'))

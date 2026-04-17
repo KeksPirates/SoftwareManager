@@ -27,7 +27,7 @@ class SteamripScraper:
 
         try:
             url = f"https://steamrip.com/games-list-page/"
-            response = requests.get(url)
+            response = requests.get(url, timeout=15)
             response.raise_for_status()
             text = response.text
         except requests.RequestException as e:
@@ -61,7 +61,7 @@ class SteamripScraper:
 
     def scrape_steamrip_game_downloads(self, url):
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=15)
             response.raise_for_status()
         except requests.RequestException as e:
             consoleLog(f"SteamRip: Failed to fetch game page - {e}")

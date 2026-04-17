@@ -1,5 +1,6 @@
 from utils.logging.logs import update_download_completed_by_hash
 from utils.logging.logs import consoleLog
+from PySide6.QtCore import QObject, QTimer
 from utils.data.state import state
 from plyer import notification
 import libtorrent as lt
@@ -19,55 +20,28 @@ def cleanup_session():
         with state.downloads_lock:
             state.active_downloads.clear()
 
-def send_notification(shutdown_event):
-    notified = set()
-    while not shutdown_event.is_set():
-        try:
-            with state.downloads_lock:
-                items = list(state.active_downloads.items())
-            for magnet_uri, magnetdl in items:
-                if isinstance(magnetdl, dict):
-                    continue
-                
-                status = magnetdl.status()
-                
-                if status.state == lt.torrent_status.seeding and magnet_uri not in notified:
-                    notification.notify(
-                        title="Download finished",
-                        message=f"{status.name} has finished downloading.",
-                        timeout=4
-                    )
-                    notified.add(magnet_uri)
-        except Exception as e:
-            consoleLog(f"Exception while sending notification: {e}")
-        time.sleep(5)
+class AppDaemons(QObject):
+    def __init__(self):
+        super().__init__()
 
-def update_log(shutdown_event):
-    updated = set()
-    while not shutdown_event.is_set():
-        try:
-            with state.downloads_lock:
-                items = list(state.active_downloads.items())
-            for magnet_uri, magnetdl in items:
-                if isinstance(magnetdl, dict):
-                    continue
-                
-                status = magnetdl.status()
-                
-                if status.state == lt.torrent_status.seeding and magnet_uri not in updated and magnet_uri not in state.seeded_magnets:
-                    consoleLog(f"Marking {status.name} as completed")
-                    if hasattr(status, 'info_hashes'):
-                        info_hash = str(status.info_hashes.v1)
-                    else:
-                        info_hash = str(status.info_hash)
-                    update_download_completed_by_hash(info_hash, True)
-                    updated.add(magnet_uri)
-        except Exception as e:
-            consoleLog(f"Exception while updating log file: {e}")
-        time.sleep(5)
+        self.notified_magnets = set()
+        self.updated_magnets = set()
 
-def check_deleted_files(shutdown_event):
-    while not shutdown_event.is_set():
+        # Create Timers
+        self.deleted_files_timer = QTimer(self)
+        self.completed_downloads_timer = QTimer(self)
+
+        # Connect Timer Signals
+        self.deleted_files_timer.timeout.connect(self.check_deleted_files)
+        self.completed_downloads_timer.timeout.connect(self.check_completed_downloads)
+
+    def start_all(self):
+        consoleLog("Starting Timer: deleted_files")
+        self.deleted_files_timer.start(2000)
+        consoleLog("Starting Timer: completed_downloads")
+        self.completed_downloads_timer.start(5000)
+
+    def check_deleted_files(self):
         try:
             with state.downloads_lock:
                 items = list(state.active_downloads.items())
@@ -87,4 +61,36 @@ def check_deleted_files(shutdown_event):
                             del state.active_downloads[magnet_uri]
         except Exception as e:
             consoleLog(f"Exception while checking for file deletions: {e}")
-        time.sleep(5)
+
+    def check_completed_downloads(self):
+        try:
+            with state.downloads_lock:
+                items = list(state.active_downloads.items())
+                seeded = set(state.seeded_magnets)
+            for magnet_uri, magnetdl in items:
+                if isinstance(magnetdl, dict):
+                    continue
+                
+                status = magnetdl.status()
+                
+                if status.state == lt.torrent_status.seeding:
+                
+                    if magnet_uri not in self.updated_magnets and magnet_uri not in seeded:
+                        consoleLog(f"Marking {status.name} as completed")
+                        if hasattr(status, 'info_hashes'):
+                            info_hash = str(status.info_hashes.v1)
+                        else:
+                            info_hash = str(status.info_hash)
+                        update_download_completed_by_hash(info_hash, True)
+                        self.updated_magnets.add(magnet_uri)
+
+                    if magnet_uri not in self.notified_magnets:
+                        notification.notify(
+                            title="Download finished",
+                            message=f"{status.name} has finished downloading.",
+                            timeout=4
+                        )
+                        self.notified_magnets.add(magnet_uri)
+
+        except Exception as e:
+            consoleLog(f"Exception while checking downloads: {e}")
