@@ -55,10 +55,6 @@ SoftwareManager is a Python-based GUI tool that simplifies searching and downloa
    ```
 <!-- python-dependencies:end -->
 
-## Activity
-
-![Alt](https://repobeats.axiom.co/api/embed/3a61ea02ffdeb9ed5dd948d974a21e0d6cfae36c.svg "Repobeats analytics image")
-
 ## Star History
 
 <a href="https://www.star-history.com/#KeksPirates/SoftwareManager&type=date&legend=top-left">
