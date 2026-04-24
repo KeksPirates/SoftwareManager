@@ -79,9 +79,8 @@ def settings_dialog(self):
 
     # Ignore Updates checkbox
     update_checkbox_container, update_checkbox = create_widget(QCheckBox, "Ignore Updates: ")
-    if platform.system() == "Windows":
-        update_checkbox.setChecked(state.ignore_updates)
-        update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
+    update_checkbox.setChecked(state.ignore_updates)
+    update_checkbox.toggled.connect(lambda checked: setattr(state, 'ignore_updates', checked))
 
     # Autoresume Container Checkbox
     autoresume_container, autoresume_checkbox = create_widget(QCheckBox, "Auto-Resume Downloads: ")
