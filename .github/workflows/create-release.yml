@@ -141,7 +141,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          pyinstaller --onefile \
+          pyinstaller --windowed \
             --add-data "build_info.json:." \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
@@ -153,6 +153,10 @@ jobs:
             --name ${{ env.APP_NAME }} \
             src/main.py
 
+      - name: Install create-dmg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install create-dmg
+
       - name: Rename artifact
         shell: bash
         run: |
@@ -160,9 +164,20 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             mv nuitka-build/main.dist dist-final/${{ env.APP_NAME }}
             ls -la dist-final/${{ env.APP_NAME }}/
-          else
+          elif [ "$RUNNER_OS" == "Linux" ]; then
             chmod +x dist/${{ env.APP_NAME }}
             mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            create-dmg \
+              --volname "${{ env.APP_NAME }}" \
+              --window-pos 200 120 \
+              --window-size 600 300 \
+              --icon-size 100 \
+              --icon "${{ env.APP_NAME }}.app" 150 150 \
+              --hide-extension "${{ env.APP_NAME }}.app" \
+              --app-drop-link 450 150 \
+              "dist-final/${{ matrix.artifact_name }}.dmg" \
+              "dist/"
           fi
           ls -la dist-final/
 
@@ -203,7 +218,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-build
-          path: dist-final/${{ matrix.artifact_name }}
+          path: dist-final/${{ matrix.artifact_name }}*
           retention-days: 1
 
   release:
@@ -225,8 +240,8 @@ jobs:
           cp artifacts/ubuntu-22.04-build/SoftwareManager-stable-*-linux release/SoftwareManager-stable-${SHORT_SHA}-linux
           cp artifacts/windows-latest-build/SoftwareManager-stable-*-windows.zip release/SoftwareManager-stable-${SHORT_SHA}-windows.zip
           cp artifacts/windows-latest-build/SoftwareManager-stable-*-windows-setup.exe release/SoftwareManager-stable-${SHORT_SHA}-windows-setup.exe
-          cp artifacts/macos-latest-build/SoftwareManager-stable-*-macos release/SoftwareManager-stable-${SHORT_SHA}-macos
-          chmod +x release/SoftwareManager-stable-*-linux release/SoftwareManager-stable-*-macos
+          cp artifacts/macos-latest-build/SoftwareManager-stable-*-macos.dmg release/SoftwareManager-stable-${SHORT_SHA}-macos.dmg
+          chmod +x release/SoftwareManager-stable-*-linux
           ls -la release/
 
       - name: Generate checksums
@@ -246,5 +261,5 @@ jobs:
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-linux
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-windows.zip
             release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-windows-setup.exe
-            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-macos
+            release/SoftwareManager-stable-${{ needs.build.outputs.short_sha }}-macos.dmg
             release/SHA256SUMS.txt
