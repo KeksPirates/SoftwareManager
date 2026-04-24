@@ -14,7 +14,7 @@ jobs:
   build:
     name: Build ${{ matrix.os }}
     strategy:
-      fail-fast: false   # keep other platforms building even if one fails
+      fail-fast: false   
       matrix:
         include:
           - os: ubuntu-22.04
@@ -138,7 +138,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          pyinstaller --onefile \
+          pyinstaller --windowed \
             --add-data "build_info.json:." \
             --exclude-module PyQt6 \
             --exclude-module PyQt5 \
@@ -150,15 +150,30 @@ jobs:
             --name ${{ env.APP_NAME }} \
             src/main.py
 
+      - name: Install create-dmg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install create-dmg
+
       - name: Stage artifact
         shell: bash
         run: |
           mkdir -p dist-final
           if [ "$RUNNER_OS" == "Windows" ]; then
             mv nuitka-build/main.dist dist-final/${{ env.APP_NAME }}
-          else
+          elif [ "$RUNNER_OS" == "Linux" ]; then
             chmod +x dist/${{ env.APP_NAME }}
             mv dist/${{ env.APP_NAME }} dist-final/${{ matrix.artifact_name }}
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            create-dmg \
+              --volname "${{ env.APP_NAME }} Test" \
+              --window-pos 200 120 \
+              --window-size 600 300 \
+              --icon-size 100 \
+              --icon "${{ env.APP_NAME }}.app" 150 150 \
+              --hide-extension "${{ env.APP_NAME }}.app" \
+              --app-drop-link 450 150 \
+              "dist-final/${{ matrix.artifact_name }}.dmg" \
+              "dist/"
           fi
           ls -la dist-final/
 
@@ -181,5 +196,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-build
-          path: dist-final/${{ matrix.artifact_name }}
+          path: dist-final/${{ matrix.artifact_name }}*
           retention-days: 7
