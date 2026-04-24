@@ -1,5 +1,5 @@
+from PySide6.QtWidgets import QDialog, QMessageBox, QCheckBox
 from utils.network.update_checker import get_updates
-from PySide6.QtWidgets import QDialog, QMessageBox, QCheckBox, QDialogButtonBox, QVBoxLayout, QLabel
 from utils.network.updater import download_update
 from utils.config.config import create_config
 from utils.logging.logs import consoleLog
