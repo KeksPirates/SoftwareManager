@@ -4,7 +4,6 @@ from PySide6.QtCore import QObject, QTimer
 from utils.data.state import state
 from plyer import notification
 import libtorrent as lt
-import time
 import os
 
 

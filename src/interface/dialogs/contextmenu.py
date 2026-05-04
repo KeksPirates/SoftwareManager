@@ -12,7 +12,6 @@ import threading
 import webbrowser
 import subprocess
 import platform
-import time
 import os
 
 
