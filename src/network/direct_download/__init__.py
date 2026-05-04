@@ -20,11 +20,13 @@ def add_direct_download(url: str, title: str, dl_path: Optional[str] = None, hea
             consoleLog(f"Download already active: {title}")
             return
 
-    filename = (
+    raw_filename = (
         detect_filename_from_headers(url, DirectDownloadHandle.USER_AGENT)
         or extract_filename_from_url(url)
         or sanitize_filename(title) + ".zip"
     )
+
+    filename = sanitize_filename(raw_filename)
 
     handle = DirectDownloadHandle(url, filename, dl_path, headers, single_threaded)
     with state.downloads_lock:

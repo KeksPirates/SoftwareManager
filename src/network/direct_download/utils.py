@@ -34,7 +34,7 @@ def detect_filename_from_headers(url: str, user_agent: str) -> Optional[str]:
         if "filename=" in cd:
             parts = cd.split("filename=")
             if len(parts) > 1:
-                fname = parts[-1].strip().strip('"').strip("'")
+                fname = parts[1].split(";")[0].strip().strip('"').strip("'")
                 if fname:
                     return fname
     except Exception as e:
