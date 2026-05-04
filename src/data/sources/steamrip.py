@@ -113,7 +113,7 @@ class SteamripScraper:
 
         try:
             consoleLog(f"Found download link: {best}")
-            if "buzzheavier" in best:
+            if "buzzheavier" or "bzzhr" in best:
                 link = scrape_buzzheavier(best)
                 return link
             elif "gofile" in best:

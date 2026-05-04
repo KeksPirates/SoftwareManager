@@ -10,6 +10,7 @@ import requests
 import hashlib
 import json
 import time
+import sys
 import os
 
 
@@ -231,8 +232,24 @@ class DirectDownloadHandle:
     def _preallocate_file(self, total_size: int):
         if os.path.exists(self._file_path) and os.path.getsize(self._file_path) == total_size:
             return
+
         with open(self._file_path, "wb") as f:
-            f.truncate(total_size)
+            if sys.platform == "win32":
+                import msvcrt
+                import ctypes
+                from ctypes.wintypes import DWORD
+
+                handle = msvcrt.get_osfhandle(f.fileno())
+                kernel32 = ctypes.windll.kernel32
+
+                bytes_returned = DWORD()
+                kernel32.DeviceIoControl(
+                    handle, 590020, None, 0, None, 0, ctypes.byref(bytes_returned), None
+                )
+                kernel32.SetFilePointerEx(handle, ctypes.c_int64(total_size), None, 0)
+                kernel32.SetEndOfFile(handle)
+            else:
+                f.truncate(total_size)
 
     def _compute_chunks(self, total_size: int) -> list[ChunkSpec]:
         num_chunks = min(self.NUM_THREADS, max(1, total_size // self.MIN_CHUNK_SIZE))
