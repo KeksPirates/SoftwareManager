@@ -58,6 +58,14 @@ jobs:
         env:
           UV_SYSTEM_PYTHON: 1
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-cursor0 libxcb-render-util0 libxcb-xkb1 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-image0 \
+            libxcb-shape0 libxcb-util1 libxkbcommon-x11-0
+
       - name: Install Nuitka (Windows only)
         if: runner.os == 'Windows'
         run: uv pip install nuitka
