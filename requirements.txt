@@ -1,5 +1,5 @@
 requests==2.34.1
-PySide6-Essentials==6.11.0
+PySide6-Essentials==6.11.1
 beautifulsoup4==4.14.3
 darkdetect==0.7.1
 pyinstaller==6.19.0
