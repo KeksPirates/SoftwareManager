@@ -1,3 +1,11 @@
+// Cloudflare Pages middleware.
+//
+// Both softwaremanager.xyz and vstsearch.softwaremanager.xyz serve the same
+// index.html. Crawlers (Discord, Twitter, etc.) read the raw HTML and do NOT
+// run JavaScript, so we rewrite the <title> and Open Graph / Twitter meta tags
+// server-side when the request is for the VST Search subdomain. This gives the
+// subdomain its own link embed without a separate deploy.
+
 const VST = {
   title: "VST Search - SoftwareManager",
   description: "Search for plugins easily",
