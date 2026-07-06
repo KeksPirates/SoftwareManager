@@ -39,9 +39,10 @@
             <h1>KeksPirates</h1>
         </div>
         <nav class="tab">
-            <a class="tablinks" onclick="openTab(event, 'start')" id="defaultOpen">Home</a>
-            <a class="tablinks" onclick="openTab(event, 'api')">API</a>
-            <a class="tablinks" onclick="openTab(event, 'docs')">Docs</a>
+            <a class="tablinks" onclick="openTab(event, 'start')" id="navHome">Home</a>
+            <a class="tablinks" onclick="openTab(event, 'api')" id="navApi">API</a>
+            <a class="tablinks" onclick="openTab(event, 'docs')" id="navDocs">Docs</a>
+            <a class="tablinks" id="navVst" href="https://vstsearch.softwaremanager.xyz">VST Search</a>
             <!-- <a class="tablinks" onclick="openTab(event, 'notfound')">404</a> -->
         </nav>
     </header>
@@ -187,6 +188,17 @@
             </div>
         </div>
 
+        <div id="vstsearch" class="tabcontent">
+            <div class="cse-search">
+                <h3 class="vst-logo"><span style="color: #db65d5">VST Search</span></h3>
+                <div class="gcse-searchbox"></div>
+
+                <div class="gcse-searchresults"></div>
+
+
+            </div>
+        </div>
+
         <div id="notfound" class="tabcontent">
             <div class="notfound-frame">
                 <h1 class="notfound-title">404</h1>
@@ -203,6 +215,20 @@
     </footer>
 
     <script>
+    const MAIN_ORIGIN = 'https://softwaremanager.xyz';
+    const VST_ORIGIN  = 'https://vstsearch.softwaremanager.xyz';
+    const onVstDomain = window.location.hostname.startsWith('vstsearch.');
+
+    let cseLoaded = false;
+    function loadCSE() {
+        if (cseLoaded) return;
+        cseLoaded = true;
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://cse.google.com/cse.js?cx=e7334cef72a8b42e7';
+        document.head.appendChild(s);
+    }
+
     function openTab(evt, tabName, pushToHistory = true) {
         var i, tabcontent, tablinks;
         
@@ -218,6 +244,8 @@
         
         var target = document.getElementById(tabName);
         target.style.display = "block";
+
+        if (tabName === 'vstsearch') loadCSE();
         // restart animation
         target.classList.remove('tab-animate');
         void target.offsetWidth;
@@ -247,6 +275,10 @@
 
     // Determine the correct tab immediately (before full load) to prevent flash
     (function() {
+        if (onVstDomain) {
+            document.getElementById('vstsearch').style.display = 'block';
+            return;
+        }
         let currentPath = window.location.pathname;
         let tabName = 'start';
         if (currentPath === '/api') tabName = 'api';
@@ -257,9 +289,23 @@
     })();
 
     window.onload = function() {
+        if (onVstDomain) {
+            document.getElementById('navHome').href = MAIN_ORIGIN + '/';
+            document.getElementById('navApi').href  = MAIN_ORIGIN + '/api';
+            document.getElementById('navDocs').href = MAIN_ORIGIN + '/docs';
+            ['navHome', 'navApi', 'navDocs'].forEach(function(id) {
+                document.getElementById(id).removeAttribute('onclick');
+            });
+            openTab(null, 'vstsearch', false);
+            document.getElementById('navVst').className += " active";
+            return;
+        }
+
         let currentPath = window.location.pathname;
-        
-        if (currentPath === '/api') {
+
+        if (currentPath === '/vstsearch') {
+            window.location.replace(VST_ORIGIN);
+        } else if (currentPath === '/api') {
             openTab(null, 'api', false);
         } else if (currentPath === '/docs') {
             openTab(null, 'docs', false);
