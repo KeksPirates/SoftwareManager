@@ -378,6 +378,84 @@ pre.api-response {
     font-size: 2rem;
 }
 
+.cse-search {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    text-align: center;
+}
+
+.cse-search .vst-logo {
+    font-family: var(--main-font);
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    user-select: none;
+}
+
+.cse-search .gsc-control-cse,
+.cse-search .gsc-results-wrapper-overlay,
+.cse-search .gsc-results-wrapper-visible {
+    background: transparent !important;
+    border: none !important;
+}
+
+.cse-search .gsc-input-box,
+.cse-search .gsc-input-box.gsc-input-box-hover,
+.cse-search .gsc-input-box.gsc-input-box-focus {
+    background: #1a1b1d !important;
+    border-color: #1a1b1d !important;
+}
+
+.cse-search .gsc-input,
+.cse-search input.gsc-input,
+.cse-search .gsib_a input.gsc-input {
+    background: transparent !important;
+    color: #fff !important;
+}
+
+.cse-search .gsib_a {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'><path fill-rule='evenodd' clip-rule='evenodd' d='M14.76 13.27L20.49 19L19 20.49L13.27 14.76C12.2 15.53 10.91 16 9.5 16C5.91 16 3 13.09 3 9.5C3 5.91 5.91 3 9.5 3C13.09 3 16 5.91 16 9.5C16 10.91 15.53 12.2 14.76 13.27ZM9.5 5C7.01 5 5 7.01 5 9.5C5 11.99 7.01 14 9.5 14C11.99 14 14 11.99 14 9.5C14 7.01 11.99 5 9.5 5Z' fill='%23ffffff'/></svg>") !important;
+}
+
+.cse-search .gsc-search-button-v2 {
+    background: #db65d5 !important;
+    border-color: #db65d5 !important;
+}
+
+.cse-search .gsc-search-button-v2:hover {
+    background: #c94dc3 !important;
+    border-color: #c94dc3 !important;
+}
+
+.cse-search .gcsc-more-maybe-branding-root,
+.gcsc-find-more-on-google {
+    display: none !important;
+}
+
+.gsc-completion-container,
+.gssb_c, .gssb_e,
+table.gssb_c, table.gssb_e {
+    background: #1a1b1d !important;
+    border-color: #333 !important;
+    color: #fff !important;
+}
+
+.gsc-completion-container td,
+.gsc-completion-container .gsc-completion-suggestion,
+.gssb_a, .gssb_a td, .gssb_i {
+    background: #1a1b1d !important;
+    color: #fff !important;
+}
+
+.gsc-completion-container .gsc-completion-selected,
+.gsc-completion-container tr:hover td,
+.gssb_a:hover td, .gssb_e-hover {
+    background: #2a2b2d !important;
+}
 
 @media(max-width: 560px) {
 
