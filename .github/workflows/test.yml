@@ -149,6 +149,11 @@ jobs:
             --name ${{ env.APP_NAME }} \
             src/main.py
 
+      - name: Build AppImage (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: scripts/build_appimage.sh
+
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
         shell: bash
