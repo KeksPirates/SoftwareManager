@@ -18,12 +18,15 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            artifact_name: SoftwareManager-test-${{ github.sha }}-linux
-            artifact_name: SoftwareManager-x86_64
+            artifact_paths: |
+              dist-final/SoftwareManager-test-${{ github.sha }}-linux*
+              dist-final/SoftwareManager-x86_64*
           - os: windows-latest
-            artifact_name: SoftwareManager-test-${{ github.sha }}-windows
+            artifact_paths: |
+              dist-final/SoftwareManager-test-${{ github.sha }}-windows*
           - os: macos-latest
-            artifact_name: SoftwareManager-test-${{ github.sha }}-macos
+            artifact_paths: |
+              dist-final/SoftwareManager-test-${{ github.sha }}-macos*
 
     runs-on: ${{ matrix.os }}
 
@@ -217,5 +220,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-build
-          path: dist-final/${{ matrix.artifact_name }}*
+          path: ${{ matrix.artifact_paths }}
           retention-days: 7
