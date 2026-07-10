@@ -2,6 +2,6 @@
 Name=SoftwareManager
 Type=Application
 Exec=python3 -m SoftwareManager
-Icon=logo
+Icon=softwaremanager
 Terminal=false
 Categories=X-Software;X-Torrents;

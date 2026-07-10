@@ -19,6 +19,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             artifact_name: SoftwareManager-test-${{ github.sha }}-linux
+            artifact_name: SoftwareManager-x86_64
           - os: windows-latest
             artifact_name: SoftwareManager-test-${{ github.sha }}-windows
           - os: macos-latest
@@ -149,10 +150,10 @@ jobs:
             --name ${{ env.APP_NAME }} \
             src/main.py
 
-      # - name: Build AppImage (Linux)
-      #   if: runner.os == 'Linux'
-      #   shell: bash
-      #   run: scripts/build_appimage.sh
+      - name: Build AppImage (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: scripts/build_appimage.sh
 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'

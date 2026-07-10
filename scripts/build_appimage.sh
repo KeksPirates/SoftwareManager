@@ -24,7 +24,8 @@ cd build/SoftwareManager.AppDir
 
 rm AppRun .DirIcon python.png python*.desktop usr/share/applications/python*.desktop
 
-cp -t . ../../src/interface/assets/logo.png ../../SoftwareManager.desktop
+cp -t ./softwaremanager.png ../../src/interface/assets/logo.png
+cp -t . ../../SoftwareManager.desktop
 cp ../../SoftwareManager.desktop usr/share/applications/
 
 echo '#! /bin/bash
