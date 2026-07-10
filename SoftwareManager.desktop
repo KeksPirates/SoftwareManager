@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=SoftwareManager
+Type=Application
+Exec=python3 -m SoftwareManager
+Icon=logo
+Terminal=false
+Categories=X-Software;X-Torrents;

@@ -219,3 +219,6 @@ __marimo__/
 # Local build files
 build-local.ps1
 build-local.bat
+
+# UV
+uv.lock
