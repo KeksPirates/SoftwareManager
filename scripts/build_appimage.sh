@@ -49,4 +49,6 @@ cd ..
 ./appimagetool-x86_64.AppImage --appimage-extract
 squashfs-root/AppRun SoftwareManager.AppDir
 
+cd ..
+
 echo " => Done "
