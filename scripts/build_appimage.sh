@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-echo "Cleaning up"
-rm -rf dist build
-
 echo "Installing Dependencies"
 mkdir build
 cd build
