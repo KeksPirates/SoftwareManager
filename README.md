@@ -1,9 +1,9 @@
 # SoftwareManager
 SoftwareManager is a Python-based GUI tool that simplifies searching and downloading software from various sources, including Rutracker, Uztracker, Steamrip and the official M0nkrus Telegram channel.
 
-> [!NOTE]  
-> Our Steamrip implementation is currently very experimental and potentially unstable.<br>
-> Downloads will fail if there's no BuzzHeavier download available. We're working on this.
+> [!WARNING]  
+> SoftwareManager is currently very broken due to sites changing & enforcing turnstile tokens.<br>
+> We're working on this, but can't guarantee anything.
 
 ## Features
 - Searching & Downloading Software from various pages
